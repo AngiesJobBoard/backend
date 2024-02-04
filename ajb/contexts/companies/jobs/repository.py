@@ -1,0 +1,63 @@
+from ajb.base import (
+    MultipleChildrenRepository,
+    RepositoryRegistry,
+    RequestScope,
+    Collection,
+    RepoFilterParams,
+    QueryFilterParams,
+)
+from ajb.vendor.arango.models import Join, Filter
+
+from .models import Job, CreateJob, JobWithCompany, AdminSearchJobsWithCompany
+
+
+class JobRepository(MultipleChildrenRepository[CreateJob, Job]):
+    collection = Collection.JOBS
+    entity_model = Job
+    search_fields = ("position_title",)
+
+    def __init__(self, request_scope: RequestScope, company_id: str | None = None):
+        super().__init__(
+            request_scope,
+            parent_collection=Collection.COMPANIES.value,
+            parent_id=company_id,
+        )
+
+    def get_company_jobs(
+        self,
+        company_id: str,
+        query: QueryFilterParams | RepoFilterParams = RepoFilterParams(),
+    ):
+        if isinstance(query, QueryFilterParams):
+            query = query.convert_to_repo_filters()
+        query.filters.append(Filter(field="company_id", value=company_id))
+        return self.query(query)
+
+    def get_jobs_with_company(
+        self,
+        job_id: str | None = None,
+        query: AdminSearchJobsWithCompany = AdminSearchJobsWithCompany(),
+        is_live: bool = False,
+        is_boosted: bool = False,
+    ) -> tuple[list[JobWithCompany], int]:
+        formatted_query = query.convert_to_repo_params()
+        if job_id:
+            formatted_query.filters.append(Filter(field="_key", value=job_id))
+        if is_live:
+            formatted_query.filters.append(Filter(field="is_live", value=is_live))
+        if is_boosted:
+            formatted_query.filters.append(Filter(field="is_boosted", value=is_boosted))
+        return self.query_with_joins(  # type: ignore
+            joins=[
+                Join(
+                    to_collection_alias="company",
+                    to_collection="companies",
+                    from_collection_join_attr="company_id",
+                )
+            ],
+            repo_filters=formatted_query,
+            return_model=JobWithCompany,
+        )
+
+
+RepositoryRegistry.register(JobRepository)

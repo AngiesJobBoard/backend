@@ -1,0 +1,17 @@
+.space
+.env
+
+_pycache_
+__pycache__
+.hypothesis
+.pytest_cache
+.vscode
+
+clerk_key.pem
+service_key.json
+.coverage
+.mypy_cache
+htmlcov
+
+dist
+.todos

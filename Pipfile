@@ -1,0 +1,52 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+python-arango = "*"
+openai = "*"
+kafka-python = "*"
+pyjwt = "*"
+sentry-sdk = "*"
+pdfplumber = "*"
+firebase-admin = "*"
+requests = "*"
+croniter = "*"
+algoliasearch = "*"
+hubspot = "*"
+sendgrid = "*"
+jinja2 = "*"
+twilio = "*"
+influxdb3-python = "*"
+uvicorn = "*"
+python-multipart = "*"
+
+[dev-packages]
+mypy = "*"
+pylint = "*"
+black = "*"
+pytest = "*"
+httpx = "*"
+coverage = "*"
+faker = "*"
+types-requests = "*"
+hypothesis = "*"
+types-croniter = "*"
+pytest-asyncio = "*"
+mock-firestore = "*"
+pandas = "*"
+matplotlib = "*"
+
+[requires]
+python_version = "3.11"
+
+[scripts]
+check_all = "bash -c \"black .; pylint .; mypy . --ignore-missing-imports; coverage run --source=. -m pytest -v --disable-warnings tests && coverage report\""
+test = "bash -c \"coverage run --source=ajb -m pytest -v --disable-warnings tests && coverage report && coverage html\""
+migrate = "python -m ajb.migrate"
+seed = "python -m ajb.seed"
+localapi = "uvicorn api.app:app --reload --port 8000 --host 0.0.0.0"
+api = "uvicorn api.app:app --workers 4 --port $PORT --host 0.0.0.0"
+services = "python -m services.main"
