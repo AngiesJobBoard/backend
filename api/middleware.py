@@ -57,13 +57,13 @@ def get_user(token: str):
     This function decodes the JWT token and returns the user data
     """
     try:
-        # decoded_token = jwt.decode(
-        #     token,
-        #     SETTINGS.CLERK_JWT_PEM_KEY,
-        #     algorithms=["RS256"],
-        #     leeway=SETTINGS.CLERK_TOKEN_LEEWAY,
-        # )
-        return SessionData(id="user_2Y91uRPqV6FOkD5DLKZcF3gaaNv")
+        decoded_token = jwt.decode(
+            token,
+            SETTINGS.CLERK_JWT_PEM_KEY,
+            algorithms=["RS256"],
+            leeway=SETTINGS.CLERK_TOKEN_LEEWAY,
+        )
+        return SessionData(**decoded_token)
     except jwt.DecodeError:
         raise InvalidToken
     except jwt.ExpiredSignatureError:
@@ -130,9 +130,9 @@ async def verify_user(
 
     request.state.user = None
     request.state.companies = []
-    # if credentials and credentials.credentials:
-    # User trying to authenticate
-    request.state.user = get_user("")
+    if credentials and credentials.credentials:
+        # User trying to authenticate
+        request.state.user = get_user(credentials.credentials)
 
     if request.url.path not in PUBLIC_ROUTES and not request.state.user:
         raise Forbidden
