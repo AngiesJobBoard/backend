@@ -14,7 +14,8 @@ class CreateJobTemplate(UserCreateTemplate):
     company_id: str
 
 
-class JobTemplate(BaseDataModel, CreateJobTemplate): ...
+class JobTemplate(BaseDataModel, CreateJobTemplate):
+    ...
 
 
 @dataclass

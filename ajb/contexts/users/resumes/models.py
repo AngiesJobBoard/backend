@@ -16,7 +16,8 @@ class CreateResume(BaseModel):
     file_name: str
 
 
-class Resume(CreateResume, BaseDataModel): ...
+class Resume(CreateResume, BaseDataModel):
+    ...
 
 
 @dataclass

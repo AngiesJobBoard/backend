@@ -15,7 +15,8 @@ class CreateCompanyAction(BaseAction):
     metadata: dict[str, t.Any] = Field(default_factory=dict)
 
 
-class CompanyAction(BaseDataModel, CreateCompanyAction): ...
+class CompanyAction(BaseDataModel, CreateCompanyAction):
+    ...
 
 
 @dataclass

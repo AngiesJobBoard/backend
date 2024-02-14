@@ -16,7 +16,8 @@ class CreateUserAction(BaseAction):
     metadata: dict[str, t.Any] = Field(default_factory=dict)
 
 
-class UserAction(BaseDataModel, CreateUserAction): ...
+class UserAction(BaseDataModel, CreateUserAction):
+    ...
 
 
 @dataclass

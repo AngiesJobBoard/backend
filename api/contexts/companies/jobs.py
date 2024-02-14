@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Request, Depends
+from io import StringIO
+from fastapi import APIRouter, Request, Depends, File, UploadFile
+import pandas as pd
 
 from ajb.base import QueryFilterParams, build_pagination_response
 from ajb.contexts.companies.jobs.models import (
@@ -87,3 +89,30 @@ def unsubmit_job(request: Request, company_id: str, job_id: str):
 @router.post("/{job_id}/unpost")
 def unpost_job(request: Request, company_id: str, job_id: str):
     return JobUseCase(request.state.request_scope).unpost_job(company_id, job_id)
+
+
+@router.post("/jobs-from-csv")
+async def create_jobs_from_csv_data(
+    request: Request, company_id: str, file: UploadFile = File(...)
+):
+    if file.content_type != "text/csv":
+        raise GenericHTTPException(
+            status_code=400, detail="Invalid file type. Please upload a CSV file."
+        )
+
+    try:
+        content = await file.read()
+        content = content.decode("utf-8")
+        content = StringIO(content)
+        df = pd.read_csv(content)
+        df = df.where(pd.notnull(df), None)
+        raw_jobs = df.to_dict(orient="records")
+        print(f"\n\n{raw_jobs}\n\n")
+        jobs = [UserCreateJob(**job) for job in raw_jobs]  # type: ignore
+        return JobUseCase(request.state.request_scope).create_many_jobs(
+            company_id, jobs
+        )
+    except Exception as e:
+        raise GenericHTTPException(
+            status_code=400, detail=f"Error processing file: {e}"
+        )

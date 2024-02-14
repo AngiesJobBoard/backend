@@ -27,7 +27,8 @@ class CreateTestModel(BaseModel):
     text_three: str | None = None
 
 
-class TestModel(BaseDataModel, CreateTestModel): ...
+class TestModel(BaseDataModel, CreateTestModel):
+    ...
 
 
 class TestRepository(ParentRepository[CreateTestModel, TestModel]):
@@ -466,7 +467,9 @@ def test_multiple_child_repository(request_scope):
     assert result.name == "test2"
 
 
-def test_sort_with_join(request_scope): ...
+def test_sort_with_join(request_scope):
+    ...
 
 
-def test_sort_with_nested_values(request_scope): ...
+def test_sort_with_nested_values(request_scope):
+    ...

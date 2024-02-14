@@ -27,11 +27,39 @@ class JobRepository(MultipleChildrenRepository[CreateJob, Job]):
         self,
         company_id: str,
         query: QueryFilterParams | RepoFilterParams = RepoFilterParams(),
-    ):
+    ) -> tuple[list[Job], int]:
+        # Better optimiation in the future is to track the count of applications in the job document directly
         if isinstance(query, QueryFilterParams):
             query = query.convert_to_repo_filters()
         query.filters.append(Filter(field="company_id", value=company_id))
-        return self.query(query)
+        results, count = self.query_with_joins(
+            joins=[
+                Join(
+                    to_collection="applications",
+                    to_collection_alias="application",
+                    to_collection_join_attr="job_id",
+                    from_collection_join_attr="_key",
+                    is_aggregate=True,
+                )
+            ],
+            repo_filters=query,
+        )
+        formatted_job_results = [
+            Job(
+                **job,
+                applicants=len(job["application"]) if job.get("application") else 0,
+                shortlisted_applicants=len(
+                    [
+                        application
+                        for application in job["application"]
+                        if application["application_is_shortlisted"]
+                    ]
+                ),
+                id=job["_key"],
+            )
+            for job in results
+        ]
+        return formatted_job_results, count
 
     def get_jobs_with_company(
         self,

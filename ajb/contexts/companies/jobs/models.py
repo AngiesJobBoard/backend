@@ -109,7 +109,7 @@ class UserCreateJob(BaseModel):
     ideal_days_to_hire: int | None = None
     internal_reference_code: str | None = None
     job_associated_company_description: str | None = None
-    jog_tags: list[str] | None = None
+    job_tags: list[str] | None = None
     application_settings: ApplicationSettings | None = None
     position_filled: bool = False
 
@@ -120,7 +120,7 @@ class UserCreateJob(BaseModel):
             "ideal_days_to_hire",
             "internal_reference_code",
             "job_associated_company_description",
-            "jog_tags",
+            "job_tags",
             "application_settings",
             "application_questions",
             "desired_start_date",
@@ -181,6 +181,9 @@ class InternalUpdateJob(UpdateJob):
 
 
 class Job(CreateJob, BaseDataModel):
+    applicants: int = 0
+    shortlisted_applicants: int = 0
+
     @property
     def required_fields(self):
         return [

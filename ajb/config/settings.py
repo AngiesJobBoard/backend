@@ -56,9 +56,7 @@ class AppSettings:
     HUBSPOT_TOKEN: str = os.getenv("HUBSPOT_TOKEN", "")
 
     # Arango config
-    ARANGO_URL: str = os.getenv(
-        "ARANGO_URL", "http://ec2-18-222-196-136.us-east-2.compute.amazonaws.com:8529"
-    )
+    ARANGO_URL: str = os.getenv("ARANGO_URL", "http://localhost:8529")
     ARANGO_USERNAME: str = os.getenv("ARANGO_USERNAME", "root")
     ARANGO_PASSWORD: str = os.getenv("ARANGO_PASSWORD", "root")
     ARANGO_DB_NAME: str = os.getenv("ARANGO_DB_NAME", "ajb")

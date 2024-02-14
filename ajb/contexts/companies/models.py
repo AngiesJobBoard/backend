@@ -41,7 +41,8 @@ class CreateCompany(UserCreateCompany):
     owner_email: str
 
 
-class Company(BaseDataModel, CreateCompany): ...
+class Company(BaseDataModel, CreateCompany):
+    ...
 
 
 @dataclass

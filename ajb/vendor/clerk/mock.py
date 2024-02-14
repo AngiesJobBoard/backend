@@ -21,7 +21,8 @@ mock_clerk_user = ClerkUser(
 
 class MockClerkClient(ClerkClient):
     # pylint: disable=super-init-not-called
-    def __init__(self, *args, **kwargs): ...
+    def __init__(self, *args, **kwargs):
+        ...
 
     def _make_request(self, *args, **kwargs):
         resp = Response()

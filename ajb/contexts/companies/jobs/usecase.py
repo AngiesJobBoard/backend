@@ -1,8 +1,5 @@
 from ajb.base import BaseUseCase, Collection, RequestScope
-from ajb.contexts.companies.jobs.models import (
-    Job,
-    UserCreateJob,
-)
+from ajb.contexts.companies.jobs.models import Job, UserCreateJob, CreateJob
 from ajb.contexts.admin.jobs.models import (
     CreateAdminJobPostApproval,
     JobApprovalStatus,
@@ -197,3 +194,12 @@ class JobUseCase(BaseUseCase):
             updated_job = job_repo.update_fields(job.id, job_score=new_job_score)
 
         return updated_job
+
+    def create_many_jobs(self, company_id: str, jobs: list[UserCreateJob]):
+        job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
+        jobs_to_create = []
+        for job in jobs:
+            job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
+            job_to_create.job_score = job.calculate_score()
+            jobs_to_create.append(job_to_create)
+        return job_repo.create_many(jobs_to_create)

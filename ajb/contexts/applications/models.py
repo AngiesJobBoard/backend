@@ -57,7 +57,8 @@ class CreateApplication(UserCreatedApplication):
     recruiter_notes: dict[str, RecruiterNote] = Field(default_factory=dict)
 
 
-class Application(CreateApplication, BaseDataModel): ...
+class Application(CreateApplication, BaseDataModel):
+    ...
 
 
 @dataclass

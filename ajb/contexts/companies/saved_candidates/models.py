@@ -11,7 +11,8 @@ class CreateSavedCandidate(BaseModel):
     saved_for_application_id: str | None = None
 
 
-class SavedCandidate(CreateSavedCandidate, BaseDataModel): ...
+class SavedCandidate(CreateSavedCandidate, BaseDataModel):
+    ...
 
 
 class SavedCandidatesListObject(SavedCandidate):

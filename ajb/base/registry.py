@@ -16,11 +16,11 @@ class RepositoryRegistry(t.Generic[Repo]):
 
     @classmethod
     def register(cls, repo: t.Any) -> None:
-        cls.repositories[repo.collection] = repo
+        cls.repositories[repo.collection] = repo  # type: ignore
 
     @classmethod
     def get(cls, collection: str) -> Repo:
-        repo = cls.repositories.get(collection)
+        repo = cls.repositories.get(collection)  # type: ignore
         if repo is None:
             raise RuntimeError(
                 f"Repository for collection {collection} is not registered"

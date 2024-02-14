@@ -388,3 +388,12 @@ def test_get_jobs_with_companies(request_scope):
 
     assert results[0].id == data.job.id
     assert results[0].company.id == data.company.id
+
+
+def test_get_jobs_with_applicants(request_scope):
+    data = ApplicationFixture(request_scope).create_application()
+    repo = JobRepository(request_scope)
+
+    results, _ = repo.get_company_jobs(data.company.id)
+    assert results[0].applicants == 1
+    assert results[0].shortlisted_applicants == 0

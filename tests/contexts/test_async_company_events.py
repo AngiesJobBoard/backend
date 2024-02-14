@@ -49,9 +49,9 @@ async def test_company_is_deleted(request_scope):
     mock_algolia = AlgoliaClientFactory._return_mock()
 
     # Add company to Algolia
-    mock_algolia.index.local_items[application_data.company.id] = (
-        application_data.company.model_dump()
-    )
+    mock_algolia.index.local_items[
+        application_data.company.id
+    ] = application_data.company.model_dump()
 
     # Send delete message
     delete_message = BaseKafkaMessage(
@@ -77,9 +77,9 @@ async def test_company_is_updated(request_scope):
     mock_algolia = AlgoliaClientFactory._return_mock()
 
     # Add company to Algolia
-    mock_algolia.index.local_items[application_data.company.id] = (
-        application_data.company.model_dump()
-    )
+    mock_algolia.index.local_items[
+        application_data.company.id
+    ] = application_data.company.model_dump()
 
     # Send update message
     updated_company = application_data.company.model_copy()

@@ -9,7 +9,8 @@ class CreateSavedCompany(BaseModel):
     company_id: str
 
 
-class SavedCompany(CreateSavedCompany, BaseDataModel): ...
+class SavedCompany(CreateSavedCompany, BaseDataModel):
+    ...
 
 
 class SavedCompaniesListObject(SavedCompany):

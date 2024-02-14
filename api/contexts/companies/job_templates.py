@@ -40,7 +40,7 @@ def get_job_template_autocomplete(
 
 
 @router.post("/", response_model=UserCreateTemplate)
-def create_job_template(request: Request, company_id: str, job: UserCreateJob):
+def create_job_template(request: Request, company_id: str, job: UserCreateTemplate):
     """Creates a job template for a company"""
     return JobTemplateRepository(request.state.request_scope, company_id).create(
         CreateJobTemplate(**job.model_dump(), company_id=company_id)

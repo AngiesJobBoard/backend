@@ -17,7 +17,8 @@ class CreateUserNotification(BaseModel):
     is_read: bool = False
 
 
-class UserNotification(CreateUserNotification, BaseDataModel): ...
+class UserNotification(CreateUserNotification, BaseDataModel):
+    ...
 
 
 @dataclass

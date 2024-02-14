@@ -8,7 +8,8 @@ class CreateCoverLetter(BaseModel):
     cover_letter: str
 
 
-class CoverLetter(CreateCoverLetter, BaseDataModel): ...
+class CoverLetter(CreateCoverLetter, BaseDataModel):
+    ...
 
 
 @dataclass

@@ -10,7 +10,8 @@ class CreateSavedJob(BaseModel):
     company_id: str
 
 
-class SavedJob(CreateSavedJob, BaseDataModel): ...
+class SavedJob(CreateSavedJob, BaseDataModel):
+    ...
 
 
 class SavedJobsListObject(SavedJob):

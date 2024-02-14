@@ -67,7 +67,8 @@ class CreateTestModel(BaseModel):
     text_three: str | None = None
 
 
-class TestModel(BaseDataModel, CreateTestModel): ...
+class TestModel(BaseDataModel, CreateTestModel):
+    ...
 
 
 class TestRepository(ParentRepository[CreateTestModel, TestModel]):
