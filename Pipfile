@@ -22,6 +22,7 @@ twilio = "*"
 influxdb3-python = "*"
 uvicorn = "*"
 python-multipart = "*"
+pandas = "*"
 
 [dev-packages]
 mypy = "*"
@@ -36,7 +37,6 @@ hypothesis = "*"
 types-croniter = "*"
 pytest-asyncio = "*"
 mock-firestore = "*"
-pandas = "*"
 matplotlib = "*"
 
 [requires]
