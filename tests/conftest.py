@@ -7,8 +7,6 @@ from ajb.config.settings import SETTINGS
 from ajb.vendor.arango.client_factory import ArangoClientFactory
 from ajb.vendor.arango.migration import ArangoMigrator
 from ajb.vendor.arango.constants import Constants
-from ajb.vendor.algolia.repository import AlgoliaSearchRepository, AlgoliaIndex
-from ajb.vendor.algolia.client_factory import AlgoliaClientFactory
 from ajb.vendor.kafka.client_factory import KafkaProducerFactory
 
 
@@ -44,23 +42,3 @@ def request_scope(db: StandardDatabase):
         kafka_producer=KafkaProducerFactory._return_mock(),
         company_id=None,
     )
-
-
-@pytest.fixture(scope="function")
-def mock_algolia_client():
-    yield AlgoliaClientFactory._return_mock()
-
-
-@pytest.fixture(scope="function")
-def mock_aloglia_users(mock_algolia_client):
-    yield AlgoliaSearchRepository(AlgoliaIndex.CANDIDATES, mock_algolia_client)
-
-
-@pytest.fixture(scope="function")
-def mock_algolia_companies(mock_algolia_client):
-    yield AlgoliaSearchRepository(AlgoliaIndex.COMPANIES, mock_algolia_client)
-
-
-@pytest.fixture(scope="function")
-def mock_algolia_jobs(mock_algolia_client):
-    yield AlgoliaSearchRepository(AlgoliaIndex.JOBS, mock_algolia_client)

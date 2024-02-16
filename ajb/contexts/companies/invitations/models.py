@@ -16,8 +16,7 @@ class CreateInvitation(UserCreateInvitation):
     company_id: str
 
 
-class Invitation(BaseDataModel, CreateInvitation):
-    ...
+class Invitation(BaseDataModel, CreateInvitation): ...
 
 
 @dataclass

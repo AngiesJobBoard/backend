@@ -56,8 +56,8 @@ def test_admin_search(
     results, count = admin_search_repo.admin_search(
         search=AdminSearch(collection=Collection.USERS)
     )
-    assert count == 5
-    assert len(results) == 5
+    assert count == 6
+    assert len(results) == 6
 
     results, count = admin_search_repo.admin_search(
         search=AdminSearch(

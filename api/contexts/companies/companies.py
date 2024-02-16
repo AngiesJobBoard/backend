@@ -40,9 +40,7 @@ def get_company_autocomplete(request: Request, prefix: str, field: str = "name")
 
 @router.patch("/{company_id}", response_model=Company)
 def update_company(request: Request, company_id: str, company: UpdateCompany):
-    return CompaniesUseCase(request.state.request_scope).update_company(
-        company_id, company
-    )
+    return CompanyRepository(request.state.request_scope).update(company_id, company)
 
 
 @router.get("/{company_id}", response_model=Company)
@@ -54,4 +52,4 @@ def get_company(request: Request, company_id: str):
 @router.delete("/{company_id}")
 def delete_company(request: Request, company_id: str):
     """Deletes a company by id"""
-    return CompaniesUseCase(request.state.request_scope).delete_company(company_id)
+    return CompanyRepository(request.state.request_scope).delete(company_id)

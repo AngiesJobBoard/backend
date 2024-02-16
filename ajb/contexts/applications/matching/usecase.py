@@ -13,9 +13,9 @@ class ApplicantMatchUsecase(BaseUseCase):
         self.openai = openai or OpenAIRepository()
 
     def get_match(self, application: Application) -> ApplicantMatchScore:
-        user = self.get_object(Collection.USERS, application.user_id)
+        application = self.get_object(Collection.APPLICATIONS, application.id)
         job = self.get_object(Collection.JOBS, application.job_id)
-        return AIApplicationMatcher(self.openai).get_match_score(user, job)
+        return AIApplicationMatcher(self.openai).get_match_score(application, job)
 
     def update_application_with_match_score(
         self, application: Application

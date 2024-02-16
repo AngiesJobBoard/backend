@@ -2,16 +2,13 @@ from cachetools import TTLCache
 from fastapi import APIRouter, Request, Depends
 
 from ajb.base import QueryFilterParams, build_pagination_response
-from ajb.base.constants import BaseConstants
-from ajb.common.models import TimeRange, TimesSeriesAverage
+from ajb.common.models import TimeRange
 from ajb.contexts.companies.dashboard.models import (
     CompanyDashboardSummary,
     PaginatedDashboardApplicants,
     PaginatedCompanyDashboardJobs,
-    CompanyDashboardJobPostStatistics,
 )
 from ajb.contexts.companies.dashboard.usecase import CompanyDashboardUseCase
-from ajb.vendor.arango.models import Operator
 
 
 router = APIRouter(
@@ -76,16 +73,3 @@ def get_company_dashboard_jobs(
         request.url._url,
         PaginatedCompanyDashboardJobs,
     )
-
-
-@router.get("/job-statistics", response_model=CompanyDashboardJobPostStatistics)
-def get_company_dashboard_job_statistics(
-    request: Request,
-    company_id: str,
-    time_range: TimeRange = Depends(),
-    averaging: TimesSeriesAverage = TimesSeriesAverage.HOURLY,
-    query: QueryFilterParams = Depends(),
-):
-    return CompanyDashboardUseCase(
-        request.state.request_scope, company_id, time_range, averaging=averaging
-    ).get_company_job_post_statistics(query.convert_to_repo_filters())

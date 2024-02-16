@@ -17,13 +17,13 @@ from ajb.contexts.scheduled_events.enumerations import (
     ScheduledEventCategory,
     ReportScheduledEvent,
 )
-from ajb.contexts.users.enumerations import (
+from ajb.static.enumerations import (
     LevelOfEducationEnum,
     RaceEnum,
     GenderEnum,
     LanguageProficiencyEnum,
+    PayType,
 )
-from ajb.static.enumerations import PayType
 
 router = APIRouter(prefix="/static/enumerations", tags=["Enumerations"])
 

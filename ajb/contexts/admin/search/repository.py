@@ -1,4 +1,4 @@
-from typing import cast, Literal
+from typing import cast
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
@@ -68,7 +68,6 @@ class AdminSearchRepository:
 
     def get_action_timeseries_data(
         self,
-        action_type: Literal["users", "companies"] = "users",
         event: UserEvent | CompanyEvent | None = None,
         start: datetime | None = None,
         end: datetime | None = None,
@@ -81,11 +80,7 @@ class AdminSearchRepository:
             filters = []
         response = build_and_execute_timeseries_query(
             db=self.db,
-            collection_name=(
-                Collection.USER_ACTIONS.value
-                if action_type == "users"
-                else Collection.COMPANY_ACTIONS.value
-            ),
+            collection_name=Collection.COMPANY_ACTIONS.value,
             filters=filters,
             start=start,
             end=end,

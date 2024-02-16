@@ -4,7 +4,6 @@ from fastapi.responses import JSONResponse
 
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.users.models import UpdateUser, User
-from ajb.contexts.users.usecase import UserUseCase
 
 
 router = APIRouter(tags=["Users"], prefix="/me")
@@ -34,20 +33,6 @@ def get_current_user(request: Request):
 
 @router.patch("/", response_model=User)
 def update_current_user(request: Request, user: UpdateUser):
-    return UserUseCase(request.state.request_scope).update_user(
+    return UserRepository(request.state.request_scope).update(
         request.state.request_scope.user_id, user
-    )
-
-
-@router.post("/publish-profile")
-def post_candidate(request: Request):
-    return UserUseCase(request.state.request_scope).make_user_information_public(
-        request.state.request_scope.user_id
-    )
-
-
-@router.post("/unpublish-profile")
-def unpost_candidate(request: Request):
-    return UserUseCase(request.state.request_scope).make_user_information_private(
-        request.state.request_scope.user_id
     )

@@ -52,25 +52,11 @@ class AppSettings:
     SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
     SENTRY_TRACES_RATE: float = 1.0
 
-    # Hubspot config
-    HUBSPOT_TOKEN: str = os.getenv("HUBSPOT_TOKEN", "")
-
     # Arango config
     ARANGO_URL: str = os.getenv("ARANGO_URL", "http://localhost:8529")
     ARANGO_USERNAME: str = os.getenv("ARANGO_USERNAME", "root")
     ARANGO_PASSWORD: str = os.getenv("ARANGO_PASSWORD", "root")
     ARANGO_DB_NAME: str = os.getenv("ARANGO_DB_NAME", "ajb")
-
-    # Algolia config
-    ALGOLIA_APP_ID: str = os.getenv("ALGOLIA_APP_ID", "4RKW5NKE5I")
-    ALGOLIA_API_KEY: str = os.getenv(
-        "ALGOLIA_API_KEY", "10c231ae20508e4c5e3eafb52c64bb35"
-    )
-
-    # InfluxDB config
-    INFLUXDB_HOST: str = os.getenv("INFLUXDB_HOST", "")
-    INFLUXDB_TOKEN: str = os.getenv("INFLUXDB_TOKEN", "")
-    INFLUXDB_ORG: str = os.getenv("INFLUXDB_ORG", "")
 
     # Google API
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")

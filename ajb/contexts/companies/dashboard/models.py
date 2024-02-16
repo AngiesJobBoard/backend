@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from ajb.base import BaseDataModel, PaginatedResponse, RequestScope
 from ajb.common.models import Location
-from ajb.contexts.admin.jobs.models import Job
+from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.applications.models import ApplicationStatus
 from ajb.utils import get_nested_value
 

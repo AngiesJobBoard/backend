@@ -34,8 +34,6 @@ class CompanyEvent(str, Enum):
     """Represents a business action that can be taken on a company"""
 
     COMPANY_IS_CREATED = "company_is_created"
-    COMPANY_IS_UPDATED = "company_is_updated"
-    COMPANY_IS_DELETED = "company_is_deleted"
 
     # Application related
     COMPANY_VIEWS_APPLICATIONS = "company_views_applications"
@@ -43,32 +41,11 @@ class CompanyEvent(str, Enum):
     COMPANY_SHORTLISTS_APPLICATION = "company_shortlists_application"
     COMPANY_REJECTS_APPLICATION = "company_rejects_application"
 
-    # Search impression related
-    COMPANY_VIEWS_CANDIDATES = "company_views_candidates"
-    COMPANY_CLICKS_CANDIDATE = "company_clicks_candidate"
-    COMPANY_SAVES_CANDIDATE = "company_saves_candidate"
-
-    # Job related events
-    JOB_SUBMISSION_IS_POSTED = "job_submission_is_posted"
-    ADMIN_REJECTS_JOB_SUBMISSION = "admin_rejects_job_submission"
-
 
 class UserEvent(str, Enum):
     """Represents a business action that can be taken on a user"""
 
     USER_IS_CREATED = "user_is_created"
-    USER_IS_UPDATED = "user_is_updated"
-    USER_IS_DELETED = "user_is_deleted"
-
-    # Search impression related
-    USER_VIEWS_JOBS = "user_views_jobs"
-    USER_CLICKS_JOB = "user_clicks_job"
-    USER_SAVES_JOB = "user_saves_job"
-    USER_APPLIES_JOB = "user_applies_job"
-
-    USER_VIEWS_COMPANIES = "user_views_companies"
-    USER_CLICKS_COMPANY = "user_clicks_company"
-    USER_SAVES_COMPANY = "user_saves_company"
 
 
 class CreateKafkaMessage(BaseModel):
@@ -93,8 +70,6 @@ class SourceServices(str, Enum):
 
     API = "api"  # Created based on an API request
     ADMIN = "admin"  # Created based on an admin request
-    SERVICES = "services"  # Created when handling another async message
-    SCHEDULED = "scheduled"  # Created when handling a scheduled task
 
 
 class BaseEventProducer:

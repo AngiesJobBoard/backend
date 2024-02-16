@@ -7,21 +7,17 @@ from ajb.base import (
     RequestScope,
     Pagination,
 )
-from ajb.base.events import UserEvent
 from ajb.common.models import (
     TimeRange,
     TimesSeriesAverage,
-    get_actions_as_daily_timeseries,
 )
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.vendor.arango.models import Filter, Operator, Join
-from ajb.utils import get_perecent
 
 from .models import (
     CompanyDashboardSummary,
     CompanyDashboardApplicant,
     CompanyDashboardJobPost,
-    CompanyDashboardJobPostStatistics,
 )
 
 DEFAULT_TIME_DELTA = timedelta(days=30)
@@ -137,55 +133,3 @@ class CompanyDashboardUseCase(BaseUseCase):
             for result in results
         ]
         return formatted_results, count
-
-    def get_company_job_post_statistics(
-        self, query: RepoFilterParams | None = None
-    ) -> CompanyDashboardJobPostStatistics:
-        # Get impressions as timeseries
-        if not query:
-            query = self._get_default_repo_params()
-        user_action_repo = self.get_repository(Collection.USER_ACTIONS)
-        job_repo = self.get_repository(
-            Collection.JOBS, self.request_scope, self.company_id
-        )
-        live_jobs = job_repo.get_count(repo_filters=query, is_live=True)
-        results, _ = user_action_repo.query(
-            repo_filters=query, company_id=self.company_id
-        )
-        actions_as_timeseries = get_actions_as_daily_timeseries(results, self.averaging)
-        action_summary = {
-            key: sum(actions_as_timeseries.get(key, {}).values())
-            for key in [
-                UserEvent.USER_VIEWS_JOBS,
-                UserEvent.USER_CLICKS_JOB,
-                UserEvent.USER_SAVES_JOB,
-                UserEvent.USER_APPLIES_JOB,
-            ]
-        }
-        average_click_rate_percent = get_perecent(
-            action_summary[UserEvent.USER_CLICKS_JOB],
-            action_summary[UserEvent.USER_VIEWS_JOBS],
-        )
-        average_save_rate_percent = get_perecent(
-            action_summary[UserEvent.USER_SAVES_JOB],
-            action_summary[UserEvent.USER_VIEWS_JOBS],
-        )
-        average_apply_rate_percent = get_perecent(
-            action_summary[UserEvent.USER_APPLIES_JOB],
-            action_summary[UserEvent.USER_VIEWS_JOBS],
-        )
-        output = CompanyDashboardJobPostStatistics(
-            active_jobs=live_jobs,
-            sum_job_views=action_summary[UserEvent.USER_VIEWS_JOBS],
-            average_click_rate_percent=average_click_rate_percent,
-            average_save_rate_percent=average_save_rate_percent,
-            average_apply_rate_percent=average_apply_rate_percent,
-            views_over_time=actions_as_timeseries.get(UserEvent.USER_VIEWS_JOBS, {}),
-            clicks_over_time=actions_as_timeseries.get(UserEvent.USER_CLICKS_JOB, {}),
-            saves_over_time=actions_as_timeseries.get(UserEvent.USER_SAVES_JOB, {}),
-            applications_over_time=actions_as_timeseries.get(
-                UserEvent.USER_APPLIES_JOB, {}
-            ),
-        )
-        output.recommendations = output.generate_recommendation()
-        return output

@@ -1,4 +1,4 @@
-from ajb.base import BaseUseCase, RequestScope, Collection
+from ajb.base import BaseUseCase, Collection
 from ajb.contexts.users.models import User
 from ajb.vendor.clerk.models import SimpleClerkCreateUser, ClerkCreateUser
 from ajb.vendor.clerk.repository import ClerkAPIRepository
@@ -8,23 +8,17 @@ from ajb.contexts.webhooks.users.usecase import (
     ClerkUserWebhookType,
     ClerkUser,
 )
+from ajb.contexts.companies.recruiters.models import (
+    CreateRecruiter,
+    RecruiterRole,
+    Recruiter,
+)
 from ajb.exceptions import AdminCreateUserException
-from ajb.vendor.algolia.repository import AlgoliaSearchRepository, AlgoliaIndex
 
-from .models import User, UpdateUser, AlgoliaCandidateSearch
+from .models import User
 
 
 class UserUseCase(BaseUseCase):
-    def __init__(
-        self,
-        request_scope: RequestScope,
-        algolia_users: AlgoliaSearchRepository | None = None,
-    ):
-        self.request_scope = request_scope
-        self.algolia_users = algolia_users or AlgoliaSearchRepository(
-            AlgoliaIndex.CANDIDATES
-        )
-
     def admin_create_user(
         self, new_user: SimpleClerkCreateUser, force_if_exists: bool = False
     ) -> User:
@@ -61,27 +55,16 @@ class UserUseCase(BaseUseCase):
             raise AdminCreateUserException
         return response
 
-    def make_user_information_public(self, user_id: str):
-        user = self.get_repository(Collection.USERS).update_fields(
-            user_id, profile_is_public=True
+    def admin_adds_user_to_company(
+        self, user_id: str, company_id: str, role: RecruiterRole
+    ) -> Recruiter:
+        recruiter_repo = self.get_repository(
+            Collection.COMPANY_RECRUITERS, self.request_scope, company_id
         )
-        self.algolia_users.create_object(
-            user.id, AlgoliaCandidateSearch.convert_from_user(user).model_dump()
+        return recruiter_repo.create(
+            CreateRecruiter(
+                role=role,
+                user_id=user_id,
+                company_id=company_id,
+            )
         )
-
-    def make_user_information_private(self, user_id: str):
-        self.get_repository(Collection.USERS).update_fields(
-            user_id, profile_is_public=False
-        )
-        self.algolia_users.delete_object(user_id)
-
-    def update_user(self, user_id: str, updates: UpdateUser) -> User:
-        user_repo = self.get_repository(Collection.USERS)
-        updated_user: User = user_repo.update(user_id, updates)
-        updated_user = user_repo.update_fields(
-            user_id, candidate_score=updated_user.get_candidate_score()
-        )
-        self.algolia_users.update_object(
-            user_id, AlgoliaCandidateSearch.convert_from_user(updated_user).model_dump()
-        )
-        return updated_user

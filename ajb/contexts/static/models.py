@@ -21,8 +21,7 @@ class CreateStaticData(BaseModel):
     type: StaticDataTypes
 
 
-class StaticData(CreateStaticData, BaseDataModel):
-    ...
+class StaticData(CreateStaticData, BaseDataModel): ...
 
 
 @dataclass

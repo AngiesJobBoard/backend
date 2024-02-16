@@ -3,7 +3,7 @@ import secrets
 import pytest
 
 from ajb.exceptions import EntityNotFound
-from ajb.contexts.users.models import CreateUser, UpdateUser
+from ajb.contexts.users.models import CreateUser
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.users.usecase import UserUseCase
 from ajb.contexts.webhooks.users.usecase import WebhookUserUseCase
@@ -15,8 +15,6 @@ from ajb.vendor.clerk.models import (
 )
 from ajb.vendor.clerk.mock import mock_clerk_user
 from ajb.exceptions import AdminCreateUserException
-
-from ajb.fixtures.users import UserFixture
 
 
 @pytest.fixture(scope="function")
@@ -138,33 +136,3 @@ def test_bad_type_output(request_scope):
                 ),
                 force_if_exists=True,
             )
-
-
-def test_make_user_public(request_scope, mock_aloglia_users):
-    user = UserFixture(request_scope).create_user()
-    usecase = UserUseCase(request_scope, mock_aloglia_users)
-    usecase.make_user_information_public(user.id)
-    assert user.id in usecase.algolia_users.client.index.local_items  # type: ignore
-
-
-def test_make_user_private(request_scope, mock_aloglia_users):
-    user = UserFixture(request_scope).create_user()
-    usecase = UserUseCase(request_scope, mock_aloglia_users)
-    usecase.make_user_information_public(user.id)
-    assert user.id in usecase.algolia_users.client.index.local_items  # type: ignore
-    usecase.make_user_information_private(user.id)
-    assert user.id not in usecase.algolia_users.client.index.local_items  # type: ignore
-
-
-def test_update_user(request_scope, mock_aloglia_users):
-    user = UserFixture(request_scope).create_user()
-    usecase = UserUseCase(request_scope, mock_aloglia_users)
-    usecase.make_user_information_public(user.id)
-    assert usecase.algolia_users.client.index.local_items[user.id]["first_name"] == user.first_name  # type: ignore
-    usecase.update_user(
-        user.id,
-        UpdateUser(
-            first_name="Bob",
-        ),
-    )
-    assert usecase.algolia_users.client.index.local_items[user.id]["first_name"] == "Bob"  # type: ignore

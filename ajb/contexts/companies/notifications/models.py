@@ -16,8 +16,7 @@ class CreateCompanyNotification(BaseModel):
     is_read: bool = False
 
 
-class CompanyNotification(CreateCompanyNotification, BaseDataModel):
-    ...
+class CompanyNotification(CreateCompanyNotification, BaseDataModel): ...
 
 
 @dataclass

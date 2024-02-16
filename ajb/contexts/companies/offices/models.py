@@ -21,8 +21,7 @@ class CreateOffice(UserCreateOffice):
     company_id: str
 
 
-class Office(BaseDataModel, CreateOffice):
-    ...
+class Office(BaseDataModel, CreateOffice): ...
 
 
 @dataclass

@@ -3,8 +3,8 @@ from ajb.contexts.users.models import CreateUser, User
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.admin.users.repository import AdminUserRepository
 from ajb.contexts.admin.users.models import CreateAdminUser, AdminRoles
-from ajb.contexts.users.resumes.models import Resume, CreateResume
-from ajb.contexts.users.resumes.repository import ResumeRepository
+from ajb.contexts.resumes.models import Resume, CreateResume
+from ajb.contexts.resumes.repository import ResumeRepository
 
 
 class UserFixture:
@@ -42,8 +42,8 @@ class UserFixture:
         )
         return created_user
 
-    def create_resume_for_user(self, user_id: str) -> Resume:
-        return ResumeRepository(self.request_scope, user_id).create(
+    def create_resume_for_user(self) -> Resume:
+        return ResumeRepository(self.request_scope).create(
             CreateResume(
                 remote_file_path="test", resume_url="nice.com", file_name="test"
             )

@@ -11,10 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from ajb.vendor.sentry import initialize_sentry
 from ajb.config.settings import SETTINGS
 
-from api.contexts.search.jobs import router as search_jobs_router
-from api.contexts.search.companies import router as search_companies_router
-from api.contexts.search.candidates import router as search_candidates_router
-
 from api.contexts.admin.search import router as admin_search_router
 from api.contexts.admin.admin_users import router as admin_users_router
 from api.contexts.admin.admin_jobs import router as admin_jobs_router
@@ -22,10 +18,6 @@ from api.contexts.admin.admin_actions import router as admin_actions_router
 
 from api.contexts.users.users import router as users_router
 from api.contexts.users.resume import router as resume_router
-from api.contexts.users.cover_letters import router as cover_letter_router
-from api.contexts.users.cover_letter_helper import router as cover_letter_helper_router
-from api.contexts.users.applications import router as applications_router
-from api.contexts.users.notifications import router as user_notifications_router
 
 from api.contexts.companies.dashboard import router as company_dashboard_router
 from api.contexts.companies.companies import router as companies_router
@@ -34,7 +26,6 @@ from api.contexts.companies.recruiters import router as recruiters_router
 from api.contexts.companies.offices import router as offices_router
 from api.contexts.companies.jobs import router as jobs_router
 from api.contexts.companies.job_templates import router as job_templates_router
-from api.contexts.companies.save_candidates import router as save_candidates_router
 from api.contexts.companies.applications import router as company_applications_router
 from api.contexts.companies.notifications import router as company_notifications_router
 from api.contexts.companies.description_generator import (
@@ -64,15 +55,8 @@ app = FastAPI(
 
 initialize_sentry()
 
-app.include_router(search_jobs_router)
-app.include_router(search_companies_router)
-app.include_router(search_candidates_router)
 app.include_router(users_router)
 app.include_router(resume_router)
-app.include_router(cover_letter_router)
-app.include_router(cover_letter_helper_router)
-app.include_router(applications_router)
-app.include_router(user_notifications_router)
 
 app.include_router(company_dashboard_router)
 app.include_router(companies_router)
@@ -81,7 +65,6 @@ app.include_router(recruiters_router)
 app.include_router(offices_router)
 app.include_router(jobs_router)
 app.include_router(job_templates_router)
-app.include_router(save_candidates_router)
 app.include_router(company_applications_router)
 app.include_router(company_notifications_router)
 app.include_router(description_generator_router)

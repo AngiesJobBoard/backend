@@ -57,11 +57,6 @@ class FileUpload(BaseModel):
     file_data: bytes
 
 
-class JobSkill(BaseModel):
-    skill_name: str
-    must_have: bool
-
-
 def convert_pay_to_hourly(pay_amount: float, pay_type: PayType) -> float:
     if pay_type == PayType.HOURLY:
         return pay_amount
@@ -81,16 +76,7 @@ class Pay(BaseModel):
     pay_min: int
     pay_max: int
     exact_pay: int | None = None
-    includes_bonus: bool | None = None
-    includes_commission: bool | None = None
-    includes_equity: bool | None = None
-    includes_tips: bool | None = None
-    includes_vacation: bool | None = None
-    included_vacation_days: int | None = None
-    includes_relocation: bool | None = None
-    max_included_relocation_amount: int | None = None
-    includes_signing_bonus: bool | None = None
-    max_included_signing_bonus_amount: int | None = None
+    additional_metadata: dict[str, str] | None = None
 
     @property
     def min_pay_as_hourly(self) -> float:
@@ -114,11 +100,9 @@ class ExperienceLevel(str, Enum):
 
 class JobLocationType(str, Enum):
     REMOTE = "Remote"
-    WITHIN_TEN_MILES = "Within 10 Miles"
-    WITHIN_FIFTY_MILES = "Within 50 Miles"
-    WITHIN_ONE_HUNDRED_MILES = "Within 100 Miles"
-    ON_THE_ROAD = "On the Road"
+    IN_OFFICE = "In Office"
     HYBRID = "Hybrid"
+    ON_THE_ROAD = "On the Road"
 
 
 class DataReducedJob(BaseDataModel):

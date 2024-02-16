@@ -8,11 +8,6 @@ from ajb.contexts.admin.search.models import (
     AdminTimeseriesSearch,
 )
 from ajb.contexts.users.repository import UserRepository
-from ajb.contexts.applications.models import (
-    PaginatedUserApplicationView,
-    ApplicationStatus,
-)
-from ajb.contexts.applications.repository import UserApplicationRepository
 from ajb.base import (
     PaginatedResponse,
     build_pagination_response,
@@ -69,38 +64,6 @@ def search_users(request: Request, query: QueryFilterParams = Depends()):
         query.page_size,
         request.url._url,
         PaginatedDataReducedUser,
-    )
-
-
-@router.get("/search/users/applications", response_model=PaginatedUserApplicationView)
-def get_all_user_applications(
-    request: Request,
-    user_id: str | None = None,
-    application_id: str | None = None,
-    job_id: str | None = None,
-    job_title: str | None = None,
-    company_name: str | None = None,
-    application_status: ApplicationStatus | None = None,
-    query: QueryFilterParams = Depends(),
-):
-    """Gets all applications"""
-    results = UserApplicationRepository(
-        request.state.request_scope
-    ).get_candidate_view_list(
-        user_id,
-        application_id,
-        job_id,
-        job_title,
-        company_name,
-        application_status,
-        query,
-    )
-    return build_pagination_response(
-        results,
-        query.page,
-        query.page_size,
-        request.url._url,
-        PaginatedUserApplicationView,
     )
 
 

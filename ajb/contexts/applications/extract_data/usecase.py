@@ -1,5 +1,5 @@
 from ajb.base import BaseUseCase, Collection
-from ajb.contexts.users.resumes.models import Resume
+from ajb.contexts.resumes.models import Resume
 from ajb.vendor.pdf_plumber import extract_pdf_text_by_url
 
 from .ai_extractor import AIResumeExtractor, ExtractedResume

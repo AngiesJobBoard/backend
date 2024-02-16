@@ -9,10 +9,9 @@ from ajb.base import (
 )
 from ajb.base.events import SourceServices
 from ajb.exceptions import EntityNotFound
-from ajb.vendor.arango.models import Join, Filter, Operator
+from ajb.vendor.arango.models import Join, Filter
 from ajb.utils import generate_random_short_code
 from ajb.contexts.companies.events import CompanyEventProducer
-from ajb.contexts.applications.enumerations import USER_UPDATE
 
 from .models import (
     UserCreatedApplication,
@@ -20,7 +19,6 @@ from .models import (
     CreateRecruiterNote,
     RecruiterNote,
     CompanyApplicationView,
-    UserApplicationView,
     ApplicationStatusRecord,
 )
 from .enumerations import ApplicationStatus
@@ -223,110 +221,6 @@ class CompanyApplicationRepository(ApplicationRepository):
             ),
         )
         return cursor.count() or 0
-
-
-class UserApplicationRepository(ApplicationRepository):
-    def _user_get_application(self, user_id: str, application_id: str):
-        original_application = self.get(application_id)
-        if original_application.user_id != user_id:
-            raise EntityNotFound(NOT_FOUND_TEXT)
-        return original_application
-
-    def candidate_updates_application(
-        self, user_id: str, application_id: str, new_status: USER_UPDATE
-    ):
-        assert self._user_get_application(user_id, application_id)
-        return self.update_fields(application_id, application_status=new_status)
-
-    def get_candidate_view_list(
-        self,
-        user_id: str | None = None,
-        application_id: str | None = None,
-        job_id: str | None = None,
-        job_title: str | None = None,
-        company_name: str | None = None,
-        application_status: ApplicationStatus | None = None,
-        query: QueryFilterParams = QueryFilterParams(),
-    ):
-        repo_filters = query.convert_to_repo_filters()
-        if user_id:
-            repo_filters.filters.append(Filter(field="user_id", value=user_id))
-        if application_id:
-            repo_filters.filters.append(Filter(field="_key", value=application_id))
-        if job_id:
-            repo_filters.filters.append(
-                Filter(field="_key", value=job_id, collection_alias="job")
-            )
-        if job_title:
-            repo_filters.filters.append(
-                Filter(
-                    field="position_title",
-                    operator=Operator.CONTAINS,
-                    value=job_title,
-                    collection_alias="job",
-                )
-            )
-        if company_name:
-            repo_filters.filters.append(
-                Filter(
-                    field="name",
-                    operator=Operator.CONTAINS,
-                    value=company_name,
-                    collection_alias="company",
-                )
-            )
-        if application_status:
-            repo_filters.filters.append(
-                Filter(field="application_status", value=application_status)
-            )
-        return self.query_with_joins(
-            joins=[
-                Join(
-                    to_collection_alias="company",
-                    to_collection="companies",
-                    from_collection_join_attr="company_id",
-                ),
-                Join(
-                    to_collection_alias="job",
-                    to_collection="jobs",
-                    from_collection_join_attr="job_id",
-                ),
-                Join(
-                    to_collection_alias="resume",
-                    to_collection="resumes",
-                    from_collection_join_attr="resume_id",
-                ),
-            ],
-            repo_filters=repo_filters,
-            return_model=UserApplicationView,
-        )
-
-    def get_candidate_view_single(self, user_id: str, application_id: str):
-        result = self.get_with_joins(
-            id=application_id,
-            joins=[
-                Join(
-                    to_collection_alias="company",
-                    to_collection="companies",
-                    from_collection_join_attr="company_id",
-                ),
-                Join(
-                    to_collection_alias="job",
-                    to_collection="jobs",
-                    from_collection_join_attr="job_id",
-                ),
-                Join(
-                    to_collection_alias="resume",
-                    to_collection="resumes",
-                    from_collection_join_attr="resume_id",
-                ),
-            ],
-            return_model=UserApplicationView,
-        )
-        casted_result = t.cast(UserApplicationView, result)  # type: ignore
-        if casted_result.user_id != user_id:
-            raise EntityNotFound(NOT_FOUND_TEXT)
-        return result
 
 
 RepositoryRegistry.register(ApplicationRepository)

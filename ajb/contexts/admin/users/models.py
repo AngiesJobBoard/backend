@@ -22,8 +22,7 @@ class CreateAdminUser(UserCreateAdminUser):
     user_id: str
 
 
-class AdminUser(BaseDataModel, CreateAdminUser):
-    ...
+class AdminUser(BaseDataModel, CreateAdminUser): ...
 
 
 @dataclass

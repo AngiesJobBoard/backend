@@ -1,9 +1,16 @@
+from datetime import datetime
 from pydantic import BaseModel
 from ajb.base.models import RequestScope
-from ajb.contexts.applications.usecase import ApplicationsUseCase
-from ajb.contexts.applications.models import UserCreatedApplication, Application
+from ajb.contexts.applications.repository import ApplicationRepository
+from ajb.contexts.applications.models import (
+    UserCreatedApplication,
+    Application,
+    Qualifications,
+    WorkHistory,
+    Education,
+)
 from ajb.contexts.users.models import User
-from ajb.contexts.users.resumes.models import Resume
+from ajb.contexts.resumes.models import Resume
 from ajb.contexts.companies.models import Company
 from ajb.contexts.companies.jobs.models import Job
 from ajb.fixtures.companies import CompanyFixture
@@ -13,7 +20,6 @@ from ajb.fixtures.users import UserFixture
 class ApplicationData(BaseModel):
     application: Application
     admin: User
-    user: User
     resume: Resume
     company: Company
     job: Job
@@ -29,23 +35,56 @@ class ApplicationFixture:
         job = company_fixture.create_company_job(company.id)
 
         user_fixture = UserFixture(self.request_scope)
-        applying_user = user_fixture.create_user(email="apply@email.com")
-        resume = user_fixture.create_resume_for_user(applying_user.id)
+        resume = user_fixture.create_resume_for_user()
 
-        usecase = ApplicationsUseCase(self.request_scope)
-        application = usecase.user_creates_application(
-            applying_user.id,
+        application_repo = ApplicationRepository(self.request_scope)
+
+        application = application_repo.create(
             UserCreatedApplication(
+                applying_user_email="apply@email.com",
                 company_id=company.id,
                 job_id=job.id,
                 resume_id=resume.id,
-            ),
+                cover_letter_content="Nice Cover Letter",
+                qualifications=Qualifications(
+                    most_recent_job=WorkHistory(
+                        job_title="Software Engineer",
+                        company_name="Test Company",
+                        job_industry="Tech",
+                        still_at_job=True,
+                        start_date=datetime(2023, 1, 1),
+                    ),
+                    work_history=[
+                        WorkHistory(
+                            job_title="Software Intern",
+                            company_name="Test Company",
+                            job_industry="Tech",
+                            still_at_job=False,
+                            start_date=datetime(2022, 1, 1),
+                            end_date=datetime(2023, 1, 1),
+                        )
+                    ],
+                    education=[
+                        Education(
+                            school_name="Test University",
+                            level_of_education="Bachelor's",
+                            field_of_study="Computer Science",
+                            still_in_school=False,
+                            start_date=datetime(2019, 1, 1),
+                            end_date=datetime(2023, 1, 1),
+                        )
+                    ],
+                    skills=["Python", "Django", "React"],
+                    licenses=["Driver's License"],
+                    certifications=["AWS Certified"],
+                    language_proficiencies=["English", "Spanish"],
+                ),
+            )
         )
 
         return ApplicationData(
             application=application,
             admin=admin,
-            user=applying_user,
             resume=resume,
             company=company,
             job=job,

@@ -17,24 +17,18 @@ class Collection(str, Enum):
     # Users (or candidates )
 
     USERS = "users"
-    USER_SAVED_COMPANIES = "user_saved_companies"
-    USER_SAVED_JOBS = "user_saved_jobs"
-    USER_ACTIONS = "user_actions"
-    COVER_LETTERS = "cover_letters"
-    RESUMES = "resumes"
-    USER_NOTIFICATIONS = "user_notifications"
 
     # Companies
 
     COMPANIES = "companies"
     COMPANY_RECRUITERS = "company_recruiters"
     COMPANY_ACTIONS = "company_actions"
-    COMPANY_SAVES_CANDIDATES = "company_saves_candidates"
     RECRUITER_INVITATIONS = "recruiter_invitations"
     JOBS = "jobs"
     JOB_TEMPLATES = "job_templates"
     COMPANY_OFFICES = "company_offices"
     APPLICATIONS = "applications"
+    RESUMES = "resumes"
     COMPANY_NOTIFICATIONS = "company_notifications"
 
     # System
@@ -42,8 +36,6 @@ class Collection(str, Enum):
 
     # Admin entities
     ADMIN_USERS = "admin_users"
-    ADMIN_JOB_APPROVALS = "admin_job_approvals"
-    ADMIN_ACCESS = "admin_access"
 
     # Static content
     STATIC_DATA = "static_data"
@@ -59,7 +51,6 @@ class View(str, Enum):
 
     JOBS_VIEW = "jobs_view"
     USERS_VIEW = "users_view"
-    COMPANIES_VIEW = "companies_view"
     APPLICANTS_VIEW = "applicants_view"
     STATIC_DATA_VIEW = "static_data_view"
 
@@ -99,18 +90,6 @@ VIEW_DEFINITIONS: dict[View, ViewProperties] = {
         name=View.USERS_VIEW.value,
         links={
             Collection.USERS: ViewLink(
-                analyzers=[Analyzer.IDENTITY],
-                fields={},
-                includeAllFields=True,
-                storeValues="none",
-                trackListPositions=False,
-            ),
-        },
-    ),
-    View.COMPANIES_VIEW: ViewProperties(
-        name=View.COMPANIES_VIEW.value,
-        links={
-            Collection.COMPANIES: ViewLink(
                 analyzers=[Analyzer.IDENTITY],
                 fields={},
                 includeAllFields=True,

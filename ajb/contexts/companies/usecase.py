@@ -1,33 +1,19 @@
 from ajb.base import (
     BaseUseCase,
     Collection,
-    RequestScope,
-    ValidationException,
 )
 from ajb.exceptions import CompanyCreateException
 from ajb.contexts.companies.recruiters.models import CreateRecruiter, RecruiterRole
 from ajb.contexts.users.models import User
-from ajb.vendor.algolia.repository import AlgoliaSearchRepository, AlgoliaIndex
 from ajb.base.events import (
     SourceServices,
 )
 
-from .models import UserCreateCompany, CreateCompany, Company, UpdateCompany
-from .rules import CompanyCreationRuleSet
+from .models import UserCreateCompany, CreateCompany, Company
 from .events import CompanyEventProducer
 
 
 class CompaniesUseCase(BaseUseCase):
-    def __init__(
-        self,
-        request_scope: RequestScope,
-        algolia_companies: AlgoliaSearchRepository | None = None,
-    ):
-        self.request_scope = request_scope
-        self.algolia_companies = algolia_companies or AlgoliaSearchRepository(
-            AlgoliaIndex.COMPANIES
-        )
-
     def user_create_company(
         self, data: UserCreateCompany, creating_user_id: str
     ) -> Company:
@@ -42,12 +28,10 @@ class CompaniesUseCase(BaseUseCase):
             if not slug_provided:
                 data.slug = data.name.lower().replace(" ", "-")
 
-            # Run ruleset on creating company
-            try:
-                CompanyCreationRuleSet(company_repo, data.slug).run(
-                    raise_exception=True
-                )
-            except ValidationException:
+            # Check if the company name or slug has been taken
+            slug_results = company_repo.query(slug=data.slug)
+            name_results = company_repo.query(name=data.name)
+            if slug_results[0] or name_results[0]:
                 raise CompanyCreateException("Company Name or Slug Taken")
 
             user: User = self.get_object(Collection.USERS, creating_user_id)
@@ -89,19 +73,3 @@ class CompaniesUseCase(BaseUseCase):
             user_id=user_id
         )
         return company_repo.get_many_by_id([record.company_id for record in recruiter_records])  # type: ignore
-
-    def delete_company(self, company_id: str):
-        self.get_repository(Collection.COMPANIES).delete(company_id)
-        CompanyEventProducer(
-            request_scope=self.request_scope, source_service=SourceServices.API
-        ).company_delete_event(company_id)
-        return True
-
-    def update_company(self, company_id: str, company: UpdateCompany) -> Company:
-        updated_company = self.get_repository(Collection.COMPANIES).update(
-            company_id, company
-        )
-        CompanyEventProducer(
-            request_scope=self.request_scope, source_service=SourceServices.API
-        ).company_is_updated(updated_company)
-        return updated_company

@@ -19,8 +19,7 @@ class CreateRecruiter(UserCreateRecruiter):
     send_email_message_updates: bool = True
 
 
-class Recruiter(CreateRecruiter, BaseDataModel):
-    ...
+class Recruiter(CreateRecruiter, BaseDataModel): ...
 
 
 class RecruiterAndUser(Recruiter):

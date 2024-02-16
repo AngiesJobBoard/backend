@@ -1,16 +1,13 @@
 from fastapi import APIRouter, Request, Depends, UploadFile, File
 
 from ajb.base import QueryFilterParams, build_pagination_response
-from ajb.contexts.users.resumes.models import (
+from ajb.contexts.resumes.models import (
     UserCreateResume,
     Resume,
     ResumePaginatedResponse,
 )
-from ajb.contexts.users.resumes.repository import ResumeRepository
-from ajb.contexts.users.resumes.usecase import ResumeUseCase
-from ajb.contexts.users.resumes.extract_data.usecase import ResumeExtractorUseCase
-from ajb.contexts.users.resumes.extract_data.ai_extractor import ExtractedResume
-from ajb.contexts.users.resumes.suggestions.usecase import ResumeSuggestorUseCase
+from ajb.contexts.resumes.repository import ResumeRepository
+from ajb.contexts.resumes.usecase import ResumeUseCase
 
 from api.vendors import storage
 
@@ -64,18 +61,4 @@ def delete_resume(resume_id: str, request: Request):
     """Deletes a resume by id for the current user"""
     return ResumeUseCase(request.state.request_scope).delete_user_resume(
         request.state.request_scope.user_id, resume_id
-    )
-
-
-@router.get("/{resume_id}/extract", response_model=ExtractedResume)
-def extract_resume_data(request: Request, resume_id: str):
-    return ResumeExtractorUseCase(
-        request.state.request_scope
-    ).extract_resume_information(resume_id)
-
-
-@router.get("/{resume_id}/suggest")
-def suggested_resume_improvements(request: Request, resume_id: str):
-    return ResumeSuggestorUseCase(request.state.request_scope).create_resume_suggestion(
-        resume_id
     )

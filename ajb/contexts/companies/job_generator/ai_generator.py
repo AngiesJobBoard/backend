@@ -1,21 +1,23 @@
 from ajb.common.models import PreferredTone
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.common.models import ExperienceLevel, JobLocationType
-from ajb.contexts.companies.jobs.models import UserCreateJob, JobSkill
+from ajb.contexts.companies.jobs.models import UserCreateJob
 
 
 class AIJobGenerator:
     def __init__(self, openai: OpenAIRepository | None = None):
         self.openai = openai or OpenAIRepository()
 
-    def generate_job_from_description(self, description: str) -> UserCreateJob:
+    def generate_job_from_description(
+        self, description: str, preferred_tone: PreferredTone = PreferredTone.funny
+    ) -> UserCreateJob:
         job_keys = [
             "position_title as str",
             "industry_category as str",
             "industry_subcategories as list[str]",
             "experience_required as str",
             "required_job_skills as list[str]",
-            "description as str",
+            f"description as str in the following tone: {preferred_tone.value}",
             "location_type as str",
         ]
         response = self.openai.json_prompt(
@@ -28,20 +30,13 @@ class AIJobGenerator:
             Keys: {job_keys}.
             Description: {description}.
             """,
-            max_tokens=2000,
+            max_tokens=4096,
         )
         created_job = UserCreateJob(
             position_title=response["position_title"].title(),
             description=response["description"],
             experience_required=response["experience_required"],
-            required_job_skills=(
-                [
-                    JobSkill(skill_name=skill, must_have=True)
-                    for skill in response["required_job_skills"]
-                ]
-                if response["required_job_skills"]
-                else None
-            ),
+            required_job_skills=response["required_job_skills"],
             location_type=response["location_type"],
             industry_category=response["industry_category"],
             industry_subcategories=response["industry_subcategories"],
@@ -61,11 +56,7 @@ class AIJobGenerator:
             "experience_required": (
                 job.experience_required.value if job.experience_required else None
             ),
-            "required_job_skills": (
-                [skill.skill_name for skill in job.required_job_skills]
-                if job.required_job_skills
-                else None
-            ),
+            "required_job_skills": job.required_job_skills,
             "location_type": job.location_type.value if job.location_type else None,
         }
         # Remove null values from dict
