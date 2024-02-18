@@ -86,11 +86,15 @@ class UserCreatedApplication(BaseModel):
                 name=record["name"],
                 email=record["email"],
                 phone=record.get("phone"),
-                user_location=GeneralLocation(
-                    city=record["city"],
-                    state=record["state"],
-                    country=record["country"],
-                ) if record.get("city") else None
+                user_location=(
+                    GeneralLocation(
+                        city=record["city"],
+                        state=record["state"],
+                        country=record["country"],
+                    )
+                    if record.get("city")
+                    else None
+                ),
             ),
             qualifications=Qualifications(
                 most_recent_job=WorkHistory(
@@ -109,11 +113,27 @@ class UserCreatedApplication(BaseModel):
                         end_date=record.get("education_end_date_1"),
                     )
                 ],
-                skills=record.get("skills", "").split(",") if record.get("skills") else None,
-                licenses=record.get("licenses", "").split(",") if record.get("licenses") else None,
-                certifications=record.get("certifications", "").split(",") if record.get("certifications") else None,
-                language_proficiencies=record.get("language_proficiencies", "").split(",") if record.get("language_proficiencies") else None,
-            )
+                skills=(
+                    record.get("skills", "").split(",")
+                    if record.get("skills")
+                    else None
+                ),
+                licenses=(
+                    record.get("licenses", "").split(",")
+                    if record.get("licenses")
+                    else None
+                ),
+                certifications=(
+                    record.get("certifications", "").split(",")
+                    if record.get("certifications")
+                    else None
+                ),
+                language_proficiencies=(
+                    record.get("language_proficiencies", "").split(",")
+                    if record.get("language_proficiencies")
+                    else None
+                ),
+            ),
         )
 
 

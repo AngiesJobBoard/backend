@@ -13,7 +13,10 @@ from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
     ApplicationStatusRecord,
 )
-from ajb.contexts.applications.repository import CompanyApplicationRepository, ApplicationRepository
+from ajb.contexts.applications.repository import (
+    CompanyApplicationRepository,
+    ApplicationRepository,
+)
 
 
 router = APIRouter(
@@ -55,9 +58,7 @@ def delete_company_application(request: Request, company_id: str, application_id
     # First make sure that the application exists for this company
     application = ApplicationRepository(request.state.request_scope).get(application_id)
     assert application.company_id == company_id
-    return ApplicationRepository(request.state.request_scope).delete(
-        application_id
-    )
+    return ApplicationRepository(request.state.request_scope).delete(application_id)
 
 
 @router.patch("/{application_id}/add-shortlist")

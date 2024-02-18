@@ -1,12 +1,5 @@
 from io import StringIO
-from fastapi import (
-    APIRouter,
-    Request,
-    Depends,
-    UploadFile,
-    File,
-    HTTPException
-)
+from fastapi import APIRouter, Request, Depends, UploadFile, File, HTTPException
 import pandas as pd
 
 from ajb.base import QueryFilterParams, build_pagination_response
@@ -86,12 +79,16 @@ async def create_jobs_from_csv_data(
 
 
 @router.post("/{job_id}/csv-upload")
-async def upload_applications_from_csv(request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)):
-    print(f"Uploading applications for company {company_id} and job {job_id}\n\n{files}\n\n")
+async def upload_applications_from_csv(
+    request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)
+):
+    print(
+        f"Uploading applications for company {company_id} and job {job_id}\n\n{files}\n\n"
+    )
     files_processed = 0
     application_repo = ApplicationRepository(request.state.request_scope)
     for file in files:
-        if file and file.filename and not file.filename.endswith('.csv'):
+        if file and file.filename and not file.filename.endswith(".csv"):
             continue
         content = await file.read()
         content = content.decode("utf-8")
@@ -101,8 +98,7 @@ async def upload_applications_from_csv(request: Request, company_id: str, job_id
         raw_candidates = df.to_dict(orient="records")
         candidates = [
             UserCreatedApplication.from_csv_record(company_id, job_id, candidate)
-            for candidate
-            in raw_candidates
+            for candidate in raw_candidates
         ]
         application_repo.create_many(candidates)
         files_processed += 1
