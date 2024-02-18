@@ -82,7 +82,7 @@ app.include_router(admin_actions_router)
 app.include_router(health_router)
 
 
-origins = ["*"]
+origins = ["http://localhost:3000", "https://matcher.ajbdevelopment.com"]
 
 app.add_middleware(
     CORSMiddleware,
