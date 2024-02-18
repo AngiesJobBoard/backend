@@ -8,6 +8,7 @@ from ajb.contexts.applications.models import (
     Qualifications,
     WorkHistory,
     Education,
+    ContactInformation
 )
 from ajb.contexts.users.models import User
 from ajb.contexts.resumes.models import Resume
@@ -41,11 +42,15 @@ class ApplicationFixture:
 
         application = application_repo.create(
             UserCreatedApplication(
-                applying_user_email="apply@email.com",
                 company_id=company.id,
                 job_id=job.id,
                 resume_id=resume.id,
                 cover_letter_content="Nice Cover Letter",
+                contact_information=ContactInformation(
+                    email="nice@email.com",
+                    name="Nice Name",
+                    phone="123-456-7890",
+                ),
                 qualifications=Qualifications(
                     most_recent_job=WorkHistory(
                         job_title="Software Engineer",

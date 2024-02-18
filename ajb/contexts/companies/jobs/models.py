@@ -104,10 +104,7 @@ class UserCreateJob(BaseModel):
             "ongoing_recruitment",
             "ideal_days_to_hire",
             "internal_reference_code",
-            "job_associated_company_description",
             "job_tags",
-            "application_settings",
-            "application_questions",
             "desired_start_date",
         }
         return self.model_dump(exclude=company_fields)
@@ -116,7 +113,7 @@ class UserCreateJob(BaseModel):
         weights = {
             "position_title": 10,
             "description": 10,
-            "industry_category": 10,
+            "industry_category": 13,
             "schedule": 5,
             "experience_required": 6,
             "location_type": 10,
@@ -126,7 +123,7 @@ class UserCreateJob(BaseModel):
             "on_job_training_offered": 2,
             "weekly_day_range": 3,
             "shift_type": 3,
-            "pay": 5,
+            "pay": 8,
             "language_requirements": 4,
             "background_check_required": 2,
             "drug_test_required": 2,
@@ -135,8 +132,6 @@ class UserCreateJob(BaseModel):
             "ideal_days_to_hire": 2,
             "internal_reference_code": 1,
             "job_associated_company_description": 4,
-            "application_settings": 3,
-            "application_questions": 3,
             "desired_start_date": 3,
         }
 

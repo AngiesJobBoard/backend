@@ -20,6 +20,8 @@ class AIApplicationMatcher:
 
     def _get_applicant_qualifications(self, application: Application):
         qualifications = application.qualifications
+        if not qualifications:
+            return {}
 
         return {
             "most_recent_job": (

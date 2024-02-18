@@ -17,6 +17,9 @@ class DemographicData(BaseModel):
 
 
 class ContactInformation(BaseModel):
+    name: str
+    email: str
+    phone: str | None = None
     user_location: GeneralLocation | None = None
 
 
@@ -67,12 +70,51 @@ class Qualifications(BaseModel):
 
 
 class UserCreatedApplication(BaseModel):
-    applying_user_email: str
     company_id: str
     job_id: str
     resume_id: str | None = None
     cover_letter_content: str | None = None
-    qualifications: Qualifications
+    qualifications: Qualifications | None = None
+    contact_information: ContactInformation
+
+    @classmethod
+    def from_csv_record(cls, company_id: str, job_id: str, record: dict):
+        return cls(
+            company_id=company_id,
+            job_id=job_id,
+            contact_information=ContactInformation(
+                name=record["name"],
+                email=record["email"],
+                phone=record.get("phone"),
+                user_location=GeneralLocation(
+                    city=record["city"],
+                    state=record["state"],
+                    country=record["country"],
+                ) if record.get("city") else None
+            ),
+            qualifications=Qualifications(
+                most_recent_job=WorkHistory(
+                    job_title=record["most_recent_job_title"],
+                    company_name=record["most_recent_company_name"],
+                    start_date=record.get("most_recent_start_date"),
+                    end_date=record.get("most_recent_end_date"),
+                ),
+                work_history=[],
+                education=[
+                    Education(
+                        school_name=record["school_name_1"],
+                        level_of_education=record["education_level_1"],
+                        field_of_study=record["field_of_study_1"],
+                        start_date=record.get("education_start_date_1"),
+                        end_date=record.get("education_end_date_1"),
+                    )
+                ],
+                skills=record.get("skills", "").split(",") if record.get("skills") else None,
+                licenses=record.get("licenses", "").split(",") if record.get("licenses") else None,
+                certifications=record.get("certifications", "").split(",") if record.get("certifications") else None,
+                language_proficiencies=record.get("language_proficiencies", "").split(",") if record.get("language_proficiencies") else None,
+            )
+        )
 
 
 class UserCreateRecruiterNote(BaseModel):
@@ -100,8 +142,7 @@ class ApplicationStatusRecord(CreateApplicationStatusUpdate):
 
 
 class CreateApplication(UserCreatedApplication):
-    user_id: str
-    application_status: ApplicationStatus
+    application_status: ApplicationStatus = ApplicationStatus.CREATED_BY_COMPANY
 
     application_status_history: list[ApplicationStatusRecord] = Field(
         default_factory=list
@@ -123,9 +164,6 @@ class PaginatedApplications(PaginatedResponse[Application]):
 
 
 class CompanyApplicationView(Application):
-    user: User
-    resume: Resume
-    qualifications: Qualifications
     job: DataReducedJob
 
 

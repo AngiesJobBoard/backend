@@ -8,7 +8,6 @@ from ajb.base.models import (
 
 def test_create_anonymous_scope(request_scope):
     anon_user = RequestScope.create_anonymous_user_scope(
-        user_agent="test",
         ip_address="test",
         db=request_scope.db,
     )

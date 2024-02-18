@@ -137,16 +137,6 @@ class CompanyApplicationRepository(ApplicationRepository):
         results, count = self.query_with_joins(
             joins=[
                 Join(
-                    to_collection_alias="user",
-                    to_collection="users",
-                    from_collection_join_attr="user_id",
-                ),
-                Join(
-                    to_collection_alias="resume",
-                    to_collection="resumes",
-                    from_collection_join_attr="resume_id",
-                ),
-                Join(
                     to_collection_alias="job",
                     to_collection="jobs",
                     from_collection_join_attr="job_id",
@@ -156,12 +146,6 @@ class CompanyApplicationRepository(ApplicationRepository):
             return_model=CompanyApplicationView,
         )
         casted_results = t.cast(list[CompanyApplicationView], results)
-        CompanyEventProducer(
-            self.request_scope, SourceServices.API
-        ).company_views_applications(
-            [result.id for result in casted_results],
-            query.page,
-        )
         return results, count
 
     def get_company_view_single(self, company_id: str, application_id: str):

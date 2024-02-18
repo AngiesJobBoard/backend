@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import (
+    APIRouter,
+    Request,
+    Depends,
+)
 
 from ajb.base import QueryFilterParams, build_pagination_response
 from ajb.contexts.applications.models import (
@@ -9,7 +13,7 @@ from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
     ApplicationStatusRecord,
 )
-from ajb.contexts.applications.repository import CompanyApplicationRepository
+from ajb.contexts.applications.repository import CompanyApplicationRepository, ApplicationRepository
 
 
 router = APIRouter(
@@ -43,6 +47,17 @@ def get_company_application(request: Request, company_id: str, application_id: s
     return CompanyApplicationRepository(
         request.state.request_scope
     ).get_company_view_single(company_id, application_id)
+
+
+@router.delete("/{application_id}")
+def delete_company_application(request: Request, company_id: str, application_id: str):
+    """Deletes an application"""
+    # First make sure that the application exists for this company
+    application = ApplicationRepository(request.state.request_scope).get(application_id)
+    assert application.company_id == company_id
+    return ApplicationRepository(request.state.request_scope).delete(
+        application_id
+    )
 
 
 @router.patch("/{application_id}/add-shortlist")

@@ -156,7 +156,6 @@ async def verify_user(
         user_agent = request.headers.get("user-agent", "unknown_agent")
         ip_address = request.client.host if request.client else "unknown_ip"
         request.state.request_scope = RequestScope.create_anonymous_user_scope(
-            user_agent=user_agent,
             ip_address=ip_address,
             db=db,
             kafka_producer=kafka_producer,

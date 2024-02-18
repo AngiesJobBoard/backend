@@ -56,7 +56,6 @@ class RequestScope(BaseModel):
     @classmethod
     def create_anonymous_user_scope(
         cls,
-        user_agent: str,
         ip_address: str,
         db: StandardDatabase | TransactionDatabase,
         kafka_producer: KafkaProducer | None = None,

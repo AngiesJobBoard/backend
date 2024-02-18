@@ -66,7 +66,7 @@ class JobRepository(MultipleChildrenRepository[CreateJob, Job]):
                     [
                         application
                         for application in job["application"]
-                        if application["application_is_shortlisted"]
+                        if application.get("application_is_shortlisted")
                     ]
                 ),
                 id=job["_key"],

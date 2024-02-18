@@ -1,5 +1,12 @@
 from io import StringIO
-from fastapi import APIRouter, Request, Depends, File, UploadFile
+from fastapi import (
+    APIRouter,
+    Request,
+    Depends,
+    UploadFile,
+    File,
+    HTTPException
+)
 import pandas as pd
 
 from ajb.base import QueryFilterParams, build_pagination_response
@@ -10,6 +17,8 @@ from ajb.contexts.companies.jobs.models import (
     PaginatedJob,
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
+from ajb.contexts.applications.models import UserCreatedApplication
+from ajb.contexts.applications.repository import ApplicationRepository
 from api.exceptions import GenericHTTPException
 
 
@@ -61,12 +70,55 @@ async def create_jobs_from_csv_data(
         df = pd.read_csv(content)
         df = df.where(pd.notnull(df), None)
         raw_jobs = df.to_dict(orient="records")
-        print(f"\n\n{raw_jobs}\n\n")
         jobs = [UserCreateJob(**job) for job in raw_jobs]  # type: ignore
-        return JobRepository(request.state.request_scope).create_many_jobs(
+        return JobRepository(request.state.request_scope, company_id).create_many_jobs(
             company_id, jobs
         )
     except Exception as e:
         raise GenericHTTPException(
             status_code=400, detail=f"Error processing file: {e}"
         )
+
+
+# @router.post("/manual")
+# def create_application(request: Request, company_id: str, application: UserCreatedApplication):
+#     ...
+
+
+@router.post("/{job_id}/csv-upload")
+async def upload_applications_from_csv(request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)):
+    print(f"Uploading applications for company {company_id} and job {job_id}\n\n{files}\n\n")
+    files_processed = 0
+    application_repo = ApplicationRepository(request.state.request_scope)
+    for file in files:
+        if file and file.filename and not file.filename.endswith('.csv'):
+            continue
+        content = await file.read()
+        content = content.decode("utf-8")
+        content = StringIO(content)
+        df = pd.read_csv(content)
+        df = df.where(pd.notnull(df), None)
+        raw_candidates = df.to_dict(orient="records")
+        candidates = [
+            UserCreatedApplication.from_csv_record(company_id, job_id, candidate)
+            for candidate
+            in raw_candidates
+        ]
+        application_repo.create_many(candidates)
+        files_processed += 1
+    if not files_processed:
+        raise HTTPException(status_code=400, detail="No valid files found")
+    return {"files_processed": files_processed}
+
+
+# @router.post("/pdf")
+# async def upload_applications_from_pdfs(request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)):
+#     files_processed = 0
+#     for file in files:
+#         if file and file.filename and not file.filename.endswith('.csv'):
+#             continue
+#         print("Working on file", file.filename)
+#         files_processed += 1
+#     if not files_processed:
+#         raise HTTPException(status_code=400, detail="No valid files found")
+#     return {"files_processed": files_processed}
