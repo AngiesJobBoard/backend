@@ -66,8 +66,7 @@ class AIApplicationMatcher:
             "required_job_skills": job.required_job_skills,
             "license_requirements": job.license_requirements,
             "certification_requirements": job.certification_requirements,
-            "language_requirements": job.language_requirements,
-            "minimum_hourly_pay": job.pay.min_pay_as_hourly if job.pay else None,
+            "language_requirements": job.language_requirements
         }
 
     def get_match_score(self, application: Application, job: Job):
@@ -83,6 +82,6 @@ class AIApplicationMatcher:
             max_tokens=3000,
         )
         return ApplicantMatchScore(
-            match_score=results["match_score"],
+            match_score=results["match_score"] * 10,
             match_reason=results["match_reason"],
         )

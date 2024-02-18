@@ -14,7 +14,7 @@ from ajb.utils import generate_random_short_code
 from ajb.contexts.companies.events import CompanyEventProducer
 
 from .models import (
-    UserCreatedApplication,
+    CreateApplication,
     Application,
     CreateRecruiterNote,
     RecruiterNote,
@@ -27,7 +27,7 @@ from .enumerations import ApplicationStatus
 NOT_FOUND_TEXT = "Application not found"
 
 
-class ApplicationRepository(ParentRepository[UserCreatedApplication, Application]):
+class ApplicationRepository(ParentRepository[CreateApplication, Application]):
     collection = Collection.APPLICATIONS
     entity_model = Application
 

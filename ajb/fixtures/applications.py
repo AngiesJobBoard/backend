@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from ajb.base.models import RequestScope
 from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.models import (
+    CreateApplication,
     UserCreatedApplication,
     Application,
     Qualifications,
@@ -41,7 +42,7 @@ class ApplicationFixture:
         application_repo = ApplicationRepository(self.request_scope)
 
         application = application_repo.create(
-            UserCreatedApplication(
+            CreateApplication(
                 company_id=company.id,
                 job_id=job.id,
                 resume_id=resume.id,
