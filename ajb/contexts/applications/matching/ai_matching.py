@@ -66,7 +66,7 @@ class AIApplicationMatcher:
             "required_job_skills": job.required_job_skills,
             "license_requirements": job.license_requirements,
             "certification_requirements": job.certification_requirements,
-            "language_requirements": job.language_requirements
+            "language_requirements": job.language_requirements,
         }
 
     def get_match_score(self, application: Application, job: Job):

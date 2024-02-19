@@ -14,7 +14,9 @@ class ApplicantMatchUsecase(BaseUseCase):
         self.request_scope = request_scope
         self.openai = openai or OpenAIRepository()
 
-    def get_match(self, application: Application, job_data: Job | None = None) -> ApplicantMatchScore:
+    def get_match(
+        self, application: Application, job_data: Job | None = None
+    ) -> ApplicantMatchScore:
         if job_data:
             job = job_data
         else:
@@ -39,5 +41,7 @@ class ApplicantMatchUsecase(BaseUseCase):
         job = self.get_object(Collection.JOBS, job_id)
         with ThreadPoolExecutor(max_workers=5) as executor:
             for application_id in application_id_list:
-                executor.submit(self.update_application_with_match_score, application_id, job)
+                executor.submit(
+                    self.update_application_with_match_score, application_id, job
+                )
         return True

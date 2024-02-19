@@ -4,7 +4,7 @@ This module is intended to take a PDF of a resume and extract the data from it.
 
 from pydantic import BaseModel
 from ajb.vendor.openai.repository import OpenAIRepository
-from ajb.contexts.users.models import WorkHistory, Education
+from ajb.contexts.applications.models import WorkHistory, Education
 
 
 class ExtractedResume(BaseModel):
