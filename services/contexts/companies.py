@@ -54,6 +54,13 @@ async def company_uploads_resume(message: BaseKafkaMessage):
     ).company_uploads_resume()
 
 
+async def company_calculates_match_score(message: BaseKafkaMessage):
+    await AsynchronousCompanyEvents(
+        message,
+        make_request_scope(message),
+    ).company_calculates_match_score()
+
+
 ROUTER = {
     CompanyEvent.COMPANY_IS_CREATED.value: company_is_created,
     CompanyEvent.COMPANY_VIEWS_APPLICATIONS.value: company_views_applications,
@@ -61,4 +68,5 @@ ROUTER = {
     CompanyEvent.COMPANY_SHORTLISTS_APPLICATION.value: company_shortlists_application,
     CompanyEvent.COMPANY_REJECTS_APPLICATION.value: company_rejects_application,
     CompanyEvent.COMPANY_UPLOADS_RESUME.value: company_uploads_resume,
+    CompanyEvent.COMPANY_CALCULATES_MATCH_SCORE.value: company_calculates_match_score,
 }

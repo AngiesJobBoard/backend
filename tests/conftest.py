@@ -19,7 +19,7 @@ def db():
     if system_db.has_database(test_db_name):
         system_db.delete_database(test_db_name)
     system_db.create_database(test_db_name)
-    migrator = ArangoMigrator(db_name=test_db_name)
+    migrator = ArangoMigrator(db_name=test_db_name)  # type: ignore
     migrator.run_migrations()
     db = migrator.client.db(test_db_name)
     yield db

@@ -12,7 +12,7 @@ from ajb.base import BaseAction, BaseDataModel
 class GeneralLocation(BaseModel):
     city: str
     state: str
-    country: str
+    country: str | None = None
     lat: float | None = None
     lng: float | None = None
 
@@ -24,7 +24,7 @@ class GeneralLocation(BaseModel):
         lat, lng = values.get("lat"), values.get("lng")
         if lat is None or lng is None:
             new_lat, new_lng = get_lat_long_from_address(
-                f"{values['city']} {values['state']} {values['country']}"
+                f"{values['city']} {values['state']} {values.get('country')}"
             )
             values["lat"] = new_lat
             values["lng"] = new_lng

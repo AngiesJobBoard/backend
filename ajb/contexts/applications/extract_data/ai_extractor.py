@@ -12,6 +12,8 @@ class ExtractedResume(BaseModel):
     last_name: str | None
     email: str | None
     phone_number: str | None
+    city: str | None
+    state: str | None
     most_recent_job_title: str | None
     most_recent_job_company: str | None
     skills: list[str] | None
@@ -34,6 +36,8 @@ class AIResumeExtractor:
             - last_name as str
             - email as str
             - phone_number as str
+            - city as str
+            - state as str
             - most_recent_job_title as str
             - most_recent_job_company as str
             - skills as list[str]

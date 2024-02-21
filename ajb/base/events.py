@@ -41,6 +41,7 @@ class CompanyEvent(str, Enum):
     COMPANY_SHORTLISTS_APPLICATION = "company_shortlists_application"
     COMPANY_REJECTS_APPLICATION = "company_rejects_application"
 
+    COMPANY_CALCULATES_MATCH_SCORE = "company_calculates_match_score"
     COMPANY_UPLOADS_RESUME = "company_uploads_resume"
 
 
@@ -71,6 +72,7 @@ class SourceServices(str, Enum):
     """Represents the service that triggered the event"""
 
     API = "api"  # Created based on an API request
+    SERVICES = "services"  # Created based on a service request
     ADMIN = "admin"  # Created based on an admin request
 
 

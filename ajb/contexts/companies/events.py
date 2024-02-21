@@ -28,6 +28,10 @@ class ResumeAndApplication(BaseModel):
     resume_id: str
 
 
+class ApplicationId(BaseModel):
+    application_id: str
+
+
 class CompanyEventProducer(BaseEventProducer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -102,4 +106,10 @@ class CompanyEventProducer(BaseEventProducer):
         self._company_event(
             data=data,
             event=CompanyEvent.COMPANY_UPLOADS_RESUME,
+        )
+
+    def company_calculates_match_score(self, application_id: str):
+        self._company_event(
+            data=ApplicationId(application_id=application_id).model_dump(),
+            event=CompanyEvent.COMPANY_CALCULATES_MATCH_SCORE,
         )

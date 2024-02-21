@@ -205,6 +205,19 @@ class CompanyApplicationRepository(ApplicationRepository):
             ),
         )
         return cursor.count() or 0
+    
+    def create_applications_from_csv(self, company_id: str, job_id: str, raw_candidates: list[dict]):
+        candidates = [
+            CreateApplication.from_csv_record(company_id, job_id, candidate)
+            for candidate in raw_candidates
+        ]
+        created_applications = self.create_many(candidates)
+        
+        # Create a company event for each application created to perform the match
+        event_producter = CompanyEventProducer(self.request_scope, SourceServices.API)
+        for application in created_applications:
+            event_producter.company_calculates_match_score(application)
+        return created_applications
 
 
 RepositoryRegistry.register(ApplicationRepository)

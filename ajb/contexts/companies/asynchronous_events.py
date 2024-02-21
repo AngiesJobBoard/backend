@@ -6,11 +6,13 @@ and is then routed to the appropriate handler based on the event type.
 
 from ajb.base import RequestScope
 from ajb.contexts.companies.models import Company
-from ajb.base.events import CompanyEvent, BaseKafkaMessage
+from ajb.base.events import CompanyEvent, BaseKafkaMessage, SourceServices
+from ajb.common.models import GeneralLocation
 from ajb.contexts.companies.events import (
     RecruiterAndApplication,
     RecruiterAndApplications,
     ResumeAndApplication,
+    ApplicationId
 )
 from ajb.contexts.applications.models import (
     Application,
@@ -19,6 +21,7 @@ from ajb.contexts.applications.models import (
     WorkHistory,
     UpdateApplication,
 )
+from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
 from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.companies.actions.repository import CompanyActionRepository
@@ -29,6 +32,7 @@ from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.sendgrid.templates.newly_created_company.models import (
     NewlyCreatedCompany,
 )
+from ajb.contexts.companies.events import CompanyEventProducer
 
 
 class AsynchronousCompanyEvents:
@@ -130,6 +134,9 @@ class AsynchronousCompanyEvents:
                     certifications=resume_information.certifications,
                     language_proficiencies=resume_information.languages,
                 ),
+                user_location=GeneralLocation(
+                    city=resume_information.city, state=resume_information.state
+                ) if resume_information.city and resume_information.state else None,
             ),
         )
 
@@ -147,6 +154,8 @@ class AsynchronousCompanyEvents:
             )[0]
         )
 
+        self.request_scope.company_id = data.company_id
+        event_producter = CompanyEventProducer(self.request_scope, SourceServices.API)
         if existing_applicants_that_match_email:
             for matched_application in existing_applicants_that_match_email:
                 self._update_application_with_parsed_information(
@@ -155,10 +164,12 @@ class AsynchronousCompanyEvents:
                     resume_information,
                     application_repository,
                 )
+                event_producter.company_calculates_match_score(matched_application.id)
             return
         self._update_application_with_parsed_information(
             data.application_id, raw_text, resume_information, application_repository
         )
+        event_producter.company_calculates_match_score(data.application_id)
 
     async def company_uploads_resume(self):
         data = ResumeAndApplication.model_validate(self.message.data)
@@ -175,8 +186,6 @@ class AsynchronousCompanyEvents:
             application_repository.update_fields(
                 data.application_id, resume_scan_status=ResumeScanStatus.COMPLETED
             )
-
-            # Trigger event to perform matching again
         except Exception as e:
             application_repository.update_fields(
                 data.application_id,
@@ -184,3 +193,8 @@ class AsynchronousCompanyEvents:
                 resume_scan_error_text=str(e),
             )
             raise e
+
+    async def company_calculates_match_score(self):
+        data = ApplicationId.model_validate(self.message.data)
+        matcher_usecase = ApplicantMatchUsecase(self.request_scope)
+        matcher_usecase.update_application_with_match_score(data.application_id)

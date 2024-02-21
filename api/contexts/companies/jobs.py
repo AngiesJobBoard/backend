@@ -10,9 +10,7 @@ from ajb.contexts.companies.jobs.models import (
     PaginatedJob,
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
-from ajb.contexts.applications.models import CreateApplication
-from ajb.contexts.applications.repository import ApplicationRepository
-from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
+from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.resumes.models import UserCreateResume
 from ajb.contexts.resumes.usecase import ResumeUseCase
 from api.exceptions import GenericHTTPException
@@ -77,37 +75,36 @@ async def create_jobs_from_csv_data(
         )
 
 
+async def _process_csv_file(company_id: str, job_id: str, file: UploadFile, application_repo: CompanyApplicationRepository):
+    if file and file.filename and not file.filename.endswith(".csv"):
+        return []
+    content = await file.read()
+    content = content.decode("utf-8")
+    content = StringIO(content)
+    df = pd.read_csv(content)
+    df = df.where(pd.notnull(df), None)
+    raw_candidates = df.to_dict(orient="records")
+    return application_repo.create_applications_from_csv(
+        company_id, job_id, raw_candidates
+    )
+
+
 @router.post("/{job_id}/csv-upload")
 async def upload_applications_from_csv(
-    request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)
+    request: Request,
+    company_id: str,
+    job_id: str,
+    files: list[UploadFile] = File(...)
 ):
-    files_processed = 0
     all_created_applications = []
-    application_repo = ApplicationRepository(request.state.request_scope)
+    application_repo = CompanyApplicationRepository(request.state.request_scope)
     for file in files:
-        if file and file.filename and not file.filename.endswith(".csv"):
-            continue
-        content = await file.read()
-        content = content.decode("utf-8")
-        content = StringIO(content)
-        df = pd.read_csv(content)
-        df = df.where(pd.notnull(df), None)
-        raw_candidates = df.to_dict(orient="records")
-        candidates = [
-            CreateApplication.from_csv_record(company_id, job_id, candidate)
-            for candidate in raw_candidates
-        ]
-        created_applications = application_repo.create_many(candidates)
-        all_created_applications.extend(created_applications)
-        files_processed += 1
-    if not files_processed:
-        raise HTTPException(status_code=400, detail="No valid files found")
-    
-    matcher_usecase = ApplicantMatchUsecase(request.state.request_scope, openai)
-    matcher_usecase.update_many_applications_with_match_scores(
-        [created_application for created_application in all_created_applications], job_id
-    )
-    return {"files_processed": files_processed, "created_applications": all_created_applications}
+        all_created_applications.extend(
+            await _process_csv_file(company_id, job_id, file, application_repo)
+        )
+    if not all_created_applications:
+        raise HTTPException(status_code=400, detail="No valid applications found")
+    return all_created_applications
 
 
 @router.post("/pdf")
