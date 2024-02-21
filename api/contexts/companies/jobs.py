@@ -15,7 +15,7 @@ from ajb.contexts.resumes.models import UserCreateResume
 from ajb.contexts.resumes.usecase import ResumeUseCase
 from api.exceptions import GenericHTTPException
 
-from api.vendors import openai, storage
+from api.vendors import storage
 
 router = APIRouter(tags=["Company Jobs"], prefix="/companies/{company_id}/jobs")
 
@@ -87,7 +87,6 @@ async def _process_csv_file(
     content = content.decode("utf-8")
     content = StringIO(content)
     df = pd.read_csv(content)
-    df = df.where(pd.notnull(df), None)
     raw_candidates = df.to_dict(orient="records")
     return application_repo.create_applications_from_csv(
         company_id, job_id, raw_candidates

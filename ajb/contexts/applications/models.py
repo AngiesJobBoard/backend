@@ -2,6 +2,7 @@ from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
 from pydantic import BaseModel, Field
+import pandas as pd
 
 from ajb.base.models import BaseDataModel, PaginatedResponse
 from ajb.common.models import DataReducedJob, GeneralLocation
@@ -88,14 +89,14 @@ class UserCreatedApplication(BaseModel):
             job_id=job_id,
             name=record["name"],
             email=record["email"],
-            phone=record.get("phone"),
+            phone=record.get("phone") if not pd.isnull(record.get("phone")) else None,
             user_location=(
                 GeneralLocation(
                     city=record["city"],
                     state=record["state"],
                     country=record["country"],
                 )
-                if record.get("city") and record.get("state") and record.get("country")
+                if not pd.isnull(record.get("city")) and not pd.isnull(record.get("state")) and not pd.isnull(record.get("country"))
                 else None
             ),
             qualifications=Qualifications(
@@ -106,8 +107,7 @@ class UserCreatedApplication(BaseModel):
                         start_date=record.get("most_recent_start_date"),
                         end_date=record.get("most_recent_end_date"),
                     )
-                    if record.get("most_recent_job_title")
-                    and record.get("most_recent_company_name")
+                    if not pd.isnull(record.get("most_recent_job_title")) and not pd.isnull(record.get("most_recent_company_name"))
                     else None
                 ),
                 work_history=[],
@@ -121,29 +121,27 @@ class UserCreatedApplication(BaseModel):
                             end_date=record.get("education_end_date_1"),
                         ),
                     ]
-                    if record.get("school_name_1")
-                    and record.get("education_level_1")
-                    and record.get("field_of_study_1")
+                    if not pd.isnull(record.get("school_name_1")) and not pd.isnull(record.get("education_level_1")) and not pd.isnull(record.get("field_of_study_1"))
                     else None
                 ),
                 skills=(
                     record.get("skills", "").split(",")
-                    if record.get("skills")
+                    if not pd.isnull(record.get("skills"))
                     else None
                 ),
                 licenses=(
                     record.get("licenses", "").split(",")
-                    if record.get("licenses")
+                    if not pd.isnull(record.get("licenses"))
                     else None
                 ),
                 certifications=(
                     record.get("certifications", "").split(",")
-                    if record.get("certifications")
+                    if not pd.isnull(record.get("certifications"))
                     else None
                 ),
                 language_proficiencies=(
                     record.get("language_proficiencies", "").split(",")
-                    if record.get("language_proficiencies")
+                    if not pd.isnull(record.get("language_proficiencies")) and record.get("language_proficiencies")
                     else None
                 ),
             ),

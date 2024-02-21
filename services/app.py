@@ -54,24 +54,28 @@ async def handle_messages(consumer: KafkaConsumer):
             await asyncio.sleep(0.1)
             continue
 
+        tasks = []
         for messages in topic_messages.values():
             for message in messages:
                 logger.info("Message received")
-                asyncio.create_task(
-                    handle_message(message, commit_counter, last_commit_time, consumer)
-                )
+                task = handle_message(message, commit_counter, last_commit_time, consumer)
+                tasks.append(task)
 
-                # Yield to the event loop to allow other tasks to run
-                await asyncio.sleep(0)
+        # Run all tasks concurrently
+        await asyncio.gather(*tasks)
 
 
 async def consumer():
     consumer = KafkaConsumerFactory(group_id=KafkaGroup.DEFAULT.value).get_client()
     consumer.subscribe([topic.value for topic in KafkaTopic])
     logger.info("Consumer Started...")
-    task = asyncio.create_task(handle_messages(consumer))
+
+    # Create multiple tasks for handle_messages
+    tasks = [asyncio.create_task(handle_messages(consumer)) for _ in range(4)]
+
     try:
-        await task
+        # Run all tasks concurrently
+        await asyncio.gather(*tasks)
     except asyncio.CancelledError:
         logger.info("Consumer is shutting down...")
         consumer.close()

@@ -8,20 +8,20 @@ from ajb.contexts.applications.models import WorkHistory, Education
 
 
 class ExtractedResume(BaseModel):
-    first_name: str | None
-    last_name: str | None
-    email: str | None
-    phone_number: str | None
-    city: str | None
-    state: str | None
-    most_recent_job_title: str | None
-    most_recent_job_company: str | None
-    skills: list[str] | None
-    education: list[Education] | None
-    work_experience: list[WorkHistory] | None
-    certifications: list[str] | None
-    licenses: list[str] | None
-    languages: list[str] | None
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    phone_number: str | None = None
+    city: str | None = None
+    state: str | None = None
+    most_recent_job_title: str | None = None
+    most_recent_job_company: str | None = None
+    skills: list[str] | None = None
+    education: list[Education] | None = None
+    work_experience: list[WorkHistory] | None = None
+    certifications: list[str] | None = None
+    licenses: list[str] | None = None
+    languages: list[str] | None = None
 
 
 class AIResumeExtractor:

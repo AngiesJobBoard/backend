@@ -3,6 +3,7 @@ from ajb.contexts.companies.asynchronous_events import AsynchronousCompanyEvents
 
 from services.vendors import (
     sendgrid,
+    openai,
     make_request_scope,
 )
 
@@ -51,6 +52,7 @@ async def company_uploads_resume(message: BaseKafkaMessage):
     await AsynchronousCompanyEvents(
         message,
         make_request_scope(message),
+        openai=openai
     ).company_uploads_resume()
 
 
@@ -58,6 +60,7 @@ async def company_calculates_match_score(message: BaseKafkaMessage):
     await AsynchronousCompanyEvents(
         message,
         make_request_scope(message),
+        openai=openai
     ).company_calculates_match_score()
 
 

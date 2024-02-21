@@ -1,11 +1,16 @@
-from ajb.base import BaseUseCase, Collection
+from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.contexts.resumes.models import Resume
 from ajb.vendor.pdf_plumber import extract_pdf_text_by_url
+from ajb.vendor.openai.repository import OpenAIRepository
 
 from .ai_extractor import AIResumeExtractor, ExtractedResume
 
 
 class ResumeExtractorUseCase(BaseUseCase):
+    def __init__(self, request_scope: RequestScope, openai: OpenAIRepository | None = None):
+        self.openai = openai or OpenAIRepository()
+        super().__init__(request_scope)
+    
     def extract_resume_text(self, resume_id: str) -> str:
         resume: Resume = self.get_object(
             Collection.RESUMES,
@@ -16,4 +21,4 @@ class ResumeExtractorUseCase(BaseUseCase):
         return extract_pdf_text_by_url(resume.resume_url)
 
     def extract_resume_information(self, resume_text: str) -> ExtractedResume:
-        return AIResumeExtractor().get_candidate_profile_from_resume_text(resume_text)
+        return AIResumeExtractor(self.openai).get_candidate_profile_from_resume_text(resume_text)
