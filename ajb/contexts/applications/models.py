@@ -86,35 +86,46 @@ class UserCreatedApplication(BaseModel):
         return cls(
             company_id=company_id,
             job_id=job_id,
-                name=record["name"],
-                email=record["email"],
-                phone=record.get("phone"),
-                user_location=(
+            name=record["name"],
+            email=record["email"],
+            phone=record.get("phone"),
+            user_location=(
                 GeneralLocation(
                     city=record["city"],
                     state=record["state"],
                     country=record["country"],
                 )
-                if record.get("city")
+                if record.get("city") and record.get("state") and record.get("country")
                 else None
             ),
             qualifications=Qualifications(
-                most_recent_job=WorkHistory(
-                    job_title=record["most_recent_job_title"],
-                    company_name=record["most_recent_company_name"],
-                    start_date=record.get("most_recent_start_date"),
-                    end_date=record.get("most_recent_end_date"),
+                most_recent_job=(
+                    WorkHistory(
+                        job_title=record["most_recent_job_title"],
+                        company_name=record["most_recent_company_name"],
+                        start_date=record.get("most_recent_start_date"),
+                        end_date=record.get("most_recent_end_date"),
+                    )
+                    if record.get("most_recent_job_title")
+                    and record.get("most_recent_company_name")
+                    else None
                 ),
                 work_history=[],
-                education=[
-                    Education(
-                        school_name=record["school_name_1"],
-                        level_of_education=record["education_level_1"],
-                        field_of_study=record["field_of_study_1"],
-                        start_date=record.get("education_start_date_1"),
-                        end_date=record.get("education_end_date_1"),
-                    )
-                ],
+                education=(
+                    [
+                        Education(
+                            school_name=record["school_name_1"],
+                            level_of_education=record["education_level_1"],
+                            field_of_study=record["field_of_study_1"],
+                            start_date=record.get("education_start_date_1"),
+                            end_date=record.get("education_end_date_1"),
+                        ),
+                    ]
+                    if record.get("school_name_1")
+                    and record.get("education_level_1")
+                    and record.get("field_of_study_1")
+                    else None
+                ),
                 skills=(
                     record.get("skills", "").split(",")
                     if record.get("skills")

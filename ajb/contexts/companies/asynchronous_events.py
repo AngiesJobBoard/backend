@@ -12,7 +12,7 @@ from ajb.contexts.companies.events import (
     RecruiterAndApplication,
     RecruiterAndApplications,
     ResumeAndApplication,
-    ApplicationId
+    ApplicationId,
 )
 from ajb.contexts.applications.models import (
     Application,
@@ -134,9 +134,13 @@ class AsynchronousCompanyEvents:
                     certifications=resume_information.certifications,
                     language_proficiencies=resume_information.languages,
                 ),
-                user_location=GeneralLocation(
-                    city=resume_information.city, state=resume_information.state
-                ) if resume_information.city and resume_information.state else None,
+                user_location=(
+                    GeneralLocation(
+                        city=resume_information.city, state=resume_information.state
+                    )
+                    if resume_information.city and resume_information.state
+                    else None
+                ),
             ),
         )
 

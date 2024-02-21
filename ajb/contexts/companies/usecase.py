@@ -15,10 +15,12 @@ from .events import CompanyEventProducer
 
 
 def make_arango_safe_key(slug: str) -> str:
-    slug = re.sub('[^a-zA-Z0-9-]+', '-', slug)
+    slug = re.sub("[^a-zA-Z0-9-]+", "-", slug)
     slug = slug.strip("-")
     if not slug:
-        raise ValueError("The processed slug is empty. Provide a non-empty input string.")    
+        raise ValueError(
+            "The processed slug is empty. Provide a non-empty input string."
+        )
     return slug
 
 

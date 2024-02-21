@@ -75,7 +75,12 @@ async def create_jobs_from_csv_data(
         )
 
 
-async def _process_csv_file(company_id: str, job_id: str, file: UploadFile, application_repo: CompanyApplicationRepository):
+async def _process_csv_file(
+    company_id: str,
+    job_id: str,
+    file: UploadFile,
+    application_repo: CompanyApplicationRepository,
+):
     if file and file.filename and not file.filename.endswith(".csv"):
         return []
     content = await file.read()
@@ -91,10 +96,7 @@ async def _process_csv_file(company_id: str, job_id: str, file: UploadFile, appl
 
 @router.post("/{job_id}/csv-upload")
 async def upload_applications_from_csv(
-    request: Request,
-    company_id: str,
-    job_id: str,
-    files: list[UploadFile] = File(...)
+    request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)
 ):
     all_created_applications = []
     application_repo = CompanyApplicationRepository(request.state.request_scope)
@@ -108,12 +110,14 @@ async def upload_applications_from_csv(
 
 
 @router.post("/pdf")
-async def upload_applications_from_pdfs(request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)):
+async def upload_applications_from_pdfs(
+    request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)
+):
     files_processed = 0
     created_resume_files = []
     resume_usecase = ResumeUseCase(request.state.request_scope, storage)
     for file in files:
-        if file and file.filename and not file.filename.endswith('.pdf'):
+        if file and file.filename and not file.filename.endswith(".pdf"):
             continue
         created_resume = resume_usecase.create_resume(
             UserCreateResume(

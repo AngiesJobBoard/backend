@@ -22,5 +22,4 @@ class CreateUser(UpdateUser):
     candidate_score: float | None = None
 
 
-class User(CreateUser, BaseDataModel):
-    ...
+class User(CreateUser, BaseDataModel): ...

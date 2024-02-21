@@ -45,6 +45,10 @@ class UserFixture:
     def create_resume_for_user(self) -> Resume:
         return ResumeRepository(self.request_scope).create(
             CreateResume(
-                remote_file_path="test", resume_url="nice.com", file_name="test", company_id="test", job_id="test"
+                remote_file_path="test",
+                resume_url="nice.com",
+                file_name="test",
+                company_id="test",
+                job_id="test",
             )
         )

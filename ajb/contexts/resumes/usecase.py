@@ -45,12 +45,14 @@ class ResumeUseCase(BaseUseCase):
                 job_id=data.job_id,
                 resume_id=created_resume.id,
                 name="Resume Scan Pending",
-                email="Resume Scan Pending"
+                email="Resume Scan Pending",
             )
         )
 
         # Create kafka event for parsing the resume
-        CompanyEventProducer(self.request_scope, source_service=SourceServices.API).company_uploads_resume(
+        CompanyEventProducer(
+            self.request_scope, source_service=SourceServices.API
+        ).company_uploads_resume(
             job_id=data.job_id,
             resume_id=created_resume.id,
             application_id=created_application.id,
@@ -64,9 +66,7 @@ class ResumeUseCase(BaseUseCase):
         resume_repo.delete(resume_id)
         return True
 
-    def update_resume(
-        self, resume_id: str, data: UserCreateResume
-    ) -> Resume:
+    def update_resume(self, resume_id: str, data: UserCreateResume) -> Resume:
         resume_repo = self.get_repository(Collection.RESUMES)
         resume: Resume = resume_repo.get(resume_id)
         self.storage_repo.upload_bytes(
