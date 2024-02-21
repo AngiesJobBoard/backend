@@ -6,12 +6,14 @@ from .ai_extractor import AIResumeExtractor, ExtractedResume
 
 
 class ResumeExtractorUseCase(BaseUseCase):
-    def extract_resume_information(self, resume_id: str) -> ExtractedResume:
+    def extract_resume_text(self, resume_id: str) -> str:
         resume: Resume = self.get_object(
             Collection.RESUMES,
             resume_id,
             self.request_scope,
             self.request_scope.user_id,
         )
-        resume_text = extract_pdf_text_by_url(resume.resume_url)
+        return extract_pdf_text_by_url(resume.resume_url)
+
+    def extract_resume_information(self, resume_text: str) -> ExtractedResume:
         return AIResumeExtractor().get_candidate_profile_from_resume_text(resume_text)

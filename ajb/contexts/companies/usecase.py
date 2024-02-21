@@ -1,3 +1,4 @@
+import re
 from ajb.base import (
     BaseUseCase,
     Collection,
@@ -13,6 +14,14 @@ from .models import UserCreateCompany, CreateCompany, Company
 from .events import CompanyEventProducer
 
 
+def make_arango_safe_key(slug: str) -> str:
+    slug = re.sub('[^a-zA-Z0-9-]+', '-', slug)
+    slug = slug.strip("-")
+    if not slug:
+        raise ValueError("The processed slug is empty. Provide a non-empty input string.")    
+    return slug
+
+
 class CompaniesUseCase(BaseUseCase):
     def user_create_company(
         self, data: UserCreateCompany, creating_user_id: str
@@ -26,12 +35,11 @@ class CompaniesUseCase(BaseUseCase):
             # If no slug provided, convert company name to slug and try to create
             slug_provided = data.slug is not None
             if not slug_provided:
-                data.slug = data.name.lower().replace(" ", "-")
+                data.slug = make_arango_safe_key(data.name)
 
             # Check if the company name or slug has been taken
             slug_results = company_repo.query(slug=data.slug)
-            name_results = company_repo.query(name=data.name)
-            if slug_results[0] or name_results[0]:
+            if slug_results[0]:
                 raise CompanyCreateException("Company Name or Slug Taken")
 
             user: User = self.get_object(Collection.USERS, creating_user_id)

@@ -21,6 +21,13 @@ class RecruiterAndApplications(BaseModel):
     applications_and_positions: list[tuple[str, int]]
 
 
+class ResumeAndApplication(BaseModel):
+    company_id: str
+    job_id: str
+    application_id: str
+    resume_id: str
+
+
 class CompanyEventProducer(BaseEventProducer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -83,4 +90,16 @@ class CompanyEventProducer(BaseEventProducer):
         self._company_event(
             data=data,
             event=CompanyEvent.COMPANY_REJECTS_APPLICATION,
+        )
+
+    def company_uploads_resume(self, resume_id: str, application_id: str, job_id: str):
+        data = ResumeAndApplication(
+            company_id=str(self.request_scope.company_id),
+            job_id=job_id,
+            application_id=application_id,
+            resume_id=resume_id,
+        ).model_dump()
+        self._company_event(
+            data=data,
+            event=CompanyEvent.COMPANY_UPLOADS_RESUME,
         )

@@ -10,10 +10,21 @@ from ajb.base.events import CompanyEvent, BaseKafkaMessage
 from ajb.contexts.companies.events import (
     RecruiterAndApplication,
     RecruiterAndApplications,
+    ResumeAndApplication,
 )
+from ajb.contexts.applications.models import (
+    Application,
+    ResumeScanStatus,
+    Qualifications,
+    WorkHistory,
+    UpdateApplication,
+)
+from ajb.contexts.applications.repository import ApplicationRepository
+from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.companies.actions.repository import CompanyActionRepository
 from ajb.contexts.companies.actions.models import CreateCompanyAction
 from ajb.contexts.users.repository import UserRepository
+from ajb.contexts.applications.extract_data.usecase import ResumeExtractorUseCase
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.sendgrid.templates.newly_created_company.models import (
     NewlyCreatedCompany,
@@ -87,3 +98,89 @@ class AsynchronousCompanyEvents:
                 company_id=data.company_id,
             )
         )
+
+    def _update_application_with_parsed_information(
+        self,
+        application_id: str,
+        raw_resume_text: str,
+        resume_information: ExtractedResume,
+        application_repository: ApplicationRepository,
+    ):
+        application_repository.update(
+            application_id,
+            UpdateApplication(
+                name=f"{resume_information.first_name} {resume_information.last_name}".title(),
+                email=resume_information.email,
+                phone=resume_information.phone_number,
+                extracted_resume_text=raw_resume_text,
+                qualifications=Qualifications(
+                    most_recent_job=(
+                        WorkHistory(
+                            job_title=resume_information.most_recent_job_title,
+                            company_name=resume_information.most_recent_job_company,
+                        )
+                        if resume_information.most_recent_job_title
+                        and resume_information.most_recent_job_company
+                        else None
+                    ),
+                    work_history=resume_information.work_experience,
+                    education=resume_information.education,
+                    skills=resume_information.skills,
+                    licenses=resume_information.licenses,
+                    certifications=resume_information.certifications,
+                    language_proficiencies=resume_information.languages,
+                ),
+            ),
+        )
+
+    def _extract_and_update_application(
+        self, data: ResumeAndApplication, application_repository: ApplicationRepository
+    ):
+        extractor = ResumeExtractorUseCase(self.request_scope)
+        raw_text = extractor.extract_resume_text(data.resume_id)
+        resume_information = extractor.extract_resume_information(raw_text)
+
+        existing_applicants_that_match_email: list[Application] = (
+            application_repository.query(
+                email=resume_information.email,
+                job_id=data.job_id,
+            )[0]
+        )
+
+        if existing_applicants_that_match_email:
+            for matched_application in existing_applicants_that_match_email:
+                self._update_application_with_parsed_information(
+                    matched_application.id,
+                    raw_text,
+                    resume_information,
+                    application_repository,
+                )
+            return
+        self._update_application_with_parsed_information(
+            data.application_id, raw_text, resume_information, application_repository
+        )
+
+    async def company_uploads_resume(self):
+        data = ResumeAndApplication.model_validate(self.message.data)
+        application_repository = ApplicationRepository(self.request_scope)
+
+        # Update the scan status to started
+        application_repository.update_fields(
+            data.application_id, resume_scan_status=ResumeScanStatus.STARTED
+        )
+
+        # Try to peform the parse and updates
+        try:
+            self._extract_and_update_application(data, application_repository)
+            application_repository.update_fields(
+                data.application_id, resume_scan_status=ResumeScanStatus.COMPLETED
+            )
+
+            # Trigger event to perform matching again
+        except Exception as e:
+            application_repository.update_fields(
+                data.application_id,
+                resume_scan_status=ResumeScanStatus.FAILED,
+                resume_scan_error_text=str(e),
+            )
+            raise e

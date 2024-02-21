@@ -15,9 +15,7 @@ from ajb.exceptions import (
 )
 from ajb.vendor.jwt import decode_jwt
 from ajb.vendor.sendgrid.repository import SendgridRepository
-from ajb.vendor.sendgrid.templates.full_template_example.models import (
-    FullExampleModel,
-)
+from ajb.vendor.sendgrid.templates.company_invitation.models import CompanyInvitation
 
 from .models import UserCreateInvitation, CreateInvitation, Invitation, InvitationData
 from ..models import RecruiterRole
@@ -34,14 +32,6 @@ class CompanyInvitationUseCase(BaseUseCase):
             invitation_repo = self.get_repository(
                 Collection.RECRUITER_INVITATIONS, transaction_scope, company_id
             )
-
-            # Check that user hasn't already been invited
-            results, _ = invitation_repo.query(
-                email_address=data.email_address,
-                company_id=company_id,
-            )
-            if results:
-                raise RecruiterCreateException("Recruiter already invited")
 
             created_invitation = invitation_repo.create(
                 CreateInvitation(
@@ -67,17 +57,16 @@ class CompanyInvitationUseCase(BaseUseCase):
             deeplink_param = invitation_data.convert_to_deeplink_param(
                 SETTINGS.RECRUITER_INVITATION_SECRET
             )
-            print(f"\n\n{deeplink_param}\n\n")
             invitation_link = (
                 f"{SETTINGS.APP_URL}/confirm-invite?invite={deeplink_param}"
             )
             SendgridRepository().send_rendered_email_template(
                 to_emails=data.email_address,
                 subject="You've been invited to Angie's Job Board!",
-                template_name="full_template_example",
-                template_data=FullExampleModel(
-                    firstName=f"You've been invited to {company_name} with the role: {data.role.value}!",
-                    lowerMessage=f"Please click this link :) {invitation_link}",
+                template_name="company_invitation",
+                template_data=CompanyInvitation(
+                    companyName=company_name,
+                    invitationLink=invitation_link,
                 ),
             )
             return created_invitation
@@ -138,6 +127,15 @@ class CompanyInvitationUseCase(BaseUseCase):
             invitation_repo.delete(decoded_invitation.invitation_id)
             recruiter_and_user = recruiter_repo.get_recruiter_by_id(
                 created_recruiter.id
+            )
+
+            # Clean up all other invitations for this user and company
+            all_other_invitations: list[Invitation] = invitation_repo.query(
+                company_id=decoded_invitation.company_id,
+                email_address=decoded_invitation.email_address,
+            )[0]
+            invitation_repo.delete_many(
+                [invitation.id for invitation in all_other_invitations]
             )
 
         return recruiter_and_user

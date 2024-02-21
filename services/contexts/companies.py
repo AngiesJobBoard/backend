@@ -47,10 +47,18 @@ async def company_rejects_application(message: BaseKafkaMessage):
     ).company_rejects_application()
 
 
+async def company_uploads_resume(message: BaseKafkaMessage):
+    await AsynchronousCompanyEvents(
+        message,
+        make_request_scope(message),
+    ).company_uploads_resume()
+
+
 ROUTER = {
     CompanyEvent.COMPANY_IS_CREATED.value: company_is_created,
     CompanyEvent.COMPANY_VIEWS_APPLICATIONS.value: company_views_applications,
     CompanyEvent.COMPANY_CLICKS_ON_APPLICATION.value: company_clicks_on_application,
     CompanyEvent.COMPANY_SHORTLISTS_APPLICATION.value: company_shortlists_application,
     CompanyEvent.COMPANY_REJECTS_APPLICATION.value: company_rejects_application,
+    CompanyEvent.COMPANY_UPLOADS_RESUME.value: company_uploads_resume,
 }

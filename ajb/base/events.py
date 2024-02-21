@@ -41,6 +41,8 @@ class CompanyEvent(str, Enum):
     COMPANY_SHORTLISTS_APPLICATION = "company_shortlists_application"
     COMPANY_REJECTS_APPLICATION = "company_rejects_application"
 
+    COMPANY_UPLOADS_RESUME = "company_uploads_resume"
+
 
 class UserEvent(str, Enum):
     """Represents a business action that can be taken on a user"""

@@ -13,9 +13,11 @@ from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.applications.models import CreateApplication
 from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
+from ajb.contexts.resumes.models import UserCreateResume
+from ajb.contexts.resumes.usecase import ResumeUseCase
 from api.exceptions import GenericHTTPException
 
-from api.vendors import openai
+from api.vendors import openai, storage
 
 router = APIRouter(tags=["Company Jobs"], prefix="/companies/{company_id}/jobs")
 
@@ -75,11 +77,6 @@ async def create_jobs_from_csv_data(
         )
 
 
-# @router.post("/manual")
-# def create_application(request: Request, company_id: str, application: UserCreatedApplication):
-#     ...
-
-
 @router.post("/{job_id}/csv-upload")
 async def upload_applications_from_csv(
     request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)
@@ -113,14 +110,25 @@ async def upload_applications_from_csv(
     return {"files_processed": files_processed, "created_applications": all_created_applications}
 
 
-# @router.post("/pdf")
-# async def upload_applications_from_pdfs(request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)):
-#     files_processed = 0
-#     for file in files:
-#         if file and file.filename and not file.filename.endswith('.csv'):
-#             continue
-#         print("Working on file", file.filename)
-#         files_processed += 1
-#     if not files_processed:
-#         raise HTTPException(status_code=400, detail="No valid files found")
-#     return {"files_processed": files_processed}
+@router.post("/pdf")
+async def upload_applications_from_pdfs(request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)):
+    files_processed = 0
+    created_resume_files = []
+    resume_usecase = ResumeUseCase(request.state.request_scope, storage)
+    for file in files:
+        if file and file.filename and not file.filename.endswith('.pdf'):
+            continue
+        created_resume = resume_usecase.create_resume(
+            UserCreateResume(
+                file_type=file.content_type or "application/pdf",
+                file_name=file.filename or "resume.pdf",
+                resume_data=file.file.read(),
+                company_id=company_id,
+                job_id=job_id,
+            )
+        )
+        created_resume_files.append(created_resume)
+        files_processed += 1
+    if not files_processed:
+        raise HTTPException(status_code=400, detail="No valid files found")
+    return {"files_processed": files_processed, "resumes": created_resume_files}

@@ -1,26 +1,25 @@
+from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
 from pydantic import BaseModel, Field
 
 from ajb.base.models import BaseDataModel, PaginatedResponse
 from ajb.common.models import DataReducedJob, GeneralLocation
-from ajb.contexts.users.models import User
-from ajb.contexts.resumes.models import Resume
 
 from .enumerations import ApplicationStatus
+
+
+class ResumeScanStatus(str, Enum):
+    PENDING = "Pending"
+    STARTED = "Started"
+    COMPLETED = "Completed"
+    FAILED = "Failed"
 
 
 class DemographicData(BaseModel):
     birth_year: int | None = None
     has_disability: bool | None = None
     arrest_record: bool | None = None
-
-
-class ContactInformation(BaseModel):
-    name: str
-    email: str
-    phone: str | None = None
-    user_location: GeneralLocation | None = None
 
 
 class WorkHistory(BaseModel):
@@ -73,28 +72,31 @@ class UserCreatedApplication(BaseModel):
     company_id: str
     job_id: str
     resume_id: str | None = None
-    cover_letter_content: str | None = None
+    extracted_resume_text: str | None = None
+    resume_scan_status: ResumeScanStatus = ResumeScanStatus.PENDING
+    resume_scan_error_test: str | None = None
     qualifications: Qualifications | None = None
-    contact_information: ContactInformation
+    name: str
+    email: str
+    phone: str | None = None
+    user_location: GeneralLocation | None = None
 
     @classmethod
     def from_csv_record(cls, company_id: str, job_id: str, record: dict):
         return cls(
             company_id=company_id,
             job_id=job_id,
-            contact_information=ContactInformation(
                 name=record["name"],
                 email=record["email"],
                 phone=record.get("phone"),
                 user_location=(
-                    GeneralLocation(
-                        city=record["city"],
-                        state=record["state"],
-                        country=record["country"],
-                    )
-                    if record.get("city")
-                    else None
-                ),
+                GeneralLocation(
+                    city=record["city"],
+                    state=record["state"],
+                    country=record["country"],
+                )
+                if record.get("city")
+                else None
             ),
             qualifications=Qualifications(
                 most_recent_job=WorkHistory(
@@ -135,6 +137,18 @@ class UserCreatedApplication(BaseModel):
                 ),
             ),
         )
+
+
+class UpdateApplication(BaseModel):
+    resume_id: str | None = None
+    extracted_resume_text: str | None = None
+    resume_scan_status: ResumeScanStatus | None = None
+    resume_scan_error_test: str | None = None
+    qualifications: Qualifications | None = None
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    user_location: GeneralLocation | None = None
 
 
 class UserCreateRecruiterNote(BaseModel):
