@@ -182,7 +182,7 @@ class CreateApplication(UserCreatedApplication):
         default_factory=list
     )
     application_is_shortlisted: bool = False
-    application_match_score: int = 0
+    application_match_score: int | None = None
     application_match_reason: str = ""
 
     recruiter_tags: list[str] = Field(default_factory=list)
