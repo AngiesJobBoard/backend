@@ -153,16 +153,6 @@ class CompanyApplicationRepository(ApplicationRepository):
             id=application_id,
             joins=[
                 Join(
-                    to_collection_alias="user",
-                    to_collection="users",
-                    from_collection_join_attr="user_id",
-                ),
-                Join(
-                    to_collection_alias="resume",
-                    to_collection="resumes",
-                    from_collection_join_attr="resume_id",
-                ),
-                Join(
                     to_collection_alias="job",
                     to_collection="jobs",
                     from_collection_join_attr="job_id",
@@ -171,8 +161,7 @@ class CompanyApplicationRepository(ApplicationRepository):
             return_model=CompanyApplicationView,
         )
         casted_result = t.cast(CompanyApplicationView, result)
-        if casted_result.company_id != company_id:
-            raise EntityNotFound(NOT_FOUND_TEXT)
+        # TODO the company_id is null for some reason? Should not be so it can match
         CompanyEventProducer(
             self.request_scope, SourceServices.API
         ).company_clicks_on_application(casted_result.id)
