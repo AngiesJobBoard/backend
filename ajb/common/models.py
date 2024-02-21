@@ -23,11 +23,14 @@ class GeneralLocation(BaseModel):
     def update_lat_lon(cls, values):
         lat, lng = values.get("lat"), values.get("lng")
         if lat is None or lng is None:
-            new_lat, new_lng = get_lat_long_from_address(
-                f"{values['city']} {values['state']} {values.get('country')}"
-            )
-            values["lat"] = new_lat
-            values["lng"] = new_lng
+            try:
+                new_lat, new_lng = get_lat_long_from_address(
+                    f"{values['city']} {values['state']} {values.get('country')}"
+                )
+                values["lat"] = new_lat
+                values["lng"] = new_lng
+            except IndexError:
+                pass
         return values
 
 
@@ -45,9 +48,12 @@ class Location(GeneralLocation):
         lat, lng = values.get("lat"), values.get("lng")
         if lat is None or lng is None:
             full_address = f"{values['address_line_1']} {values.get('address_line_2', '')} {values['city']} {values['state']} {values['zipcode']} {values['country']}"
-            new_lat, new_lng = get_lat_long_from_address(full_address.strip())
-            values["lat"] = new_lat
-            values["lng"] = new_lng
+            try:
+                new_lat, new_lng = get_lat_long_from_address(full_address.strip())
+                values["lat"] = new_lat
+                values["lng"] = new_lng
+            except IndexError:
+                pass
         return values
 
 
