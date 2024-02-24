@@ -92,10 +92,10 @@ class CompanyInvitationUseCase(BaseUseCase):
             except EntityNotFound:
                 raise RecruiterCreateException("Accepting user does not exist")
 
-            if accepting_user.email != decoded_invitation.email_address:
-                raise RecruiterCreateException(
-                    "Invitation email does not match accepting user email"
-                )
+            # if accepting_user.email != decoded_invitation.email_address:
+            #     raise RecruiterCreateException(
+            #         "Invitation email does not match accepting user email"
+            #     )
 
             # Check invitation exists and company id matches
             try:
