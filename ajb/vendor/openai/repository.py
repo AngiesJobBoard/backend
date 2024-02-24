@@ -1,6 +1,7 @@
 import json
 from openai import OpenAI
 from ajb.config.settings import SETTINGS
+from aiohttp import ClientSession
 
 from .client_factory import OpenAIClientFactory
 
@@ -31,3 +32,43 @@ class OpenAIRepository:
         if not output:
             raise ValueError("OpenAI returned an empty response")
         return json.loads(output)
+
+
+class AsyncOpenAIRepository:
+    def __init__(self, async_session: ClientSession):
+        self.async_session = async_session
+        self.url = "https://api.openai.com/v1/completions"
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {SETTINGS.OPENAI_API_KEY}",
+        }
+
+    async def _send_request(self, data: dict) -> dict:
+        data["model"] = SETTINGS.OPENAI_MODEL
+        async with self.async_session.post(
+            self.url, json=data, headers=self.headers
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
+
+    async def text_prompt(self, prompt: str, max_tokens: int = 100) -> str:
+        data = {"prompt": prompt, "max_tokens": max_tokens}
+        response = await self._send_request(data)
+        try:
+            output = response["choices"][0]["text"].strip()
+            if not output:
+                raise ValueError("OpenAI returned an empty response")
+            return output
+        except (IndexError, KeyError):
+            raise ValueError("Unexpected response structure from OpenAI")
+
+    async def json_prompt(self, prompt: str, max_tokens: int = 100) -> dict:
+        data = {"prompt": prompt, "max_tokens": max_tokens}
+        response = await self._send_request(data)
+        try:
+            output = response["choices"][0]["text"].strip()
+            if not output:
+                raise ValueError("OpenAI returned an empty response")
+            return json.loads(output)
+        except (IndexError, KeyError, json.JSONDecodeError):
+            raise ValueError("Unexpected response or parsing error")

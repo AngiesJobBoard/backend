@@ -9,47 +9,37 @@ from ajb.utils import get_nested_value
 from ajb.base import BaseAction, BaseDataModel
 
 
-class GeneralLocation(BaseModel):
-    city: str
-    state: str
+def get_google_string(values: dict) -> str:
+    address_line_1 = values.get("address_line_1", "")
+    address_line_2 = values.get("address_line_2", "")
+    city = values.get("city", "")
+    state = values.get("state", "")
+    zipcode = values.get("zipcode", "")
+    country = values.get("country", "")
+
+    address = f"{address_line_1} {address_line_2}".strip()
+    return f"{address} {city} {state} {zipcode} {country}".strip()
+
+
+class Location(BaseModel):
+    address_line_1: str | None = None
+    address_line_2: str | None = None
+    zipcode: str | None = None
+    city: str | None = None
+    state: str | None = None
     country: str | None = None
     lat: float | None = None
     lng: float | None = None
 
-    def get_google_string(self) -> str:
-        return f"{self.city} {self.state} {self.country}"
-
     @root_validator(pre=True)
     def update_lat_lon(cls, values):
         lat, lng = values.get("lat"), values.get("lng")
         if lat is None or lng is None:
+            address_string = get_google_string(values)
+            if not address_string:
+                return values
             try:
-                new_lat, new_lng = get_lat_long_from_address(
-                    f"{values['city']} {values['state']} {values.get('country')}"
-                )
-                values["lat"] = new_lat
-                values["lng"] = new_lng
-            except IndexError:
-                pass
-        return values
-
-
-class Location(GeneralLocation):
-    address_line_1: str
-    address_line_2: str | None = None
-    zipcode: str
-
-    def get_google_string(self) -> str:
-        address = f"{self.address_line_1} {self.address_line_2 or ''}".strip()
-        return f"{address} {self.city} {self.state} {self.zipcode} {self.country}"
-
-    @root_validator(pre=True)
-    def update_lat_lon(cls, values):
-        lat, lng = values.get("lat"), values.get("lng")
-        if lat is None or lng is None:
-            full_address = f"{values['address_line_1']} {values.get('address_line_2', '')} {values['city']} {values['state']} {values['zipcode']} {values['country']}"
-            try:
-                new_lat, new_lng = get_lat_long_from_address(full_address.strip())
+                new_lat, new_lng = get_lat_long_from_address(address_string)
                 values["lat"] = new_lat
                 values["lng"] = new_lng
             except IndexError:

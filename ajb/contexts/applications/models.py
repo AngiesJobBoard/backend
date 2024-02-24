@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 import pandas as pd
 
 from ajb.base.models import BaseDataModel, PaginatedResponse
-from ajb.common.models import DataReducedJob, GeneralLocation
+from ajb.common.models import DataReducedJob, Location
 
 from .enumerations import ApplicationStatus
 
@@ -73,14 +73,15 @@ class UserCreatedApplication(BaseModel):
     company_id: str
     job_id: str
     resume_id: str | None = None
+    resume_url: str | None = None
     extracted_resume_text: str | None = None
-    resume_scan_status: ResumeScanStatus = ResumeScanStatus.PENDING
+    resume_scan_status: ResumeScanStatus | None = None
     resume_scan_error_test: str | None = None
     qualifications: Qualifications | None = None
     name: str
     email: str
     phone: str | None = None
-    user_location: GeneralLocation | None = None
+    user_location: Location | None = None
 
     @classmethod
     def from_csv_record(cls, company_id: str, job_id: str, record: dict):
@@ -91,12 +92,14 @@ class UserCreatedApplication(BaseModel):
             email=record["email"],
             phone=record.get("phone") if not pd.isnull(record.get("phone")) else None,
             user_location=(
-                GeneralLocation(
+                Location(
                     city=record["city"],
                     state=record["state"],
                     country=record["country"],
                 )
-                if not pd.isnull(record.get("city")) and not pd.isnull(record.get("state")) and not pd.isnull(record.get("country"))
+                if not pd.isnull(record.get("city"))
+                and not pd.isnull(record.get("state"))
+                and not pd.isnull(record.get("country"))
                 else None
             ),
             qualifications=Qualifications(
@@ -107,7 +110,8 @@ class UserCreatedApplication(BaseModel):
                         start_date=record.get("most_recent_start_date"),
                         end_date=record.get("most_recent_end_date"),
                     )
-                    if not pd.isnull(record.get("most_recent_job_title")) and not pd.isnull(record.get("most_recent_company_name"))
+                    if not pd.isnull(record.get("most_recent_job_title"))
+                    and not pd.isnull(record.get("most_recent_company_name"))
                     else None
                 ),
                 work_history=[],
@@ -121,7 +125,9 @@ class UserCreatedApplication(BaseModel):
                             end_date=record.get("education_end_date_1"),
                         ),
                     ]
-                    if not pd.isnull(record.get("school_name_1")) and not pd.isnull(record.get("education_level_1")) and not pd.isnull(record.get("field_of_study_1"))
+                    if not pd.isnull(record.get("school_name_1"))
+                    and not pd.isnull(record.get("education_level_1"))
+                    and not pd.isnull(record.get("field_of_study_1"))
                     else None
                 ),
                 skills=(
@@ -141,7 +147,8 @@ class UserCreatedApplication(BaseModel):
                 ),
                 language_proficiencies=(
                     record.get("language_proficiencies", "").split(",")
-                    if not pd.isnull(record.get("language_proficiencies")) and record.get("language_proficiencies")
+                    if not pd.isnull(record.get("language_proficiencies"))
+                    and record.get("language_proficiencies")
                     else None
                 ),
             ),
@@ -157,7 +164,8 @@ class UpdateApplication(BaseModel):
     name: str | None = None
     email: str | None = None
     phone: str | None = None
-    user_location: GeneralLocation | None = None
+    user_location: Location | None = None
+    resume_url: str | None = None
 
 
 class UserCreateRecruiterNote(BaseModel):

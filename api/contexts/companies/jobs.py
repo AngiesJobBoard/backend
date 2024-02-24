@@ -49,33 +49,30 @@ def delete_job(request: Request, company_id: str, job_id: str):
     return JobRepository(request.state.request_scope, company_id).delete(job_id)
 
 
+async def _process_jobs_csv_file(
+    company_id: str, file: UploadFile, job_repo: JobRepository
+):
+    if file and file.filename and not file.filename.endswith(".csv"):
+        return []
+    content = await file.read()
+    content = content.decode("utf-8")
+    content = StringIO(content)
+    df = pd.read_csv(content)
+    df = df.where(pd.notnull(df), None)
+    raw_jobs = df.to_dict(orient="records")
+    jobs = [UserCreateJob.from_csv(job) for job in raw_jobs]  # type: ignore
+    return job_repo.create_many_jobs(company_id, jobs)
+
+
 @router.post("/jobs-from-csv")
 async def create_jobs_from_csv_data(
     request: Request, company_id: str, file: UploadFile = File(...)
 ):
-    if file.content_type != "text/csv":
-        raise GenericHTTPException(
-            status_code=400, detail="Invalid file type. Please upload a CSV file."
-        )
-
-    try:
-        content = await file.read()
-        content = content.decode("utf-8")
-        content = StringIO(content)
-        df = pd.read_csv(content)
-        df = df.where(pd.notnull(df), None)
-        raw_jobs = df.to_dict(orient="records")
-        jobs = [UserCreateJob(**job) for job in raw_jobs]  # type: ignore
-        return JobRepository(request.state.request_scope, company_id).create_many_jobs(
-            company_id, jobs
-        )
-    except Exception as e:
-        raise GenericHTTPException(
-            status_code=400, detail=f"Error processing file: {e}"
-        )
+    job_repo = JobRepository(request.state.request_scope, company_id)
+    return await _process_jobs_csv_file(company_id, file, job_repo)
 
 
-async def _process_csv_file(
+async def _process_applications_csv_file(
     company_id: str,
     job_id: str,
     file: UploadFile,
@@ -101,7 +98,9 @@ async def upload_applications_from_csv(
     application_repo = CompanyApplicationRepository(request.state.request_scope)
     for file in files:
         all_created_applications.extend(
-            await _process_csv_file(company_id, job_id, file, application_repo)
+            await _process_applications_csv_file(
+                company_id, job_id, file, application_repo
+            )
         )
     if not all_created_applications:
         raise HTTPException(status_code=400, detail="No valid applications found")

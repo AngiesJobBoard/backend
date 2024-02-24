@@ -15,7 +15,7 @@ from ajb.common.models import (
     DataReducedCompany,
     JobLocationType,
 )
-from ajb.common.models import Location, convert_pay_to_hourly
+from ajb.common.models import Location, Location, convert_pay_to_hourly
 from ajb.static.enumerations import PayType
 from ajb.contexts.companies.offices.repository import OfficeRepository
 from ajb.exceptions import MissingJobFieldsException
@@ -23,7 +23,6 @@ from ajb.vendor.arango.models import Filter, Operator, Sort
 
 from ..enumerations import (
     ScheduleType,
-    ResumeRequirement,
     WeeklyScheduleType,
     ShiftType,
 )
@@ -65,7 +64,7 @@ class UserCreateJob(BaseModel):
     experience_required: ExperienceLevel | None = None
 
     location_type: JobLocationType | None = None
-    location_override: Location | None = None
+    location_override: Location | Location | None = None
     company_office_id: str | None = None
 
     required_job_skills: t.List[str] | None = None
@@ -141,6 +140,30 @@ class UserCreateJob(BaseModel):
                 score += weight
 
         return score
+
+    @classmethod
+    def from_csv(cls, values: dict) -> "UserCreateJob":
+        values["industry_subcategories"] = values.get(
+            "industry_subcategories", ""
+        ).split(",")
+        values["required_job_skills"] = values.get("required_job_skills", "").split(",")
+        values["weekly_day_range"] = values.get("weekly_day_range", "").split(",")
+        values["shift_type"] = values.get("shift_type", "").split(",")
+        values["language_requirements"] = values.get("language_requirements", "").split(
+            ","
+        )
+        values["license_requirements"] = values.get("license_requirements", "").split(
+            ","
+        )
+        values["certification_requirements"] = values.get(
+            "certification_requirements", ""
+        ).split(",")
+
+        if values.get("zipcode"):
+            values["location_override"] = Location(
+                zipcode=str(values.get("zipcode")),
+            )
+        return cls(**values)
 
 
 class CreateJob(UserCreateJob):

@@ -5,7 +5,9 @@ from kafka.consumer.fetcher import ConsumerRecord
 
 from ajb.base.events import KafkaGroup, KafkaTopic
 from ajb.vendor.kafka.client_factory import KafkaConsumerFactory
+from ajb.vendor.sentry import capture_exception
 
+from .middleware import verify_message_header_token
 from .routing import topic_router
 from .health_check import status
 
@@ -49,33 +51,29 @@ async def handle_messages(consumer: KafkaConsumer):
         topic_messages = consumer.poll(timeout_ms=10)
         if (
             topic_messages is None
-            or sum(len(messages) for messages in topic_messages.values()) == 0
+            or sum([len(messages) for messages in topic_messages.values()]) == 0
         ):
             await asyncio.sleep(0.1)
             continue
 
-        tasks = []
         for messages in topic_messages.values():
             for message in messages:
                 logger.info("Message received")
-                task = handle_message(message, commit_counter, last_commit_time, consumer)
-                tasks.append(task)
+                asyncio.create_task(
+                    handle_message(message, commit_counter, last_commit_time, consumer)
+                )
 
-        # Run all tasks concurrently
-        await asyncio.gather(*tasks)
+                # Yield to the event loop to allow other tasks to run
+                await asyncio.sleep(0)
 
 
 async def consumer():
     consumer = KafkaConsumerFactory(group_id=KafkaGroup.DEFAULT.value).get_client()
     consumer.subscribe([topic.value for topic in KafkaTopic])
     logger.info("Consumer Started...")
-
-    # Create multiple tasks for handle_messages
-    tasks = [asyncio.create_task(handle_messages(consumer)) for _ in range(4)]
-
+    task = asyncio.create_task(handle_messages(consumer))
     try:
-        # Run all tasks concurrently
-        await asyncio.gather(*tasks)
+        await task
     except asyncio.CancelledError:
         logger.info("Consumer is shutting down...")
         consumer.close()

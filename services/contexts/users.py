@@ -1,3 +1,4 @@
+from aiohttp import ClientSession
 from ajb.base.events import UserEvent, BaseKafkaMessage
 from ajb.contexts.users.asynchronous_events import AsynchronousUserEvents
 

@@ -26,6 +26,7 @@ def initialize_repositories():
             if index != -1:
                 module_name = module_name[index:]
             importlib.import_module(module_name)  # type: ignore
+    print("Repositories initialized")
 
 
 def generate_random_short_code(length: int = 10):

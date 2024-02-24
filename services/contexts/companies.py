@@ -1,3 +1,4 @@
+from aiohttp import ClientSession
 from ajb.base.events import CompanyEvent, BaseKafkaMessage
 from ajb.contexts.companies.asynchronous_events import AsynchronousCompanyEvents
 
@@ -24,7 +25,9 @@ async def company_views_applications(message: BaseKafkaMessage):
     ).company_views_applications()
 
 
-async def company_clicks_on_application(message: BaseKafkaMessage):
+async def company_clicks_on_application(
+    message: BaseKafkaMessage
+):
     await AsynchronousCompanyEvents(
         message,
         make_request_scope(message),
@@ -32,7 +35,9 @@ async def company_clicks_on_application(message: BaseKafkaMessage):
     ).company_clicks_on_application()
 
 
-async def company_shortlists_application(message: BaseKafkaMessage):
+async def company_shortlists_application(
+    message: BaseKafkaMessage
+):
     await AsynchronousCompanyEvents(
         message,
         make_request_scope(message),
@@ -40,7 +45,9 @@ async def company_shortlists_application(message: BaseKafkaMessage):
     ).company_shortlists_application()
 
 
-async def company_rejects_application(message: BaseKafkaMessage):
+async def company_rejects_application(
+    message: BaseKafkaMessage
+):
     await AsynchronousCompanyEvents(
         message,
         make_request_scope(message),
@@ -56,7 +63,9 @@ async def company_uploads_resume(message: BaseKafkaMessage):
     ).company_uploads_resume()
 
 
-async def company_calculates_match_score(message: BaseKafkaMessage):
+async def company_calculates_match_score(
+    message: BaseKafkaMessage
+):
     await AsynchronousCompanyEvents(
         message,
         make_request_scope(message),

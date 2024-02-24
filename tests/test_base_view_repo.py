@@ -55,16 +55,14 @@ class CreateModelOne(BaseModel):
     name: str
 
 
-class ModelOne(CreateModelOne, BaseDataModel):
-    ...
+class ModelOne(CreateModelOne, BaseDataModel): ...
 
 
 class CreateModelTwo(BaseModel):
     age: int
 
 
-class ModelTwo(CreateModelTwo, BaseDataModel):
-    ...
+class ModelTwo(CreateModelTwo, BaseDataModel): ...
 
 
 class TestCollection(str, Enum):

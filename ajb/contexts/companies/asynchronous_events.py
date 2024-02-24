@@ -7,7 +7,7 @@ and is then routed to the appropriate handler based on the event type.
 from ajb.base import RequestScope
 from ajb.contexts.companies.models import Company
 from ajb.base.events import CompanyEvent, BaseKafkaMessage, SourceServices
-from ajb.common.models import GeneralLocation
+from ajb.common.models import Location
 from ajb.contexts.companies.events import (
     RecruiterAndApplication,
     RecruiterAndApplications,
@@ -108,7 +108,9 @@ class AsynchronousCompanyEvents:
 
     def _update_application_with_parsed_information(
         self,
+        *,
         application_id: str,
+        resume_url: str,
         raw_resume_text: str,
         resume_information: ExtractedResume,
         application_repository: ApplicationRepository,
@@ -120,6 +122,7 @@ class AsynchronousCompanyEvents:
                 email=resume_information.email,
                 phone=resume_information.phone_number,
                 extracted_resume_text=raw_resume_text,
+                resume_url=resume_url,
                 qualifications=Qualifications(
                     most_recent_job=(
                         WorkHistory(
@@ -138,7 +141,7 @@ class AsynchronousCompanyEvents:
                     language_proficiencies=resume_information.languages,
                 ),
                 user_location=(
-                    GeneralLocation(
+                    Location(
                         city=resume_information.city, state=resume_information.state
                     )
                     if resume_information.city and resume_information.state
@@ -151,7 +154,7 @@ class AsynchronousCompanyEvents:
         self, data: ResumeAndApplication, application_repository: ApplicationRepository
     ) -> bool:
         extractor = ResumeExtractorUseCase(self.request_scope, self.openai)
-        raw_text = extractor.extract_resume_text(data.resume_id)
+        raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
         resume_information = extractor.extract_resume_information(raw_text)
         original_application_deleted = False
 
@@ -167,19 +170,24 @@ class AsynchronousCompanyEvents:
         if existing_applicants_that_match_email:
             for matched_application in existing_applicants_that_match_email:
                 self._update_application_with_parsed_information(
-                    matched_application.id,
-                    raw_text,
-                    resume_information,
-                    application_repository,
+                    application_id=matched_application.id,
+                    resume_url=resume_url,
+                    raw_resume_text=raw_text,
+                    resume_information=resume_information,
+                    application_repository=application_repository,
                 )
                 event_producter.company_calculates_match_score(matched_application.id)
-                
+
             # Delete the original application (like a merge operation)
             application_repository.delete(data.application_id)
             original_application_deleted = True
             return original_application_deleted
         self._update_application_with_parsed_information(
-            data.application_id, raw_text, resume_information, application_repository
+            application_id=data.application_id,
+            resume_url=resume_url,
+            raw_resume_text=raw_text,
+            resume_information=resume_information,
+            application_repository=application_repository,
         )
         event_producter.company_calculates_match_score(data.application_id)
         original_application_deleted = False
@@ -196,7 +204,9 @@ class AsynchronousCompanyEvents:
 
         # Try to peform the parse and updates
         try:
-            original_application_deleted = self._extract_and_update_application(data, application_repository)
+            original_application_deleted = self._extract_and_update_application(
+                data, application_repository
+            )
             if not original_application_deleted:
                 application_repository.update_fields(
                     data.application_id, resume_scan_status=ResumeScanStatus.COMPLETED

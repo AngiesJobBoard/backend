@@ -161,12 +161,7 @@ class CompanyApplicationRepository(ApplicationRepository):
             return_model=CompanyApplicationView,
         )
         casted_result = t.cast(CompanyApplicationView, result)
-        # TODO the company_id is null for some reason? Should not be so it can match
-        CompanyEventProducer(
-            self.request_scope, SourceServices.API
-        ).company_clicks_on_application(casted_result.id)
-        self.update_fields(application_id, has_been_viewed_by_recruiters=True)
-        return result
+        return casted_result
 
     def get_application_count(
         self,
