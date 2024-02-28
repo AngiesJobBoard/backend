@@ -1,5 +1,5 @@
 import typing as t
-from copy import copy
+from copy import deepcopy
 from arango.database import StandardDatabase, TransactionDatabase
 from arango.cursor import Cursor
 
@@ -94,7 +94,7 @@ class AQLQuery:
         return f"_BIND_VAR_{len(self.bind_vars)}"
 
     def build_query(self) -> str:
-        query = copy(self.query_parts)
+        query = deepcopy(self.query_parts)
 
         # Add filters
         for i, filter_obj in enumerate(self.filters):
@@ -105,6 +105,19 @@ class AQLQuery:
                     {'FILTER' if i == 0 else filter_obj.and_or_operator} 
                     LOWER({filter_obj.collection_alias}.{filter_obj.field})
                     {filter_obj.operator_value} LOWER(@{self.get_next_bind_var_key()})
+                    """
+                )
+            elif filter_obj.operator.is_in_search():
+                LIKE_NOT_LIKE_OPERATOR = "LIKE" if filter_obj.operator == Operator.IN else "NOT LIKE"
+                self.filters[i].value = f"%{filter_obj.value}%"
+                query.append(
+                    f"""
+                    {'FILTER' if i == 0 else filter_obj.and_or_operator}
+                    (
+                        FOR item IN {filter_obj.collection_alias}.{filter_obj.field}
+                        FILTER LOWER(item) {LIKE_NOT_LIKE_OPERATOR} LOWER(@{self.get_next_bind_var_key()})
+                        RETURN true
+                    ) != []
                     """
                 )
             else:

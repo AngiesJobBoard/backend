@@ -77,7 +77,7 @@ class CompanyFixture:
                     lat=42.35843,
                     lng=-71.05977,
                 ),
-                required_job_skills=["Python"],
+                required_job_skills=["Python", "Another Fancy Skill"],
                 on_job_training_offered=True,
                 weekly_day_range=[WeeklyScheduleType.monday_to_friday],
                 shift_type=[ShiftType.day],

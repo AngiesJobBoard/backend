@@ -6,8 +6,8 @@ from fastapi import (
 
 from ajb.base import QueryFilterParams, RepoFilterParams, build_pagination_response
 from ajb.contexts.applications.models import (
-    PaginatedApplications,
-    Application,
+    CompanyApplicationView,
+    PaginatedCompanyApplicationView,
     UserCreateRecruiterNote,
     CreateRecruiterNote,
     CreateApplicationStatusUpdate,
@@ -25,7 +25,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=PaginatedApplications)
+@router.get("/", response_model=PaginatedCompanyApplicationView)
 def get_all_company_applications(
     request: Request,
     company_id: str,
@@ -34,7 +34,7 @@ def get_all_company_applications(
     match_score: int | None = None,
     new_only: bool = False,
     resume_text_contains: str | None = None,
-    has_required_skills: list[str] | None = None,
+    has_required_skill: str | None = None,
     query: QueryFilterParams = Depends(),
 ):
     """Gets all applications"""
@@ -48,18 +48,18 @@ def get_all_company_applications(
         match_score,
         new_only,
         resume_text_contains,
-        has_required_skills,
+        has_required_skill,
     )
     return build_pagination_response(
         results,
         query.page,
         query.page_size,
         request.url._url,
-        PaginatedApplications,
+        PaginatedCompanyApplicationView,
     )
 
 
-@router.post("/many", response_model=PaginatedApplications)
+@router.post("/many", response_model=PaginatedCompanyApplicationView)
 def get_many_company_applications(
     request: Request,
     company_id: str,
@@ -79,7 +79,7 @@ def get_many_company_applications(
         page,
         page_size,
         request.url._url,
-        PaginatedApplications,
+        PaginatedCompanyApplicationView,
     )
 
 
@@ -116,11 +116,11 @@ def get_application_counts(
     )
 
 
-@router.get("/{application_id}", response_model=Application)
+@router.get("/{application_id}", response_model=CompanyApplicationView)
 def get_company_application(request: Request, company_id: str, application_id: str):
     """Gets a single application"""
-    return CompanyApplicationRepository(request.state.request_scope).get_one(
-        company_id=company_id, id=application_id
+    return CompanyApplicationRepository(request.state.request_scope).get_company_view_single(
+        application_id
     )
 
 

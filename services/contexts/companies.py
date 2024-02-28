@@ -1,4 +1,4 @@
-from aiohttp import ClientSession
+import time
 from ajb.base.events import CompanyEvent, BaseKafkaMessage
 from ajb.contexts.companies.asynchronous_events import AsynchronousCompanyEvents
 
@@ -56,21 +56,27 @@ async def company_rejects_application(
 
 
 async def company_uploads_resume(message: BaseKafkaMessage):
+    print("Starting to scan resume")
+    start = time.time()
     await AsynchronousCompanyEvents(
         message,
         make_request_scope(message),
         openai=openai
     ).company_uploads_resume()
+    print(f"Time to scan resume: {time.time() - start}")
 
 
 async def company_calculates_match_score(
     message: BaseKafkaMessage
 ):
+    print("Starting match score")
+    start = time.time()
     await AsynchronousCompanyEvents(
         message,
         make_request_scope(message),
         openai=openai
     ).company_calculates_match_score()
+    print(f"Time to calculate match score: {time.time() - start}")
 
 
 ROUTER = {

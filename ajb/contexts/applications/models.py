@@ -221,3 +221,12 @@ class Application(CreateApplication, BaseDataModel): ...
 @dataclass
 class PaginatedApplications(PaginatedResponse[Application]):
     data: list[Application]
+
+
+class CompanyApplicationView(Application):
+    job: DataReducedJob
+
+
+@dataclass
+class PaginatedCompanyApplicationView(PaginatedResponse[CompanyApplicationView]):
+    data: list[CompanyApplicationView]

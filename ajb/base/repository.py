@@ -92,14 +92,14 @@ def build_and_execute_query(
     if isinstance(repo_filters, QueryFilterParams):
         repo_filters = repo_filters.convert_to_repo_filters(search_fields)
     query = AQLQuery(db, collection_name)
+
     for join in joins:
         query.add_join(join)
-
     for filter in repo_filters.filters:
         query.add_filter(filter)
     for filter_field, filter_value in kwargs.items():
         query.add_filter(
-            Filter(field=filter_field, operator=Operator.EQUALS, value=filter_value)
+            Filter(field=filter_field, value=filter_value)
         )
 
     # Update the filter types based on the data model
@@ -112,14 +112,14 @@ def build_and_execute_query(
         query.add_search_filter(search_filter)
     for sort in repo_filters.sorts:
         query.add_sort(sort)
-
     if repo_filters.pagination:
         query.set_pagination(*repo_filters.pagination.get_limit_offset())
-
     if return_fields:
         query.set_return_fields(return_fields)
+
     if execute_type == "count":
         return query.execute_count()
+
     return query.execute()
 
 
