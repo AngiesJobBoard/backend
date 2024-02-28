@@ -157,6 +157,15 @@ class RepoFilterParams(BaseModel):
     search_filters: list[Filter] = Field(default_factory=list)
 
 
+def check_for_boolish(value: str) -> bool | str:
+    if value.lower() in ("true", "false", "True", "False"):
+        if value.lower() == "true":
+            return True
+        if value.lower() == "false":
+            return False
+    return value
+
+
 class QueryFilterParams(BaseModel):
     """
     This is the class that is used to parse the query string parameters
@@ -211,7 +220,7 @@ class QueryFilterParams(BaseModel):
                 Filter(
                     field=".".join(field_parts[:-1]),
                     operator=Operator.from_query_string(field_parts[-1]),
-                    value=value,
+                    value=check_for_boolish(value),
                     collection_alias=collection_alias,
                 )
             )

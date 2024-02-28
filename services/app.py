@@ -12,10 +12,6 @@ from .routing import topic_router
 from .health_check import status
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
 COMMIT_INTERVAL = 100  # Commit after every 100 messages
 COMMIT_TIME = 10  # Commit every 10 seconds, whichever comes first
 
@@ -27,7 +23,7 @@ async def handle_message(
     consumer: KafkaConsumer,
 ):
     await topic_router(message)
-    logger.info("SUCCESS: processed message")
+    print("SUCCESS: processed message")
     commit_counter += 1
     current_time = asyncio.get_running_loop().time()
     if (
@@ -35,7 +31,6 @@ async def handle_message(
         or (current_time - last_commit_time) >= COMMIT_TIME
     ):
         consumer.commit()
-        logger.info("Committed %s messages", commit_counter)
         commit_counter = 0
         last_commit_time = current_time
 
@@ -58,7 +53,7 @@ async def handle_messages(consumer: KafkaConsumer):
 
         for messages in topic_messages.values():
             for message in messages:
-                logger.info("Message received")
+                print("Message received")
                 asyncio.create_task(
                     handle_message(message, commit_counter, last_commit_time, consumer)
                 )
@@ -70,10 +65,10 @@ async def handle_messages(consumer: KafkaConsumer):
 async def consumer():
     consumer = KafkaConsumerFactory(group_id=KafkaGroup.DEFAULT.value).get_client()
     consumer.subscribe([topic.value for topic in KafkaTopic])
-    logger.info("Consumer Started...")
+    print("Consumer Started...")
     task = asyncio.create_task(handle_messages(consumer))
     try:
         await task
     except asyncio.CancelledError:
-        logger.info("Consumer is shutting down...")
+        print("Consumer is shutting down...")
         consumer.close()

@@ -4,7 +4,7 @@ from fastapi import (
     Depends,
 )
 
-from ajb.base import QueryFilterParams, build_pagination_response
+from ajb.base import QueryFilterParams, RepoFilterParams, build_pagination_response
 from ajb.contexts.applications.models import (
     CompanyApplicationView,
     PaginatedCompanyApplicationView,
@@ -17,6 +17,7 @@ from ajb.contexts.applications.repository import (
     CompanyApplicationRepository,
     ApplicationRepository,
 )
+from ajb.vendor.arango.models import Filter, Operator
 
 
 router = APIRouter(
@@ -42,6 +43,63 @@ def get_all_company_applications(
         request.url._url,
         PaginatedCompanyApplicationView,
     )
+
+
+@router.post("/many", response_model=PaginatedCompanyApplicationView)
+def get_many_company_applications(
+    request: Request,
+    company_id: str,
+    application_ids: list[str],
+    page: int = 0,
+    page_size: int = 50,
+):
+    """Gets all applications by a list of ids"""
+    query = RepoFilterParams(
+        filters=[Filter(field="_key", operator=Operator.IN, value=application_ids)],
+    )
+    results = CompanyApplicationRepository(
+        request.state.request_scope
+    ).get_company_view_list(company_id, query)
+    return build_pagination_response(
+        results,
+        page,
+        page_size,
+        request.url._url,
+        PaginatedCompanyApplicationView,
+    )
+
+
+@router.get("/count", response_model=int)
+def get_application_counts(
+    request: Request,
+    company_id: str,
+    job_id: str | None = None,
+    minimum_match_score: int | None = None,
+    shortlist_only: bool = False,
+    unviewed_only: bool = False
+):
+    filter_params = RepoFilterParams(
+        filters=[Filter(field="company_id", value=company_id)]
+    )
+    if job_id:
+        filter_params.filters.append(
+            Filter(field="job_id", value=job_id)
+        )
+    if minimum_match_score:
+        filter_params.filters.append(
+            Filter(field="application_match_score", operator=Operator.GREATER_THAN_EQUAL, value=minimum_match_score)
+        )
+    if shortlist_only:
+        filter_params.filters.append(
+            Filter(field="application_is_shortlisted", value=True)
+        )
+    if unviewed_only:
+        filter_params.filters.append(
+            Filter(field="viewed_by_company", value=False)
+        )
+    return CompanyApplicationRepository(
+        request.state.request_scope
+    ).get_count(filter_params)
 
 
 @router.get("/{application_id}", response_model=CompanyApplicationView)

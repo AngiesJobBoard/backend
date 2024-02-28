@@ -13,7 +13,6 @@ from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.resumes.models import UserCreateResume
 from ajb.contexts.resumes.usecase import ResumeUseCase
-from api.exceptions import GenericHTTPException
 
 from api.vendors import storage
 
@@ -46,7 +45,15 @@ def get_job(request: Request, company_id: str, job_id: str):
 
 @router.delete("/{job_id}")
 def delete_job(request: Request, company_id: str, job_id: str):
-    return JobRepository(request.state.request_scope, company_id).delete(job_id)
+    # Delete Job
+    result = JobRepository(request.state.request_scope, company_id).delete(job_id)
+
+    # Delete all applications with job id
+    CompanyApplicationRepository(request.state.request_scope).delete_all_applications_for_job(
+        company_id,
+        job_id
+    )
+    return result
 
 
 async def _process_jobs_csv_file(

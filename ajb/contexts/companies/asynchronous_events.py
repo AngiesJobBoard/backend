@@ -16,7 +16,7 @@ from ajb.contexts.companies.events import (
 )
 from ajb.contexts.applications.models import (
     Application,
-    ResumeScanStatus,
+    ScanStatus,
     Qualifications,
     WorkHistory,
     UpdateApplication,
@@ -199,7 +199,7 @@ class AsynchronousCompanyEvents:
 
         # Update the scan status to started
         application_repository.update_fields(
-            data.application_id, resume_scan_status=ResumeScanStatus.STARTED
+            data.application_id, resume_scan_status=ScanStatus.STARTED
         )
 
         # Try to peform the parse and updates
@@ -209,12 +209,12 @@ class AsynchronousCompanyEvents:
             )
             if not original_application_deleted:
                 application_repository.update_fields(
-                    data.application_id, resume_scan_status=ResumeScanStatus.COMPLETED
+                    data.application_id, resume_scan_status=ScanStatus.COMPLETED
                 )
         except Exception as e:
             application_repository.update_fields(
                 data.application_id,
-                resume_scan_status=ResumeScanStatus.FAILED,
+                resume_scan_status=ScanStatus.FAILED,
                 resume_scan_error_text=str(e),
             )
             raise e

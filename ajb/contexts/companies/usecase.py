@@ -21,7 +21,7 @@ def make_arango_safe_key(slug: str) -> str:
         raise ValueError(
             "The processed slug is empty. Provide a non-empty input string."
         )
-    return slug
+    return slug.lower()
 
 
 class CompaniesUseCase(BaseUseCase):

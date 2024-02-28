@@ -6,6 +6,7 @@ from ajb.base import (
     ParentRepository,
     RepositoryRegistry,
     QueryFilterParams,
+    RepoFilterParams
 )
 from ajb.base.events import SourceServices
 from ajb.exceptions import EntityNotFound
@@ -122,10 +123,13 @@ class CompanyApplicationRepository(ApplicationRepository):
     def get_company_view_list(
         self,
         company_id: str,
-        query: QueryFilterParams = QueryFilterParams(),
+        query: QueryFilterParams | RepoFilterParams = RepoFilterParams(),
         shortlist_only: bool = False,
     ):
-        repo_filters = query.convert_to_repo_filters()
+        if isinstance(query, QueryFilterParams):
+            repo_filters = query.convert_to_repo_filters()
+        else:
+            repo_filters = query
         repo_filters.filters.append(Filter(field="company_id", value=company_id))
         if shortlist_only:
             repo_filters.filters.append(
@@ -145,7 +149,6 @@ class CompanyApplicationRepository(ApplicationRepository):
             repo_filters=repo_filters,
             return_model=CompanyApplicationView,
         )
-        casted_results = t.cast(list[CompanyApplicationView], results)
         return results, count
 
     def get_company_view_single(self, company_id: str, application_id: str):
@@ -204,6 +207,18 @@ class CompanyApplicationRepository(ApplicationRepository):
         for application in created_applications:
             event_producter.company_calculates_match_score(application)
         return created_applications
+    
+    def delete_all_applications_for_job(self, company_id: str, job_id: str):
+        applications = self.query(
+            repo_filters=RepoFilterParams(
+                filters=[
+                   Filter(field="company_id", value=company_id),
+                    Filter(field="job_id", value=job_id)
+                ]
+            )
+        )[0]
+        self.delete_many([application.id for application in applications])
+        return True
 
 
 RepositoryRegistry.register(ApplicationRepository)

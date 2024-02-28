@@ -5,7 +5,7 @@ from ajb.base.events import (
     SourceServices,
 )
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
-from ajb.contexts.applications.models import CreateApplication
+from ajb.contexts.applications.models import CreateApplication, ScanStatus
 from ajb.contexts.companies.events import CompanyEventProducer
 
 from .models import Resume, CreateResume, UserCreateResume
@@ -46,6 +46,8 @@ class ResumeUseCase(BaseUseCase):
                 resume_id=created_resume.id,
                 name="Resume Scan Pending",
                 email="Resume Scan Pending",
+                resume_scan_status=ScanStatus.PENDING,
+                match_score_status=ScanStatus.PENDING,
             )
         )
 

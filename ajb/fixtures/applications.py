@@ -8,6 +8,7 @@ from ajb.contexts.applications.models import (
     Qualifications,
     WorkHistory,
     Education,
+    ScanStatus
 )
 from ajb.contexts.users.models import User
 from ajb.contexts.resumes.models import Resume
@@ -47,6 +48,8 @@ class ApplicationFixture:
                 email="nice@email.com",
                 name="Nice Name",
                 phone="123-456-7890",
+                resume_scan_status=ScanStatus.NO_SCAN,
+                match_score_status=ScanStatus.NO_SCAN,
                 qualifications=Qualifications(
                     most_recent_job=WorkHistory(
                         job_title="Software Engineer",

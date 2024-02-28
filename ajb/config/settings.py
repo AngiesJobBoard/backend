@@ -38,6 +38,8 @@ class AppSettings:
     KAFKA_USERNAME: str = os.getenv("KAFKA_USERNAME", "")
     KAFKA_PASSWORD: str = os.getenv("KAFKA_PASSWORD", "")
     KAFKA_JWT_SECRET: str = os.getenv("KAFKA_JWT_SECRET", "")
+    KAFKA_USERS_TOPIC: str = os.getenv("KAFKA_USERS_TOPIC", "users")
+    KAFKA_COMPANIES_TOPIC: str = os.getenv("KAFKA_COMPANIES_TOPIC", "companies")
 
     # Sendgrid config
     SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")

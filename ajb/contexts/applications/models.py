@@ -10,7 +10,8 @@ from ajb.common.models import DataReducedJob, Location
 from .enumerations import ApplicationStatus
 
 
-class ResumeScanStatus(str, Enum):
+class ScanStatus(str, Enum):
+    NO_SCAN = "No Scan"
     PENDING = "Pending"
     STARTED = "Started"
     COMPLETED = "Completed"
@@ -75,8 +76,10 @@ class UserCreatedApplication(BaseModel):
     resume_id: str | None = None
     resume_url: str | None = None
     extracted_resume_text: str | None = None
-    resume_scan_status: ResumeScanStatus | None = None
-    resume_scan_error_test: str | None = None
+    resume_scan_status: ScanStatus
+    resume_scan_error_text: str | None = None
+    match_score_status: ScanStatus
+    match_score_error_text: str | None = None
     qualifications: Qualifications | None = None
     name: str
     email: str
@@ -90,6 +93,8 @@ class UserCreatedApplication(BaseModel):
             job_id=job_id,
             name=record["name"],
             email=record["email"],
+            resume_scan_status=ScanStatus.NO_SCAN,
+            match_score_status=ScanStatus.NO_SCAN,
             phone=record.get("phone") if not pd.isnull(record.get("phone")) else None,
             user_location=(
                 Location(
@@ -158,8 +163,11 @@ class UserCreatedApplication(BaseModel):
 class UpdateApplication(BaseModel):
     resume_id: str | None = None
     extracted_resume_text: str | None = None
-    resume_scan_status: ResumeScanStatus | None = None
+    resume_scan_status: ScanStatus | None = None
     resume_scan_error_test: str | None = None
+    match_score_status: ScanStatus | None = None
+    match_score_error_text: str | None = None
+    viewed_by_company: bool | None = None
     qualifications: Qualifications | None = None
     name: str | None = None
     email: str | None = None
@@ -204,6 +212,7 @@ class CreateApplication(UserCreatedApplication):
 
     recruiter_tags: list[str] = Field(default_factory=list)
     recruiter_notes: dict[str, RecruiterNote] = Field(default_factory=dict)
+    viewed_by_company: bool = False
 
 
 class Application(CreateApplication, BaseDataModel): ...

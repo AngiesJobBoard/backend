@@ -10,6 +10,7 @@ from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel, Field
 from ajb.base import RequestScope
+from ajb.config.settings import SETTINGS
 from ajb.vendor.kafka.repository import KafkaProducerRepository
 
 
@@ -22,8 +23,8 @@ class KafkaGroup(str, Enum):
 class KafkaTopic(str, Enum):
     """A topic represents a group of business actions"""
 
-    COMPANIES = "companies"
-    USERS = "users"
+    COMPANIES = SETTINGS.KAFKA_COMPANIES_TOPIC
+    USERS = SETTINGS.KAFKA_USERS_TOPIC
 
     @classmethod
     def get_all_topics(cls):

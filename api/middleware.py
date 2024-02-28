@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 from typing import Callable
@@ -173,6 +174,10 @@ def add_app_middleware(app: FastAPI):
     @app.middleware("http")
     async def add_process_time_header(request: Request, call_next: Callable):
         start_time = time.time()
+
+        if os.getenv("APP_IS_SLOW") == "true":
+            time.sleep(1)
+
         response = await call_next(request)
         process_time = time.time() - start_time
         response.headers["X-Process-Time"] = str(process_time)
