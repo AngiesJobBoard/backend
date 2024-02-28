@@ -29,9 +29,9 @@ from ..enumerations import (
 
 
 class Pay(BaseModel):
-    pay_type: PayType
-    pay_min: int
-    pay_max: int
+    pay_type: PayType = PayType.YEARLY
+    pay_min: int | None = None
+    pay_max: int | None = None
     exact_pay: int | None = None
     includes_bonus: bool | None = None
     includes_commission: bool | None = None
@@ -46,11 +46,15 @@ class Pay(BaseModel):
 
     @property
     def min_pay_as_hourly(self) -> float:
+        if not self.pay_min:
+            return 0
         return convert_pay_to_hourly(self.pay_min, self.pay_type)
 
     @property
     def max_pay_as_hourly(self) -> float:
-        return convert_pay_to_hourly(self.pay_min, self.pay_type)
+        if not self.pay_max:
+            return 0
+        return convert_pay_to_hourly(self.pay_max, self.pay_type)
 
 
 class UserCreateJob(BaseModel):
