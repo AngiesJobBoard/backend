@@ -6,11 +6,11 @@ from ajb.base import (
     ParentRepository,
     RepositoryRegistry,
     QueryFilterParams,
-    RepoFilterParams
+    RepoFilterParams,
 )
 from ajb.base.events import SourceServices
 from ajb.exceptions import EntityNotFound
-from ajb.vendor.arango.models import Join, Filter
+from ajb.vendor.arango.models import Filter, Operator
 from ajb.utils import generate_random_short_code
 from ajb.contexts.companies.events import CompanyEventProducer
 
@@ -19,7 +19,6 @@ from .models import (
     Application,
     CreateRecruiterNote,
     RecruiterNote,
-    CompanyApplicationView,
     ApplicationStatusRecord,
 )
 from .enumerations import ApplicationStatus
@@ -124,13 +123,28 @@ class CompanyApplicationRepository(ApplicationRepository):
         self,
         company_id: str,
         query: QueryFilterParams | RepoFilterParams = RepoFilterParams(),
+        job_id: str | None = None,
         shortlist_only: bool = False,
+        match_score: int | None = None,
+        new_only: bool = False,
+        resume_text_contains: str | None = None,
+        has_required_skills: list[str] | None = None,
     ):
         if isinstance(query, QueryFilterParams):
             repo_filters = query.convert_to_repo_filters()
         else:
             repo_filters = query
         repo_filters.filters.append(Filter(field="company_id", value=company_id))
+        if job_id:
+            repo_filters.filters.append(Filter(field="job_id", value=job_id))
+        if match_score:
+            repo_filters.filters.append(
+                Filter(
+                    field="application_match_score",
+                    operator=Operator.GREATER_THAN_EQUAL,
+                    value=match_score,
+                )
+            )
         if shortlist_only:
             repo_filters.filters.append(
                 Filter(
@@ -138,33 +152,27 @@ class CompanyApplicationRepository(ApplicationRepository):
                     value=True,
                 )
             )
-        results, count = self.query_with_joins(
-            joins=[
-                Join(
-                    to_collection_alias="job",
-                    to_collection="jobs",
-                    from_collection_join_attr="job_id",
-                ),
-            ],
-            repo_filters=repo_filters,
-            return_model=CompanyApplicationView,
-        )
-        return results, count
-
-    def get_company_view_single(self, company_id: str, application_id: str):
-        result = self.get_with_joins(
-            id=application_id,
-            joins=[
-                Join(
-                    to_collection_alias="job",
-                    to_collection="jobs",
-                    from_collection_join_attr="job_id",
-                ),
-            ],
-            return_model=CompanyApplicationView,
-        )
-        casted_result = t.cast(CompanyApplicationView, result)
-        return casted_result
+        if new_only:
+            repo_filters.filters.append(Filter(field="viewed_by_company", value=False))
+        if resume_text_contains:
+            repo_filters.filters.append(
+                Filter(
+                    field="extracted_resume_text",
+                    operator=Operator.CONTAINS,
+                    value=resume_text_contains,
+                )
+            )
+        if has_required_skills:
+            for skill in has_required_skills:
+                repo_filters.filters.append(
+                    Filter(
+                        field="qualifications.skills",
+                        operator=Operator.IN,
+                        value=skill,
+                        and_or_operator="OR",
+                    )
+                )
+        return self.query(repo_filters=repo_filters)
 
     def get_application_count(
         self,
@@ -207,13 +215,13 @@ class CompanyApplicationRepository(ApplicationRepository):
         for application in created_applications:
             event_producter.company_calculates_match_score(application)
         return created_applications
-    
+
     def delete_all_applications_for_job(self, company_id: str, job_id: str):
         applications = self.query(
             repo_filters=RepoFilterParams(
                 filters=[
-                   Filter(field="company_id", value=company_id),
-                    Filter(field="job_id", value=job_id)
+                    Filter(field="company_id", value=company_id),
+                    Filter(field="job_id", value=job_id),
                 ]
             )
         )[0]
