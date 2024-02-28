@@ -25,8 +25,8 @@ class DemographicData(BaseModel):
 
 
 class WorkHistory(BaseModel):
-    job_title: str
-    company_name: str
+    job_title: str | None = None
+    company_name: str | None = None
     job_industry: str | None = None
     still_at_job: bool | None = None
     start_date: str | datetime | None = None
@@ -34,9 +34,9 @@ class WorkHistory(BaseModel):
 
 
 class Education(BaseModel):
-    school_name: str
-    level_of_education: str
-    field_of_study: str
+    school_name: str | None = None
+    level_of_education: str | None = None
+    field_of_study: str | None = None
     still_in_school: bool | None = None
     start_date: str | datetime | None = None
     end_date: str | datetime | None = None
