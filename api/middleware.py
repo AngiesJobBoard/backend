@@ -7,6 +7,7 @@ from cachetools import TTLCache
 import jwt
 from fastapi import FastAPI, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from ajb.config.settings import SETTINGS
 from ajb.base import RequestScope
@@ -22,7 +23,6 @@ from .vendors import db, kafka_producer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 USER_COMPANY_CACHE = TTLCache(
     maxsize=100, ttl=3600
@@ -187,4 +187,15 @@ def add_app_middleware(app: FastAPI):
             user = None
 
         log_request_info(request, user, response.status_code, round(process_time, 4))
+        return response
+
+
+class ValidationErrorLoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        if response.status_code == 422:
+            body = b""
+            async for chunk in response.body_iterator:  # type: ignore
+                body += chunk
+            raise RuntimeError(f"Validation error: {body.decode()}")
         return response

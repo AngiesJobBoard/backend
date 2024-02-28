@@ -31,14 +31,13 @@ from api.contexts.companies.description_generator import (
     router as description_generator_router,
 )
 
-
 from api.contexts.webhooks.clerk import router as clerk_webhooks_router
 from api.contexts.static.static_data import router as static_data_router
 from api.contexts.static.enumerations import router as static_enumerations_router
 from api.contexts.admin.users import router as admin_create_users_router
 from api.contexts.health.health import router as health_router
 
-from .middleware import add_app_middleware, verify_user
+from .middleware import add_app_middleware, verify_user, ValidationErrorLoggingMiddleware
 
 # pylint: disable=unused-import,wildcard-import
 from .vendors import *  # type: ignore
@@ -89,5 +88,5 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 add_app_middleware(app)
+app.add_middleware(ValidationErrorLoggingMiddleware)
