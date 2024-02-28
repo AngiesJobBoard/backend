@@ -68,18 +68,22 @@ def convert_pay_to_hourly(pay_amount: float, pay_type: PayType) -> float:
 
 
 class Pay(BaseModel):
-    pay_type: PayType
-    pay_min: int
-    pay_max: int
+    pay_type: PayType = PayType.YEARLY
+    pay_min: int | None = None
+    pay_max: int | None = None
     exact_pay: int | None = None
     additional_metadata: dict[str, str] | None = None
 
     @property
     def min_pay_as_hourly(self) -> float:
+        if not self.pay_min:
+            return 0
         return convert_pay_to_hourly(self.pay_min, self.pay_type)
 
     @property
     def max_pay_as_hourly(self) -> float:
+        if not self.pay_max:
+            return 0
         return convert_pay_to_hourly(self.pay_max, self.pay_type)
 
 
