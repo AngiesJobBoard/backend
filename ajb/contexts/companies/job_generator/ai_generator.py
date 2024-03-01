@@ -11,14 +11,13 @@ class AIJobGenerator:
     def generate_job_from_description(
         self,
         description: str,
-        preferred_tone: PreferredTone = PreferredTone.professional,
     ) -> UserCreateJob:
         job_keys = [
-            "position_title as str",
-            "industry_category as str",
-            "industry_subcategories as list[str]",
-            "required_job_skills as list[str]",
-            f"description as str in the following tone: {preferred_tone.value}",
+            "position_title",
+            "industry_category",
+            "industry_subcategories",
+            "required_job_skills",
+            "description",
         ]
         response = self.openai.json_prompt(
             prompt=f"""
@@ -30,14 +29,11 @@ class AIJobGenerator:
             max_tokens=4096,
         )
         created_job = UserCreateJob(
-            position_title=response["position_title"].title(),
-            description=response["description"],
-            required_job_skills=response["required_job_skills"],
-            industry_category=response["industry_category"],
-            industry_subcategories=response["industry_subcategories"],
-        )
-        created_job.description = self.generate_improved_job_description_from_draft(
-            description, tone=PreferredTone.professional
+            position_title=response.get("position_title", "").title(),
+            description=response.get("description"),
+            required_job_skills=response.get("required_job_skills", ""),
+            industry_category=response.get("industry_category", ""),
+            industry_subcategories=response.get("industry_subcategories"),
         )
         return created_job
 
@@ -71,5 +67,6 @@ class AIJobGenerator:
         return self.openai.text_prompt(
             prompt=f"Given the following job description, \
                 write a better and much longer job description in the following tone: {tone.value}. \
-                Description: {draft}"
+                Description: {draft}",
+                max_tokens=4096
         )
