@@ -43,6 +43,13 @@ def get_job(request: Request, company_id: str, job_id: str):
     return JobRepository(request.state.request_scope, company_id).get(job_id)
 
 
+@router.put("/{job_id}", response_model=Job)
+def update_job(request: Request, company_id: str, job_id: str, job: UserCreateJob):
+    job_to_update = CreateJob(**job.model_dump(), company_id=company_id)
+    job_to_update.job_score = job.calculate_score()
+    return JobRepository(request.state.request_scope, company_id).update(job_id, job_to_update)
+
+
 @router.delete("/{job_id}")
 def delete_job(request: Request, company_id: str, job_id: str):
     # Delete Job
