@@ -69,7 +69,7 @@ def get_many_company_applications(
 ):
     """Gets all applications by a list of ids"""
     query = RepoFilterParams(
-        filters=[Filter(field="_key", operator=Operator.IN, value=application_ids)],
+        filters=[Filter(field="_key", operator=Operator.ARRAY_IN, value=application_ids)],
     )
     results = CompanyApplicationRepository(
         request.state.request_scope

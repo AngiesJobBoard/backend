@@ -18,6 +18,8 @@ class AIJobGenerator:
             "industry_subcategories",
             "required_job_skills",
             "description",
+            "license_requirements",
+            "certification_requirements"
         ]
         response = self.openai.json_prompt(
             prompt=f"""
@@ -28,12 +30,26 @@ class AIJobGenerator:
             """,
             max_tokens=4096,
         )
+        skills = []
+        if response.get("required_job_skills"):
+            skills = response.get("required_job_skills", "").split(",") if isinstance(response.get("required_job_skills"), str) else response.get("required_job_skills")
+        
+        licenses = []
+        if response.get("license_requirements"):
+            licenses = response.get("license_requirements", "").split(",") if isinstance(response.get("license_requirements"), str) else response.get("license_requirements")
+        
+        certifications = []
+        if response.get("certification_requirements"):
+            certifications = response.get("certification_requirements", "").split(",") if isinstance(response.get("certification_requirements"), str) else response.get("certification_requirements")
+        
         created_job = UserCreateJob(
             position_title=response.get("position_title", "").title(),
             description=response.get("description"),
-            required_job_skills=response.get("required_job_skills", ""),
+            required_job_skills=skills,
             industry_category=response.get("industry_category", ""),
             industry_subcategories=response.get("industry_subcategories"),
+            license_requirements=licenses,
+            certification_requirements=certifications,
         )
         return created_job
 

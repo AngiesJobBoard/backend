@@ -94,6 +94,8 @@ class AQLQuery:
         return f"_BIND_VAR_{len(self.bind_vars)}"
 
     def build_query(self) -> str:
+        # TODO this has grown into spag and meatballs, refactor
+
         query = deepcopy(self.query_parts)
 
         # Add filters
@@ -118,6 +120,14 @@ class AQLQuery:
                         FILTER LOWER(item) {LIKE_NOT_LIKE_OPERATOR} LOWER(@{self.get_next_bind_var_key()})
                         RETURN true
                     ) != []
+                    """
+                )
+            elif filter_obj.operator == Operator.ARRAY_IN:
+                query.append(
+                    f"""
+                    {'FILTER' if i == 0 else filter_obj.and_or_operator} 
+                    {filter_obj.collection_alias}.{filter_obj.field}
+                    IN @{self.get_next_bind_var_key()}
                     """
                 )
             else:

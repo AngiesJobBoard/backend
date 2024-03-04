@@ -1,5 +1,7 @@
 from ajb.fixtures.applications import ApplicationFixture
 from ajb.contexts.applications.repository import CompanyApplicationRepository
+from ajb.vendor.arango.models import Filter, Operator
+from ajb.base.models import RepoFilterParams
 
 
 def test_company_view_list_basic(request_scope):
@@ -149,3 +151,19 @@ def test_search_applications_by_skills(request_scope):
 
 # def test_application_count(request_scope):
 #     app_data = ApplicationFixture(request_scope).create_application()
+
+
+def test_get_many_applications(request_scope):
+    app_data_1 = ApplicationFixture(request_scope).create_application()
+    app_data_2 = ApplicationFixture(request_scope).create_application()
+
+    query = RepoFilterParams(
+        filters=[Filter(field="_key", operator=Operator.ARRAY_IN, value=[
+            app_data_1.application.id,
+            app_data_2.application.id
+        ])],
+    )
+    results = CompanyApplicationRepository(
+        request_scope
+    ).get_company_view_list(app_data_1.company.id, query)
+    assert len(results) == 2

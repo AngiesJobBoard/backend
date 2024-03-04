@@ -11,8 +11,20 @@ class Operator(str, Enum):
     LESS_THAN = "<"
     GREATER_THAN_EQUAL = ">="
     LESS_THAN_EQUAL = "<="
+
+    # IN and ARRAY_IN behave differently
+
+    # IN will take a value like "one" and look through an array in the database like ["one", "two"]
+    # If any of the values in the array match (both the term and the value are lowercased), the document is returned
+
+    # For the ARRAY_IN operator, you provide an array of values like [1, 2, 3]
+    # And the database will return all documents where the field is an array and contains any of the values in the array
+    # database {id: 1, name: "one"}, {id: 2, name: "two"}, {id: 3, name: "three"}
+    # get with array_in [1, 2] will return {id: 1, name: "one"}, {id: 2, name: "two"}
+
     IN = "IN"
     NOT_IN = "NOT IN"
+    ARRAY_IN = "ARRAY IN"
 
     # Special operators for text search
     STARTS_WITH = "STARTS WITH"
