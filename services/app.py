@@ -1,3 +1,51 @@
+import ssl
+import asyncio
+from aiokafka import AIOKafkaConsumer
+
+from ajb.config.settings import SETTINGS
+from ajb.base.events import KafkaGroup, KafkaTopic
+
+from services.routing import topic_router
+
+
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
+
+
+async def consume():
+    consumer = AIOKafkaConsumer(
+        bootstrap_servers=SETTINGS.KAFKA_BOOTSTRAP_SERVER,
+        group_id=KafkaGroup.DEFAULT.value,
+        auto_offset_reset='earliest',
+        sasl_mechanism='SCRAM-SHA-256',
+        security_protocol='SASL_SSL',
+        sasl_plain_username=SETTINGS.KAFKA_USERNAME,
+        sasl_plain_password=SETTINGS.KAFKA_PASSWORD,
+        ssl_context=ssl_context,  # Use default SSL context
+    )
+    consumer.subscribe([topic.value for topic in KafkaTopic])
+
+    # Start the consumer
+    await consumer.start()
+    try:
+        async for msg in consumer:
+            # Asynchronously process the message
+            asyncio.create_task(process_message(msg))
+    finally:
+        # Cleanup
+        await consumer.stop()
+
+
+async def process_message(msg):
+    print(f"Received message")
+    await topic_router(msg)
+    print(f"Processed message: {msg.value.decode('utf-8')}")
+    msg.commit()
+
+
+
+
 import logging
 import asyncio
 from kafka import KafkaConsumer

@@ -20,7 +20,6 @@ uvicorn = "*"
 python-multipart = "*"
 pandas = "*"
 croniter = "*"
-confluent-kafka = "*"
 aiohttp = "*"
 
 [dev-packages]

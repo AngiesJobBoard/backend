@@ -3,7 +3,7 @@ This module is intended to take a PDF of a resume and extract the data from it.
 """
 
 from pydantic import BaseModel
-from ajb.vendor.openai.repository import OpenAIRepository
+from ajb.vendor.openai.repository import AsyncOpenAIRepository
 from ajb.contexts.applications.models import WorkHistory, Education
 
 
@@ -25,11 +25,11 @@ class ExtractedResume(BaseModel):
 
 
 class AIResumeExtractor:
-    def __init__(self, openai: OpenAIRepository | None = None):
-        self.openai = openai or OpenAIRepository()
+    def __init__(self, openai: AsyncOpenAIRepository):
+        self.openai = openai
 
-    def get_candidate_profile_from_resume_text(self, resume_text: str):
-        results = self.openai.json_prompt(
+    async def get_candidate_profile_from_resume_text(self, resume_text: str):
+        results = await self.openai.json_prompt(
             prompt=f"""
             This is a resume parser that will extract the following information from a resume and return it as a JSON object:
             - first_name as str

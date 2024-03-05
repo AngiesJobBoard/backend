@@ -114,7 +114,7 @@ async def upload_applications_from_csv(
         all_created_applications.extend(
             await _process_applications_csv_file(
                 company_id, job_id, file, application_repo
-            )
+            ) # type: ignore
         )
     if not all_created_applications:
         raise HTTPException(status_code=400, detail="No valid applications found")

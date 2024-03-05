@@ -2,28 +2,28 @@ from concurrent.futures import ThreadPoolExecutor
 from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.contexts.applications.models import Application, ScanStatus
 from ajb.contexts.companies.jobs.models import Job
-from ajb.vendor.openai.repository import OpenAIRepository
+from ajb.vendor.openai.repository import AsyncOpenAIRepository
 
 from .ai_matching import AIApplicationMatcher, ApplicantMatchScore
 
 
 class ApplicantMatchUsecase(BaseUseCase):
     def __init__(
-        self, request_scope: RequestScope, openai: OpenAIRepository | None = None
+        self, request_scope: RequestScope, openai: AsyncOpenAIRepository
     ):
         self.request_scope = request_scope
-        self.openai = openai or OpenAIRepository()
+        self.openai = openai
 
-    def get_match(
+    async def get_match(
         self, application: Application, job_data: Job | None = None
     ) -> ApplicantMatchScore:
         if job_data:
             job = job_data
         else:
             job = self.get_object(Collection.JOBS, application.job_id)
-        return AIApplicationMatcher(self.openai).get_match_score(application, job)
+        return await AIApplicationMatcher(self.openai).get_match_score(application, job)
 
-    def update_application_with_match_score(
+    async def update_application_with_match_score(
         self, application_id: str, job_data: Job | None = None
     ) -> Application:
         application_repo = self.get_repository(Collection.APPLICATIONS)
@@ -33,7 +33,7 @@ class ApplicantMatchUsecase(BaseUseCase):
             match_score_status=ScanStatus.STARTED
         )
         try:
-            match_results = self.get_match(application, job_data)
+            match_results = await self.get_match(application, job_data)
         except Exception as e:
             application_repo.update_fields(
                 application_id,

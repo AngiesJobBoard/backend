@@ -32,7 +32,7 @@ from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.sendgrid.templates.newly_created_company.models import (
     NewlyCreatedCompany,
 )
-from ajb.vendor.openai.repository import OpenAIRepository
+from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 from ajb.contexts.companies.events import CompanyEventProducer
 
 
@@ -43,11 +43,13 @@ class AsynchronousCompanyEvents:
         request_scope: RequestScope,
         sendgrid: SendgridRepository | None = None,
         openai: OpenAIRepository | None = None,
+        async_openai: AsyncOpenAIRepository | None = None,
     ):
         self.message = message
         self.request_scope = request_scope
         self.sendgrid = sendgrid or SendgridRepository()
-        self.openai = openai or OpenAIRepository()
+        self.openai = openai
+        self.async_openai = async_openai
 
     async def company_is_created(self):
         created_company = Company.model_validate(self.message.data)
@@ -150,12 +152,15 @@ class AsynchronousCompanyEvents:
             ),
         )
 
-    def _extract_and_update_application(
+    async def _extract_and_update_application(
         self, data: ResumeAndApplication, application_repository: ApplicationRepository
     ) -> bool:
-        extractor = ResumeExtractorUseCase(self.request_scope, self.openai)
+        if not self.async_openai:
+            raise RuntimeError("Async OpenAI Repository is not provided")
+
+        extractor = ResumeExtractorUseCase(self.request_scope, self.async_openai)
         raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
-        resume_information = extractor.extract_resume_information(raw_text)
+        resume_information = await extractor.extract_resume_information(raw_text)
         original_application_deleted = False
 
         existing_applicants_that_match_email: list[Application] = (
@@ -204,7 +209,7 @@ class AsynchronousCompanyEvents:
 
         # Try to peform the parse and updates
         try:
-            original_application_deleted = self._extract_and_update_application(
+            original_application_deleted = await self._extract_and_update_application(
                 data, application_repository
             )
             if not original_application_deleted:
@@ -220,6 +225,8 @@ class AsynchronousCompanyEvents:
             raise e
 
     async def company_calculates_match_score(self):
+        if not self.async_openai:
+            raise RuntimeError("Async OpenAI Repository is not provided")
         data = ApplicationId.model_validate(self.message.data)
-        matcher_usecase = ApplicantMatchUsecase(self.request_scope, self.openai)
-        matcher_usecase.update_application_with_match_score(data.application_id)
+        matcher_usecase = ApplicantMatchUsecase(self.request_scope, self.async_openai)
+        await matcher_usecase.update_application_with_match_score(data.application_id)

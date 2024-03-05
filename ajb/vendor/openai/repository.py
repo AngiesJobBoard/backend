@@ -3,7 +3,7 @@ from openai import OpenAI
 from ajb.config.settings import SETTINGS
 from aiohttp import ClientSession
 
-from .client_factory import OpenAIClientFactory
+from ajb.vendor.openai.client_factory import OpenAIClientFactory
 
 
 class OpenAIRepository:
@@ -37,7 +37,7 @@ class OpenAIRepository:
 class AsyncOpenAIRepository:
     def __init__(self, async_session: ClientSession):
         self.async_session = async_session
-        self.url = "https://api.openai.com/v1/completions"
+        self.url = "https://api.openai.com/v1/chat/completions"
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SETTINGS.OPENAI_API_KEY}",
@@ -45,30 +45,26 @@ class AsyncOpenAIRepository:
 
     async def _send_request(self, data: dict) -> dict:
         data["model"] = SETTINGS.OPENAI_MODEL
+        # data["temperature"] = 0.7
         async with self.async_session.post(
             self.url, json=data, headers=self.headers
         ) as response:
-            response.raise_for_status()
+            # response.raise_for_status()
             return await response.json()
 
     async def text_prompt(self, prompt: str, max_tokens: int = 100) -> str:
-        data = {"prompt": prompt, "max_tokens": max_tokens}
+        data = {
+            "messages": [{"role": "assistant", "content": prompt}],
+            "max_tokens": max_tokens,
+        }
         response = await self._send_request(data)
-        try:
-            output = response["choices"][0]["text"].strip()
-            if not output:
-                raise ValueError("OpenAI returned an empty response")
-            return output
-        except (IndexError, KeyError):
-            raise ValueError("Unexpected response structure from OpenAI")
+        return response["choices"][0]["message"]["content"]
 
     async def json_prompt(self, prompt: str, max_tokens: int = 100) -> dict:
-        data = {"prompt": prompt, "max_tokens": max_tokens}
+        data = {
+            "messages": [{"role": "assistant", "content": prompt,}],
+            "max_tokens": max_tokens,
+            "response_format": {"type": "json_object"}
+        }
         response = await self._send_request(data)
-        try:
-            output = response["choices"][0]["text"].strip()
-            if not output:
-                raise ValueError("OpenAI returned an empty response")
-            return json.loads(output)
-        except (IndexError, KeyError, json.JSONDecodeError):
-            raise ValueError("Unexpected response or parsing error")
+        return json.loads(response["choices"][0]["message"]["content"])

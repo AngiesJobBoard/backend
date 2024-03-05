@@ -4,7 +4,7 @@ based on qualifications of the candidate and the requirements of the job posting
 """
 
 from pydantic import BaseModel
-from ajb.vendor.openai.repository import OpenAIRepository
+from ajb.vendor.openai.repository import AsyncOpenAIRepository
 from ajb.contexts.applications.models import Application
 from ajb.contexts.companies.jobs.models import Job
 
@@ -15,8 +15,8 @@ class ApplicantMatchScore(BaseModel):
 
 
 class AIApplicationMatcher:
-    def __init__(self, openai: OpenAIRepository | None = None):
-        self.openai = openai or OpenAIRepository()
+    def __init__(self, openai: AsyncOpenAIRepository):
+        self.openai = openai
 
     def _get_applicant_qualifications(self, application: Application):
         qualifications = application.qualifications
@@ -69,8 +69,8 @@ class AIApplicationMatcher:
             "language_requirements": job.language_requirements,
         }
 
-    def get_match_score(self, application: Application, job: Job):
-        results = self.openai.json_prompt(
+    async def get_match_score(self, application: Application, job: Job):
+        results = await self.openai.json_prompt(
             f"""
             Given the following job description and applicant qualifications,
             return a JSON object with the following keys:
