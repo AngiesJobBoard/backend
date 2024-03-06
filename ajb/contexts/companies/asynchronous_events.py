@@ -3,6 +3,7 @@ This module contains the asyncronous event handlers for the company context.
 These are triggered when a company event is published to the Kafka topic
 and is then routed to the appropriate handler based on the event type.
 """
+import asyncio
 
 from ajb.base import RequestScope
 from ajb.contexts.companies.models import Company
@@ -26,6 +27,7 @@ from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.companies.actions.repository import CompanyActionRepository
 from ajb.contexts.companies.actions.models import CreateCompanyAction
+from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.applications.extract_data.usecase import ResumeExtractorUseCase
 from ajb.vendor.sendgrid.repository import SendgridRepository
@@ -202,6 +204,9 @@ class AsynchronousCompanyEvents:
         data = ResumeAndApplication.model_validate(self.message.data)
         application_repository = ApplicationRepository(self.request_scope)
 
+        # Get the resume to see if it has been attempted 3 times
+        application = application_repository.get(data.application_id)
+
         # Update the scan status to started
         application_repository.update_fields(
             data.application_id, resume_scan_status=ScanStatus.STARTED
@@ -217,11 +222,27 @@ class AsynchronousCompanyEvents:
                     data.application_id, resume_scan_status=ScanStatus.COMPLETED
                 )
         except Exception as e:
-            application_repository.update_fields(
-                data.application_id,
-                resume_scan_status=ScanStatus.FAILED,
-                resume_scan_error_text=str(e),
-            )
+            if application.resume_scan_attempts >= 2:
+                # Give up and mark as failed
+                application_repository.update_fields(
+                    data.application_id,
+                    resume_scan_status=ScanStatus.FAILED,
+                    resume_scan_error_text=str(e),
+                    resume_scan_attempts=application.resume_scan_attempts + 1,
+                )
+            else:
+                # Update count and reason and try again
+                application_repository.update_fields(
+                    data.application_id,
+                    resume_scan_error_text=str(e),
+                    resume_scan_attempts=application.resume_scan_attempts + 1,
+                )
+                # Async wait 3 seconds then create a new event to try again
+                await asyncio.sleep(3)
+                self.request_scope.company_id = data.company_id
+                CompanyEventProducer(self.request_scope, SourceServices.SERVICES).company_uploads_resume(
+                    data.resume_id, data.application_id, data.job_id
+                )
             raise e
 
     async def company_calculates_match_score(self):

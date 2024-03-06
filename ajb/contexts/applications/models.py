@@ -78,6 +78,7 @@ class UserCreatedApplication(BaseModel):
     extracted_resume_text: str | None = None
     resume_scan_status: ScanStatus = ScanStatus.NO_SCAN
     resume_scan_error_text: str | None = None
+    resume_scan_attempts: int = 0
     match_score_status: ScanStatus = ScanStatus.NO_SCAN
     match_score_error_text: str | None = None
     qualifications: Qualifications | None = None
