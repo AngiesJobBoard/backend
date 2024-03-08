@@ -78,6 +78,7 @@ class ResumeUseCase(BaseUseCase):
             resume_id,
             CreateResume(
                 resume_url=resume.resume_url,
+                file_type=data.file_type,
                 remote_file_path=resume.remote_file_path,
                 file_name=data.file_name,
                 company_id=data.company_id,

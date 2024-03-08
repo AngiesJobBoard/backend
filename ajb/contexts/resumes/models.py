@@ -18,6 +18,7 @@ class CreateResume(BaseModel):
     file_name: str
     company_id: str
     job_id: str
+    file_type: str | None = None
 
 
 class Resume(CreateResume, BaseDataModel): ...

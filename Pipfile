@@ -21,6 +21,7 @@ python-multipart = "*"
 pandas = "*"
 croniter = "*"
 aiohttp = "*"
+python-docx = "*"
 
 [dev-packages]
 mypy = "*"

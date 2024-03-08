@@ -46,6 +46,7 @@ class UserFixture:
         return ResumeRepository(self.request_scope).create(
             CreateResume(
                 remote_file_path="test",
+                file_type="test",
                 resume_url="nice.com",
                 file_name="test",
                 company_id="test",
