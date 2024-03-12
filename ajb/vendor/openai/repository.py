@@ -58,6 +58,8 @@ class AsyncOpenAIRepository:
             "max_tokens": max_tokens,
         }
         response = await self._send_request(data)
+        if "choices" not in response or not response["choices"]:
+            raise ValueError(f"OpenAI returned an empty response: {response}")
         return response["choices"][0]["message"]["content"]
 
     async def json_prompt(self, prompt: str, max_tokens: int = 100) -> dict:
@@ -72,4 +74,6 @@ class AsyncOpenAIRepository:
             "response_format": {"type": "json_object"},
         }
         response = await self._send_request(data)
+        if "choices" not in response or not response["choices"]:
+            raise ValueError(f"OpenAI returned an empty response: {response}")
         return json.loads(response["choices"][0]["message"]["content"])

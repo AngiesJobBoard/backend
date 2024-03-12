@@ -20,7 +20,6 @@ async def handle_message(
     consumer: KafkaConsumer,
 ):
     await topic_router(message)
-    print("SUCCESS: processed message")
     commit_counter += 1
     current_time = asyncio.get_running_loop().time()
     if (
@@ -50,7 +49,6 @@ async def handle_messages(consumer: KafkaConsumer):
 
         for messages in topic_messages.values():
             for message in messages:
-                print("Message received")
                 asyncio.create_task(
                     handle_message(message, commit_counter, last_commit_time, consumer)
                 )

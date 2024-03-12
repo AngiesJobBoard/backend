@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.common.models import QuestionStatus
-from ajb.contexts.applications.models import Application, UpdateApplication
+from ajb.contexts.applications.models import Application
 from ajb.vendor.openai.repository import AsyncOpenAIRepository
 
 from .ai_question_answers import AIApplicantionQuestionAnswer
@@ -33,13 +33,12 @@ class ApplicantQuestionsUsecase(BaseUseCase):
                     stored_exception = e
                     application.application_questions[idx].question_status = QuestionStatus.FAILED
                     application.application_questions[idx].error_text = str(e)
-        
-        
-        application_repo.update(
+
+        application_repo.update_fields(
             application.id,
-            UpdateApplication(**application.model_dump())
+            application_questions=application.model_dump(mode="json")["application_questions"]
+            
         )
-        
         if stored_exception:
             raise stored_exception
 

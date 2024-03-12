@@ -188,6 +188,7 @@ class AsynchronousCompanyEvents:
             application_repository.delete(data.application_id)
             original_application_deleted = True
             return original_application_deleted
+
         self._update_application_with_parsed_information(
             application_id=data.application_id,
             resume_url=resume_url,

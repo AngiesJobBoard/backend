@@ -17,4 +17,6 @@ async def topic_router(message: ConsumerRecord):
     if os.getenv("APP_IS_SLOW"):
         await asyncio.sleep(1)
     message_data = BaseKafkaMessage(**json.loads(message.value))
+    print(f"Received event: {message_data.event_type}")
     await ROUTER[message_data.topic][message_data.event_type](message_data)
+    print(f"Completed processing event: {message_data.event_type}")

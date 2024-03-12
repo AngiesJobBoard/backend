@@ -26,7 +26,7 @@ class AIApplicantionQuestionAnswer:
             'confidence' should be a number between 0 and 10.
             'reasoning' should be a string.
         """
-        response = await self.openai.json_prompt(prompt)
+        response = await self.openai.json_prompt(prompt, max_tokens=4000)
         return ApplicationQuestion(
             question=question,
             question_status=QuestionStatus.ANSWERED,
