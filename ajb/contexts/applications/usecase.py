@@ -14,13 +14,19 @@ class ApplicationUseCase(BaseUseCase):
         job: Job = self.get_object(Collection.JOBS, job_id)
         return job.application_questions
 
-    def create_application(self, job_id: str, partial_application: CreateApplication) -> Application:
+    def create_application(
+        self,
+        job_id: str,
+        partial_application: CreateApplication,
+        produce_submission_event: bool = True
+    ) -> Application:
         application_repo = self.get_repository(Collection.APPLICATIONS)
         partial_application.application_questions = self._get_job_questions(job_id)
         created_application = application_repo.create(partial_application)
-        CompanyEventProducer(
-            self.request_scope, source_service=SourceServices.API
-        ).application_is_submited(created_application.id)
+        if produce_submission_event:
+            CompanyEventProducer(
+                self.request_scope, source_service=SourceServices.API
+            ).application_is_submited(created_application.id)
         return created_application
     
     def create_many_applications(
@@ -60,7 +66,11 @@ class ApplicationUseCase(BaseUseCase):
             resume_scan_status=ScanStatus.PENDING,
             match_score_status=ScanStatus.PENDING,
         )
-        created_application = self.create_application(resume.job_id, partial_application)
+        created_application = self.create_application(
+            resume.job_id,
+            partial_application,
+            produce_submission_event=False
+        )  # Create the application but don't produce submission event until the resume is parsed
 
         # Create kafka event for parsing the resume
         CompanyEventProducer(
