@@ -12,7 +12,7 @@ class ArangoClientFactory(VendorClientFactory[ArangoClient]):
 
     @staticmethod
     def _return_mock():
-        return ArangoClient(hosts=SETTINGS.ARANGO_URL)
+        return ArangoClient(hosts="http://localhost:8529")
 
     @staticmethod
     def _return_client():
