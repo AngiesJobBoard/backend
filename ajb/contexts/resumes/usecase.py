@@ -1,12 +1,7 @@
 from datetime import datetime
 
 from ajb.base import BaseUseCase, RequestScope, Collection
-from ajb.base.events import (
-    SourceServices,
-)
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
-from ajb.contexts.applications.models import CreateApplication, ScanStatus
-from ajb.contexts.companies.events import CompanyEventProducer
 
 from .models import Resume, CreateResume, UserCreateResume
 
@@ -29,37 +24,13 @@ class ResumeUseCase(BaseUseCase):
         resume_url = self.storage_repo.upload_bytes(
             data.resume_data, data.file_type, remote_file_path, True
         )
-        created_resume = resume_repo.create(
+        return resume_repo.create(
             CreateResume(
                 resume_url=resume_url,
                 remote_file_path=remote_file_path,
                 **data.model_dump(),
             )
         )
-
-        # Create an application for this resume
-        application_repo = self.get_repository(Collection.APPLICATIONS)
-        created_application = application_repo.create(
-            CreateApplication(
-                company_id=data.company_id,
-                job_id=data.job_id,
-                resume_id=created_resume.id,
-                name="Resume Scan Pending",
-                email="Resume Scan Pending",
-                resume_scan_status=ScanStatus.PENDING,
-                match_score_status=ScanStatus.PENDING,
-            )
-        )
-
-        # Create kafka event for parsing the resume
-        CompanyEventProducer(
-            self.request_scope, source_service=SourceServices.API
-        ).company_uploads_resume(
-            job_id=data.job_id,
-            resume_id=created_resume.id,
-            application_id=created_application.id,
-        )
-        return created_resume
 
     def delete_resume(self, resume_id: str) -> bool:
         resume_repo = self.get_repository(Collection.RESUMES)

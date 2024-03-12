@@ -171,20 +171,12 @@ class UserCreateJob(BaseModel):
 
 
 class CreateJob(UserCreateJob):
-    is_live: bool = False
-    is_boosted: bool = False
     company_id: str
     job_score: float | None = None
-
-
-class UpdateJob(UserCreateJob):
-    is_live: bool | None = None
-    is_boosted: bool | None = None
-    position_title: str | None = None
-
-
-class InternalUpdateJob(UpdateJob):
-    position_filled: bool | None = None
+    total_applicants: int = 0
+    high_match_applicants: int = 0
+    shortlisted_applicants: int = 0
+    new_applicants: int = 0
 
 
 class Job(CreateJob, BaseDataModel):

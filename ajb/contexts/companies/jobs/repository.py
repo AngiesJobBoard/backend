@@ -13,7 +13,6 @@ from .models import (
     CreateJob,
     JobWithCompany,
     AdminSearchJobsWithCompany,
-    UserCreateJob,
 )
 
 
@@ -28,14 +27,6 @@ class JobRepository(MultipleChildrenRepository[CreateJob, Job]):
             parent_collection=Collection.COMPANIES.value,
             parent_id=company_id,
         )
-
-    def create_many_jobs(self, company_id: str, jobs: list[UserCreateJob]):
-        jobs_to_create = []
-        for job in jobs:
-            job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
-            job_to_create.job_score = job.calculate_score()
-            jobs_to_create.append(job_to_create)
-        return self.create_many(jobs_to_create)
 
     def get_company_jobs(
         self,

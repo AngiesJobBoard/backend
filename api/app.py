@@ -18,7 +18,6 @@ from api.contexts.admin.admin_actions import router as admin_actions_router
 
 from api.contexts.users.users import router as users_router
 
-from api.contexts.companies.dashboard import router as company_dashboard_router
 from api.contexts.companies.companies import router as companies_router
 from api.contexts.companies.invitations import router as company_invitations_router
 from api.contexts.companies.recruiters import router as recruiters_router
@@ -56,7 +55,6 @@ initialize_sentry()
 
 app.include_router(users_router)
 
-app.include_router(company_dashboard_router)
 app.include_router(companies_router)
 app.include_router(company_invitations_router)
 app.include_router(recruiters_router)

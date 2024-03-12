@@ -10,6 +10,7 @@ from ajb.contexts.companies.jobs.models import (
     PaginatedJob,
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
+from ajb.contexts.companies.jobs.usecase import JobsUseCase
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 
 
@@ -30,9 +31,7 @@ def get_all_jobs(
 
 @router.post("/", response_model=Job)
 def create_job(request: Request, company_id: str, job: UserCreateJob):
-    job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
-    job_to_create.job_score = job.calculate_score()
-    return JobRepository(request.state.request_scope, company_id).create(job_to_create)
+    return JobsUseCase(request.state.request_scope).create_job(company_id, job)
 
 
 @router.get("/{job_id}", response_model=Job)
@@ -49,15 +48,7 @@ def update_job(request: Request, company_id: str, job_id: str, job: UserCreateJo
 
 @router.delete("/{job_id}")
 def delete_job(request: Request, company_id: str, job_id: str):
-    # Delete Job
-    result = JobRepository(request.state.request_scope, company_id).delete(job_id)
-
-    # Delete all applications with job id
-    CompanyApplicationRepository(request.state.request_scope).delete_all_applications_for_job(
-        company_id,
-        job_id
-    )
-    return result
+    return JobsUseCase(request.state.request_scope).delete_job(company_id, job_id)
 
 
 async def _process_jobs_csv_file(
@@ -72,7 +63,7 @@ async def _process_jobs_csv_file(
     df = df.where(pd.notnull(df), None)
     raw_jobs = df.to_dict(orient="records")
     jobs = [UserCreateJob.from_csv(job) for job in raw_jobs]  # type: ignore
-    return job_repo.create_many_jobs(company_id, jobs)
+    return JobsUseCase(job_repo.request_scope).create_many_jobs(company_id, jobs)
 
 
 @router.post("/jobs-from-csv")
@@ -81,21 +72,3 @@ async def create_jobs_from_csv_data(
 ):
     job_repo = JobRepository(request.state.request_scope, company_id)
     return await _process_jobs_csv_file(company_id, file, job_repo)
-
-
-async def _process_applications_csv_file(
-    company_id: str,
-    job_id: str,
-    file: UploadFile,
-    application_repo: CompanyApplicationRepository,
-):
-    if file and file.filename and not file.filename.endswith(".csv"):
-        return []
-    content = await file.read()
-    content = content.decode("utf-8")
-    content = StringIO(content)
-    df = pd.read_csv(content)
-    raw_candidates = df.to_dict(orient="records")
-    return application_repo.create_applications_from_csv(
-        company_id, job_id, raw_candidates
-    )

@@ -70,6 +70,18 @@ class Qualifications(BaseModel):
         return score
 
 
+
+class AdditionalFilterInformation(BaseModel):
+    average_job_duration_in_months: int | None = None
+    average_gap_duration_in_months: int | None = None
+    total_years_of_experience: int | None = None
+    job_title_list: list[str] | None = None
+    within_10_miles_of_location: bool | None = None
+    within_25_miles_of_location: bool | None = None
+    in_same_state_as_location: bool | None = None
+    has_college_degree: bool | None = None
+
+
 class UserCreatedApplication(BaseModel):
     company_id: str
     job_id: str
@@ -82,6 +94,7 @@ class UserCreatedApplication(BaseModel):
     match_score_status: ScanStatus = ScanStatus.NO_SCAN
     match_score_error_text: str | None = None
     qualifications: Qualifications | None = None
+    additional_filters: AdditionalFilterInformation | None = None
     name: str
     email: str
     phone: str | None = None

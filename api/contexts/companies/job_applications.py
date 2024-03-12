@@ -2,13 +2,12 @@ from io import StringIO
 from fastapi import APIRouter, Request, UploadFile, File, HTTPException
 import pandas as pd
 
-from ajb.contexts.applications.repository import CompanyApplicationRepository
+from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.resumes.models import UserCreateResume
 from ajb.contexts.resumes.usecase import ResumeUseCase
 
 from api.vendors import storage
 
-ACCEPTABLE_RESUME_FILE_TYPES = [".pdf", ".doc", ".docx"]
 
 router = APIRouter(tags=["Company Job Applications"], prefix="/companies/{company_id}/jobs/{job_id}")
 
@@ -17,7 +16,7 @@ async def _process_applications_csv_file(
     company_id: str,
     job_id: str,
     file: UploadFile,
-    application_repo: CompanyApplicationRepository,
+    application_usecase: ApplicationUseCase,
 ):
     if file and file.filename and not file.filename.endswith(".csv"):
         return []
@@ -26,7 +25,7 @@ async def _process_applications_csv_file(
     content = StringIO(content)
     df = pd.read_csv(content)
     raw_candidates = df.to_dict(orient="records")
-    return application_repo.create_applications_from_csv(
+    return application_usecase.create_applications_from_csv(
         company_id, job_id, raw_candidates
     )
 
@@ -36,7 +35,7 @@ async def upload_applications_from_csv(
     request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)
 ):
     all_created_applications = []
-    application_repo = CompanyApplicationRepository(request.state.request_scope)
+    application_repo = ApplicationUseCase(request.state.request_scope)
     for file in files:
         all_created_applications.extend(
             await _process_applications_csv_file(
@@ -55,6 +54,7 @@ async def upload_applications_from_resume(
     files_processed = 0
     created_resume_files = []
     resume_usecase = ResumeUseCase(request.state.request_scope, storage)
+    application_usecase = ApplicationUseCase(request.state.request_scope)
     for file in files:
         file_end = file.filename.split(".")[-1]  # type: ignore
         created_resume = resume_usecase.create_resume(
@@ -66,6 +66,7 @@ async def upload_applications_from_resume(
                 job_id=job_id,
             )
         )
+        application_usecase.create_application_from_resume(created_resume)
         created_resume_files.append(created_resume)
         files_processed += 1
     if not files_processed:
