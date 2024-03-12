@@ -15,7 +15,7 @@ from ajb.common.models import (
     DataReducedCompany,
     JobLocationType,
 )
-from ajb.common.models import Location, Location, convert_pay_to_hourly
+from ajb.common.models import Location, Location, convert_pay_to_hourly, ApplicationQuestion
 from ajb.static.enumerations import PayType
 from ajb.contexts.companies.offices.repository import OfficeRepository
 from ajb.exceptions import MissingJobFieldsException
@@ -78,6 +78,8 @@ class UserCreateJob(BaseModel):
     shift_type: t.List[ShiftType] | None = None
 
     pay: Pay | None = None
+
+    application_questions: list[ApplicationQuestion] | None = None
 
     language_requirements: t.List[str] | None = None
     license_requirements: t.List[str] | None = None

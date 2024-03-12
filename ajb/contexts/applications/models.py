@@ -1,12 +1,13 @@
 from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
+import typing as t
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel, Field
 import pandas as pd
 
 from ajb.base.models import BaseDataModel, PaginatedResponse
-from ajb.common.models import DataReducedJob, Location
+from ajb.common.models import DataReducedJob, Location, ApplicationQuestion
 from ajb.vendor.google_maps import get_state_from_lat_long
 from ajb.utils import get_datetime_from_string, get_miles_between_lat_long_pairs
 
@@ -80,6 +81,10 @@ class JobDuration(BaseModel):
 
 
 class AdditionalFilterInformation(BaseModel):
+    """
+    These are additional attributes that are parsed from an application
+    and used to further filter and rank applications
+    """
     average_job_duration_in_months: int | None = None
     average_gap_duration_in_months: int | None = None
     total_years_in_workforce: int | None = None
@@ -103,6 +108,7 @@ class UserCreatedApplication(BaseModel):
     match_score_error_text: str | None = None
     qualifications: Qualifications | None = None
     additional_filters: AdditionalFilterInformation | None = None
+    application_questions: list[ApplicationQuestion] | None = None
     name: str
     email: str
     phone: str | None = None

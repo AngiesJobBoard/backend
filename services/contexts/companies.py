@@ -77,16 +77,16 @@ async def company_extracts_application_filters(message: BaseKafkaMessage):
     await repo.company_extracts_application_filters()
 
 
-# async def company_answers_job_filter_questions(
-#         message: BaseKafkaMessage
-# ):
-#     async with aiohttp.ClientSession() as session:
-#         repo = AsynchronousCompanyEvents(
-#             message,
-#             make_request_scope(message),
-#             async_openai=AsyncOpenAIRepository(session)
-#         )
-#         await repo.company_answers_job_filter_questions
+async def company_answers_job_filter_questions(
+        message: BaseKafkaMessage
+):
+    async with aiohttp.ClientSession() as session:
+        repo = AsynchronousCompanyEvents(
+            message,
+            make_request_scope(message),
+            async_openai=AsyncOpenAIRepository(session)
+        )
+        await repo.company_answers_application_questions()
 
 
 ROUTER = {
@@ -98,5 +98,5 @@ ROUTER = {
     CompanyEvent.COMPANY_UPLOADS_RESUME.value: company_uploads_resume,
     CompanyEvent.COMPANY_CALCULATES_MATCH_SCORE.value: company_calculates_match_score,
     CompanyEvent.COMPANY_EXTRACTS_APPLICATION_FILTERS.value: company_extracts_application_filters,
-    # CompanyEvent.COMPANY_ANSWERS_JOB_FILTER_QUESTIONS.value: company_answers_job_filter_questions,
+    CompanyEvent.COMPANY_ANSWERS_JOB_FILTER_QUESTIONS.value: company_answers_job_filter_questions,
 }

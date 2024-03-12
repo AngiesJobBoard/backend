@@ -30,6 +30,7 @@ from ajb.contexts.companies.actions.models import CreateCompanyAction
 from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.applications.extract_data.usecase import ResumeExtractorUseCase
+from ajb.contexts.applications.application_questions.usecase import ApplicantQuestionsUsecase
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.sendgrid.templates.newly_created_company.models import (
     NewlyCreatedCompany,
@@ -260,3 +261,10 @@ class AsynchronousCompanyEvents:
             data.application_id,
             UpdateApplication(additional_filters=application.additional_filters),
         )
+
+    async def company_answers_application_questions(self) -> None:
+        if not self.async_openai:
+            raise RuntimeError("Async OpenAI Repository is not provided")
+        data = ApplicationId.model_validate(self.message.data)
+        question_usecase = ApplicantQuestionsUsecase(self.request_scope, self.async_openai)
+        await question_usecase.update_application_with_questions_answered(data.application_id)

@@ -232,3 +232,28 @@ def get_actions_as_daily_timeseries(
         }
         for action_type, action_timeseries in output.items()
     }
+
+
+class QuestionStatus(str, Enum):
+    PENDING_ANSWER = "Pending Answer"
+    ANSWERED = "Answered"
+    FAILED = "Failed"
+
+
+class AnwserEnum(str, Enum):
+    YES = "Yes"
+    NO = "No"
+    UNSURE = "Unsure"
+
+
+class ApplicationQuestion(BaseModel):
+    """
+    Users can create a set of questions that are answered from information on an application
+    They will be answered with "yes", "no", or "unsure"
+    """
+    question: str
+    question_status: QuestionStatus = QuestionStatus.PENDING_ANSWER
+    answer: AnwserEnum | None = None
+    confidence: int | None = None
+    reasoning: str | None = None
+    error_text: str | None = None
