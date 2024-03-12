@@ -69,7 +69,9 @@ def get_many_company_applications(
 ):
     """Gets all applications by a list of ids"""
     query = RepoFilterParams(
-        filters=[Filter(field="_key", operator=Operator.ARRAY_IN, value=application_ids)],
+        filters=[
+            Filter(field="_key", operator=Operator.ARRAY_IN, value=application_ids)
+        ],
     )
     results = CompanyApplicationRepository(
         request.state.request_scope
@@ -119,9 +121,9 @@ def get_application_counts(
 @router.get("/{application_id}", response_model=CompanyApplicationView)
 def get_company_application(request: Request, company_id: str, application_id: str):
     """Gets a single application"""
-    return CompanyApplicationRepository(request.state.request_scope).get_company_view_single(
-        application_id
-    )
+    return CompanyApplicationRepository(
+        request.state.request_scope
+    ).get_company_view_single(application_id)
 
 
 @router.delete("/{application_id}")

@@ -3,6 +3,7 @@ This module contains the asyncronous event handlers for the company context.
 These are triggered when a company event is published to the Kafka topic
 and is then routed to the appropriate handler based on the event type.
 """
+
 import asyncio
 
 from ajb.base import RequestScope
@@ -16,7 +17,6 @@ from ajb.contexts.companies.events import (
     ApplicationId,
 )
 from ajb.contexts.applications.models import (
-    Application,
     ScanStatus,
     Qualifications,
     WorkHistory,
@@ -53,7 +53,7 @@ class AsynchronousCompanyEvents:
         self.openai = openai
         self.async_openai = async_openai
 
-    async def company_is_created(self):
+    async def company_is_created(self) -> None:
         created_company = Company.model_validate(self.message.data)
         user = UserRepository(self.request_scope).get(self.request_scope.user_id)
         self.sendgrid.send_rendered_email_template(
@@ -66,7 +66,7 @@ class AsynchronousCompanyEvents:
             ),
         )
 
-    async def company_views_applications(self):
+    async def company_views_applications(self) -> None:
         data = RecruiterAndApplications.model_validate(self.message.data)
         CompanyActionRepository(self.request_scope).create_many(
             [
@@ -80,7 +80,7 @@ class AsynchronousCompanyEvents:
             ]
         )
 
-    async def company_clicks_on_application(self):
+    async def company_clicks_on_application(self) -> None:
         data = RecruiterAndApplication.model_validate(self.message.data)
         CompanyActionRepository(self.request_scope).create(
             CreateCompanyAction(
@@ -90,7 +90,7 @@ class AsynchronousCompanyEvents:
             )
         )
 
-    async def company_shortlists_application(self):
+    async def company_shortlists_application(self) -> None:
         data = RecruiterAndApplication.model_validate(self.message.data)
         CompanyActionRepository(self.request_scope).create(
             CreateCompanyAction(
@@ -100,7 +100,7 @@ class AsynchronousCompanyEvents:
             )
         )
 
-    async def company_rejects_application(self):
+    async def company_rejects_application(self) -> None:
         data = RecruiterAndApplication.model_validate(self.message.data)
         CompanyActionRepository(self.request_scope).create(
             CreateCompanyAction(
@@ -165,15 +165,13 @@ class AsynchronousCompanyEvents:
         resume_information = await extractor.extract_resume_information(raw_text)
         original_application_deleted = False
 
-        existing_applicants_that_match_email: list[Application] = (
-            application_repository.query(
-                email=resume_information.email,
-                job_id=data.job_id,
-            )[0]
-        )
+        existing_applicants_that_match_email = application_repository.query(
+            email=resume_information.email,
+            job_id=data.job_id,
+        )[0]
 
         self.request_scope.company_id = data.company_id
-        event_producter = CompanyEventProducer(self.request_scope, SourceServices.API)
+        event_producer = CompanyEventProducer(self.request_scope, SourceServices.API)
         if existing_applicants_that_match_email:
             for matched_application in existing_applicants_that_match_email:
                 self._update_application_with_parsed_information(
@@ -183,7 +181,7 @@ class AsynchronousCompanyEvents:
                     resume_information=resume_information,
                     application_repository=application_repository,
                 )
-                event_producter.company_calculates_match_score(matched_application.id)
+                event_producer.application_is_submited(matched_application.id)
 
             # Delete the original application (like a merge operation)
             application_repository.delete(data.application_id)
@@ -196,15 +194,13 @@ class AsynchronousCompanyEvents:
             resume_information=resume_information,
             application_repository=application_repository,
         )
-        event_producter.company_calculates_match_score(data.application_id)
+        event_producer.application_is_submited(data.application_id)
         original_application_deleted = False
         return original_application_deleted
 
-    async def company_uploads_resume(self):
+    async def company_uploads_resume(self) -> None:
         data = ResumeAndApplication.model_validate(self.message.data)
         application_repository = ApplicationRepository(self.request_scope)
-
-        # Get the resume to see if it has been attempted 3 times
         application = application_repository.get(data.application_id)
 
         # Update the scan status to started
@@ -234,20 +230,33 @@ class AsynchronousCompanyEvents:
                 # Update count and reason and try again
                 application_repository.update_fields(
                     data.application_id,
+                    resume_scan_status=ScanStatus.PENDING,
                     resume_scan_error_text=str(e),
                     resume_scan_attempts=application.resume_scan_attempts + 1,
                 )
                 # Async wait 3 seconds then create a new event to try again
                 await asyncio.sleep(3)
                 self.request_scope.company_id = data.company_id
-                CompanyEventProducer(self.request_scope, SourceServices.SERVICES).company_uploads_resume(
+                CompanyEventProducer(
+                    self.request_scope, SourceServices.SERVICES
+                ).company_uploads_resume(
                     data.resume_id, data.application_id, data.job_id
                 )
             raise e
 
-    async def company_calculates_match_score(self):
+    async def company_calculates_match_score(self) -> None:
         if not self.async_openai:
             raise RuntimeError("Async OpenAI Repository is not provided")
         data = ApplicationId.model_validate(self.message.data)
         matcher_usecase = ApplicantMatchUsecase(self.request_scope, self.async_openai)
         await matcher_usecase.update_application_with_match_score(data.application_id)
+
+    async def company_extracts_application_filters(self) -> None:
+        application_repo = ApplicationRepository(self.request_scope)
+        data = ApplicationId.model_validate(self.message.data)
+        application = application_repo.get(data.application_id)
+        application.extract_filter_information()
+        application_repo.update(
+            data.application_id,
+            UpdateApplication(additional_filters=application.additional_filters),
+        )

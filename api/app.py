@@ -37,7 +37,11 @@ from api.contexts.static.enumerations import router as static_enumerations_route
 from api.contexts.admin.users import router as admin_create_users_router
 from api.contexts.health.health import router as health_router
 
-from .middleware import add_app_middleware, verify_user, ValidationErrorLoggingMiddleware
+from .middleware import (
+    add_app_middleware,
+    verify_user,
+    ValidationErrorLoggingMiddleware,
+)
 
 # pylint: disable=unused-import,wildcard-import
 from .vendors import *  # type: ignore
@@ -79,7 +83,12 @@ app.include_router(admin_actions_router)
 app.include_router(health_router)
 
 
-origins = ["*", "http://localhost:3000", "http://localhost:5173", "https://matcher.ajbdevelopment.com"]
+origins = [
+    "*",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://matcher.ajbdevelopment.com",
+]
 
 app.add_middleware(
     CORSMiddleware,

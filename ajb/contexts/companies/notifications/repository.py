@@ -24,10 +24,12 @@ class CompanyNotificationRepository(
         )
 
     def get_unread_notifications(
-        self, query: QueryFilterParams | RepoFilterParams = RepoFilterParams()
+        self, query: QueryFilterParams | RepoFilterParams | None = None
     ):
         if isinstance(query, QueryFilterParams):
             query = query.convert_to_repo_filters()
+        else:
+            query = query or RepoFilterParams()
         query.filters.append(Filter(field="is_read", value=False))
         return self.query(query)
 

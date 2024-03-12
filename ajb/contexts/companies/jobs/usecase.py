@@ -1,8 +1,4 @@
-from ajb.base import (
-    BaseUseCase,
-    Collection,
-    RepoFilterParams
-)
+from ajb.base import BaseUseCase, Collection, RepoFilterParams
 from ajb.vendor.arango.models import Filter
 
 from .models import (
@@ -19,7 +15,7 @@ class JobsUseCase(BaseUseCase):
         job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
         job_to_create.job_score = job.calculate_score()
         created_job = job_repo.create(job_to_create)
-        
+
         # Update company job count
         company = company_repo.get(company_id)
         company_repo.update_fields(

@@ -4,9 +4,7 @@ from kafka.consumer.fetcher import ConsumerRecord
 
 from ajb.base.events import KafkaGroup, KafkaTopic
 from ajb.vendor.kafka.client_factory import KafkaConsumerFactory
-from ajb.vendor.sentry import capture_exception
 
-from .middleware import verify_message_header_token
 from .routing import topic_router
 from .health_check import status
 
@@ -45,7 +43,7 @@ async def handle_messages(consumer: KafkaConsumer):
         topic_messages = consumer.poll(timeout_ms=10)
         if (
             topic_messages is None
-            or sum([len(messages) for messages in topic_messages.values()]) == 0
+            or sum(len(messages) for messages in topic_messages.values()) == 0
         ):
             await asyncio.sleep(0.1)
             continue

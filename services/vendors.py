@@ -13,5 +13,6 @@ sendgrid = SendgridRepository()
 
 print("Vendor dependencies initialized")
 
+
 def make_request_scope(message: BaseKafkaMessage):
     return RequestScope(user_id=message.requesting_user_id, db=db, company_id=None)

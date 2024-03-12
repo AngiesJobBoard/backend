@@ -1,5 +1,4 @@
 import typing as t
-from copy import deepcopy
 from arango.database import StandardDatabase, TransactionDatabase
 from arango.cursor import Cursor
 
@@ -96,13 +95,11 @@ class AQLQuery:
     def build_query(self) -> str:
         # TODO this has grown into spag and meatballs, refactor
 
-        query = deepcopy(self.query_parts)
-
         # Add filters
         for i, filter_obj in enumerate(self.filters):
             # If the filter is a text search, use lower
             if filter_obj.operator.is_text_search():
-                query.append(
+                self.query_parts.append(
                     f"""
                     {'FILTER' if i == 0 else filter_obj.and_or_operator} 
                     LOWER({filter_obj.collection_alias}.{filter_obj.field})
@@ -110,9 +107,11 @@ class AQLQuery:
                     """
                 )
             elif filter_obj.operator.is_in_search():
-                LIKE_NOT_LIKE_OPERATOR = "LIKE" if filter_obj.operator == Operator.IN else "NOT LIKE"
+                LIKE_NOT_LIKE_OPERATOR = (
+                    "LIKE" if filter_obj.operator == Operator.IN else "NOT LIKE"
+                )
                 self.filters[i].value = f"%{filter_obj.value}%"
-                query.append(
+                self.query_parts.append(
                     f"""
                     {'FILTER' if i == 0 else filter_obj.and_or_operator}
                     (
@@ -123,7 +122,7 @@ class AQLQuery:
                     """
                 )
             elif filter_obj.operator == Operator.ARRAY_IN:
-                query.append(
+                self.query_parts.append(
                     f"""
                     {'FILTER' if i == 0 else filter_obj.and_or_operator} 
                     {filter_obj.collection_alias}.{filter_obj.field}
@@ -131,7 +130,7 @@ class AQLQuery:
                     """
                 )
             else:
-                query.append(
+                self.query_parts.append(
                     f"""
                     {'FILTER' if i == 0 else filter_obj.and_or_operator} 
                     {filter_obj.collection_alias}.{filter_obj.field}
@@ -142,9 +141,9 @@ class AQLQuery:
 
         # Add search filters (AND (grouped ORs))
         if self.search_filters:
-            query.append("FILTER (")
+            self.query_parts.append("FILTER (")
             for i, filter_obj in enumerate(self.search_filters):
-                query.append(
+                self.query_parts.append(
                     f"""
                     LOWER({filter_obj.collection_alias}.{filter_obj.field})
                     LIKE LOWER(@{self.get_next_bind_var_key()})
@@ -152,12 +151,12 @@ class AQLQuery:
                     """
                 )
                 self.bind_vars[self.get_next_bind_var_key()] = filter_obj.search_value
-            query.append(" )")
+            self.query_parts.append(" )")
 
         # Add sorts
         if not self.sorts:
             # Add default sort of desc created
-            query.append("SORT doc.created_at DESC")
+            self.query_parts.append("SORT doc.created_at DESC")
         else:
             sort_fields = ", ".join(
                 [
@@ -165,18 +164,18 @@ class AQLQuery:
                     for sort in self.sorts
                 ]
             )
-            query.append(f"SORT {sort_fields}")
+            self.query_parts.append(f"SORT {sort_fields}")
 
         # Add pagination
         if self.limit:
-            query.append(f"LIMIT {self.offset}, {self.limit}")
+            self.query_parts.append(f"LIMIT {self.offset}, {self.limit}")
 
         if self.joins:
-            query.append(self.format_return_with_joins())
+            self.query_parts.append(self.format_return_with_joins())
         else:
-            query.append(self.format_non_join_return())
+            self.query_parts.append(self.format_non_join_return())
 
-        return "\n".join(query)
+        return "\n".join(self.query_parts)
 
     def execute_count(self) -> int:
         self.limit = None

@@ -43,6 +43,8 @@ class CompanyEvent(str, Enum):
     COMPANY_REJECTS_APPLICATION = "company_rejects_application"
 
     COMPANY_CALCULATES_MATCH_SCORE = "company_calculates_match_score"
+    COMPANY_EXTRACTS_APPLICATION_FILTERS = "company_extracts_application_filters"
+    COMPANY_ANSWERS_JOB_FILTER_QUESTIONS = "company_answers_job_filter_questions"
     COMPANY_UPLOADS_RESUME = "company_uploads_resume"
 
 

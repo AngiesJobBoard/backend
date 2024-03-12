@@ -7,6 +7,11 @@ from enum import Enum
 import secrets
 import collections.abc
 import difflib
+from datetime import datetime
+import re
+from math import radians, sin, cos, sqrt, atan2
+
+import dateutil.parser
 from pydantic import BaseModel
 
 
@@ -153,3 +158,46 @@ def get_perecent(numerator: int, denominator: int) -> int:
     if denominator == 0:
         return 0
     return round((numerator / denominator) * 100)
+
+
+def get_datetime_from_string(date_string: str) -> datetime:
+    datetime_regex_map = {
+        "DD-MM-YYYY": re.compile(r"^(\d{2})-(\d{2})-(\d{4})$"),
+    }
+    try:
+        return dateutil.parser.parse(date_string)
+    except (ValueError, OverflowError):
+        for format_label, regex in datetime_regex_map.items():
+            match = regex.match(date_string)
+            if match:
+                if format_label == "DD-MM-YYYY":
+                    day, month, year = match.groups()
+                    return datetime(int(year), int(month), int(day))
+    raise ValueError(f"Could not parse date string: {date_string}")
+
+
+def get_miles_between_lat_long_pairs(
+    lat1: float, lon1: float, lat2: float, lon2: float
+) -> int:
+    """
+    Calculate the distance between two lat/long pairs using the haversine formula.
+    """
+    # Radius of the Earth in km
+    R = 6371.0
+
+    # Convert lat/long to radians
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+
+    # Calculate the change in lat/long
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    # Calculate the distance using the haversine formula
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance = R * c
+
+    return int(distance)

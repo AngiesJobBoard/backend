@@ -108,8 +108,16 @@ class CompanyEventProducer(BaseEventProducer):
             event=CompanyEvent.COMPANY_UPLOADS_RESUME,
         )
 
-    def company_calculates_match_score(self, application_id: str):
+    def application_is_submited(self, application_id: str):
         self._company_event(
             data=ApplicationId(application_id=application_id).model_dump(),
             event=CompanyEvent.COMPANY_CALCULATES_MATCH_SCORE,
+        )
+        self._company_event(
+            data=ApplicationId(application_id=application_id).model_dump(),
+            event=CompanyEvent.COMPANY_EXTRACTS_APPLICATION_FILTERS,
+        )
+        self._company_event(
+            data=ApplicationId(application_id=application_id).model_dump(),
+            event=CompanyEvent.COMPANY_ANSWERS_JOB_FILTER_QUESTIONS,
         )

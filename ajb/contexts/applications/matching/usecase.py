@@ -8,9 +8,7 @@ from .ai_matching import AIApplicationMatcher, ApplicantMatchScore
 
 
 class ApplicantMatchUsecase(BaseUseCase):
-    def __init__(
-        self, request_scope: RequestScope, openai: AsyncOpenAIRepository
-    ):
+    def __init__(self, request_scope: RequestScope, openai: AsyncOpenAIRepository):
         self.request_scope = request_scope
         self.openai = openai
 
@@ -29,8 +27,7 @@ class ApplicantMatchUsecase(BaseUseCase):
         application_repo = self.get_repository(Collection.APPLICATIONS)
         application: Application = application_repo.get(application_id)
         application_repo.update_fields(
-            application.id,
-            match_score_status=ScanStatus.STARTED
+            application.id, match_score_status=ScanStatus.STARTED
         )
         try:
             match_results = await self.get_match(application, job_data)
@@ -38,14 +35,14 @@ class ApplicantMatchUsecase(BaseUseCase):
             application_repo.update_fields(
                 application_id,
                 match_score_status=ScanStatus.FAILED,
-                match_score_error_text=str(e)
+                match_score_error_text=str(e),
             )
             raise e
         return application_repo.update_fields(
             application_id,
             application_match_score=match_results.match_score,
             application_match_reason=match_results.match_reason,
-            match_score_status=ScanStatus.COMPLETED
+            match_score_status=ScanStatus.COMPLETED,
         )
 
     def update_many_applications_with_match_scores(

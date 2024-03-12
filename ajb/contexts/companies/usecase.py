@@ -45,7 +45,6 @@ class CompaniesUseCase(BaseUseCase):
                 raise CompanyCreateException("Company Name or Slug Taken")
 
             user: User = self.get_object(Collection.USERS, creating_user_id)
-            data.owner_first_and_last_name = user.first_name + " " + user.last_name
 
             # Create the company
             created_company: Company = company_repo.create(

@@ -1,11 +1,5 @@
-from ajb.base import (
-    BaseUseCase,
-    Collection,
-    RepoFilterParams
-)
-from ajb.base.events import (
-    SourceServices
-)
+from ajb.base import BaseUseCase, Collection, RepoFilterParams
+from ajb.base.events import SourceServices
 from ajb.contexts.resumes.models import Resume
 from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.vendor.arango.models import Filter
@@ -27,9 +21,9 @@ class ApplicationUseCase(BaseUseCase):
         # Create a company event for each application created to perform the match
         event_producter = CompanyEventProducer(self.request_scope, SourceServices.API)
         for application in created_applications:
-            event_producter.company_calculates_match_score(application)
+            event_producter.application_is_submited(application)
         return created_applications
-    
+
     def create_application_from_resume(self, resume: Resume) -> Application:
         # Create an application for this resume
         application_repo = self.get_repository(Collection.APPLICATIONS)
@@ -55,6 +49,16 @@ class ApplicationUseCase(BaseUseCase):
         )
         return created_application
 
+    def create_application_from_data(
+        self, application: CreateApplication
+    ) -> Application:
+        application_repo = self.get_repository(Collection.APPLICATIONS)
+        created_application = application_repo.create(application)
+        CompanyEventProducer(
+            self.request_scope, source_service=SourceServices.API
+        ).application_is_submited(created_application.id)
+        return created_application
+
     def delete_all_applications_for_job(self, company_id: str, job_id: str):
         application_repo = self.get_repository(Collection.APPLICATIONS)
         applications = application_repo.query(
@@ -67,4 +71,3 @@ class ApplicationUseCase(BaseUseCase):
         )[0]
         application_repo.delete_many([application.id for application in applications])
         return True
-    

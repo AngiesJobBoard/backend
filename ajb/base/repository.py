@@ -98,9 +98,7 @@ def build_and_execute_query(
     for filter in repo_filters.filters:
         query.add_filter(filter)
     for filter_field, filter_value in kwargs.items():
-        query.add_filter(
-            Filter(field=filter_field, value=filter_value)
-        )
+        query.add_filter(Filter(field=filter_field, value=filter_value))
 
     # Update the filter types based on the data model
     if data_model:

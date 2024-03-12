@@ -8,7 +8,7 @@ from ajb.contexts.applications.models import (
     Qualifications,
     WorkHistory,
     Education,
-    ScanStatus
+    ScanStatus,
 )
 from ajb.contexts.users.models import User
 from ajb.contexts.resumes.models import Resume

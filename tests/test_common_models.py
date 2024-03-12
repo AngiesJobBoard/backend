@@ -1,8 +1,6 @@
 import pytest
 
 from ajb.common.models import (
-    Location,
-    Location,
     convert_pay_to_hourly,
     Pay,
     PayType,

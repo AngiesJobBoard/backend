@@ -33,7 +33,7 @@ class Operator(str, Enum):
 
     def is_text_search(self) -> bool:
         return self in [Operator.STARTS_WITH, Operator.ENDS_WITH, Operator.CONTAINS]
-    
+
     def is_in_search(self) -> bool:
         return self in [Operator.IN, Operator.NOT_IN]
 

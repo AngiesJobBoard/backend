@@ -42,7 +42,7 @@ matplotlib = "*"
 python_version = "3.11"
 
 [scripts]
-check_all = "bash -c \"black .; pylint .; mypy . --ignore-missing-imports; coverage run --source=. -m pytest -v --disable-warnings tests && coverage report\""
+check_all = "bash -c \"black .; pylint .; mypy . --ignore-missing-imports --explicit-package-bases; coverage run --source=. -m pytest -v --disable-warnings tests && coverage report\""
 test = "bash -c \"coverage run --source=ajb -m pytest -v --disable-warnings tests && coverage report && coverage html\""
 migrate = "python -m ajb.migrate"
 seed = "python -m ajb.seed"

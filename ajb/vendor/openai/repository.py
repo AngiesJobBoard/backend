@@ -1,8 +1,8 @@
 import json
 from openai import OpenAI
-from ajb.config.settings import SETTINGS
 from aiohttp import ClientSession
 
+from ajb.config.settings import SETTINGS
 from ajb.vendor.openai.client_factory import OpenAIClientFactory
 
 
@@ -62,9 +62,14 @@ class AsyncOpenAIRepository:
 
     async def json_prompt(self, prompt: str, max_tokens: int = 100) -> dict:
         data = {
-            "messages": [{"role": "assistant", "content": prompt,}],
+            "messages": [
+                {
+                    "role": "assistant",
+                    "content": prompt,
+                }
+            ],
             "max_tokens": max_tokens,
-            "response_format": {"type": "json_object"}
+            "response_format": {"type": "json_object"},
         }
         response = await self._send_request(data)
         return json.loads(response["choices"][0]["message"]["content"])

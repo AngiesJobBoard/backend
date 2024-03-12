@@ -19,7 +19,7 @@ class AIJobGenerator:
             "required_job_skills",
             "description",
             "license_requirements",
-            "certification_requirements"
+            "certification_requirements",
         ]
         response = self.openai.json_prompt(
             prompt=f"""
@@ -32,16 +32,28 @@ class AIJobGenerator:
         )
         skills = []
         if response.get("required_job_skills"):
-            skills = response.get("required_job_skills", "").split(",") if isinstance(response.get("required_job_skills"), str) else response.get("required_job_skills")
-        
+            skills = (
+                response.get("required_job_skills", "").split(",")
+                if isinstance(response.get("required_job_skills"), str)
+                else response.get("required_job_skills")
+            )
+
         licenses = []
         if response.get("license_requirements"):
-            licenses = response.get("license_requirements", "").split(",") if isinstance(response.get("license_requirements"), str) else response.get("license_requirements")
-        
+            licenses = (
+                response.get("license_requirements", "").split(",")
+                if isinstance(response.get("license_requirements"), str)
+                else response.get("license_requirements")
+            )
+
         certifications = []
         if response.get("certification_requirements"):
-            certifications = response.get("certification_requirements", "").split(",") if isinstance(response.get("certification_requirements"), str) else response.get("certification_requirements")
-        
+            certifications = (
+                response.get("certification_requirements", "").split(",")
+                if isinstance(response.get("certification_requirements"), str)
+                else response.get("certification_requirements")
+            )
+
         created_job = UserCreateJob(
             position_title=response.get("position_title", "").title(),
             description=response.get("description"),
@@ -84,5 +96,5 @@ class AIJobGenerator:
             prompt=f"Given the following job description, \
                 write a better and much longer job description in the following tone: {tone.value}. \
                 Description: {draft}",
-                max_tokens=4096
+            max_tokens=4096,
         )

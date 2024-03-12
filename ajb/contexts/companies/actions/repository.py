@@ -19,10 +19,12 @@ class CompanyActionRepository(ParentRepository[CreateCompanyAction, CompanyActio
         self,
         company_id: str | None = None,
         event: CompanyEvent | None = None,
-        query: QueryFilterParams | RepoFilterParams = RepoFilterParams(),
+        query: QueryFilterParams | RepoFilterParams | None = None,
     ):
         if isinstance(query, QueryFilterParams):
             query = query.convert_to_repo_filters()
+        else:
+            query = query or RepoFilterParams()
         if company_id:
             query.filters.append(Filter(field="company_id", value=company_id))
         if event:

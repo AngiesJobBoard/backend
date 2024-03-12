@@ -15,7 +15,7 @@ class AdminUserRepository(ParentRepository[CreateAdminUser, AdminUser]):
     entity_model = AdminUser
 
     def get_admin_and_user(
-        self, query: QueryFilterParams | RepoFilterParams = RepoFilterParams()
+        self, query: QueryFilterParams | RepoFilterParams | None = None
     ):
         return self.query_with_joins(
             joins=[

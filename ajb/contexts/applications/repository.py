@@ -123,7 +123,7 @@ class CompanyApplicationRepository(ApplicationRepository):
     def get_company_view_list(
         self,
         company_id: str,
-        query: QueryFilterParams | RepoFilterParams = RepoFilterParams(),
+        query: QueryFilterParams | RepoFilterParams | None = None,
         job_id: str | None = None,
         shortlist_only: bool = False,
         match_score: int | None = None,
@@ -134,7 +134,7 @@ class CompanyApplicationRepository(ApplicationRepository):
         if isinstance(query, QueryFilterParams):
             repo_filters = query.convert_to_repo_filters()
         else:
-            repo_filters = query
+            repo_filters = query or RepoFilterParams()
         repo_filters.filters.append(Filter(field="company_id", value=company_id))
         if job_id:
             repo_filters.filters.append(Filter(field="job_id", value=job_id))
@@ -182,7 +182,7 @@ class CompanyApplicationRepository(ApplicationRepository):
             repo_filters=repo_filters,
             return_model=CompanyApplicationView,
         )
-    
+
     def get_company_view_single(self, application_id: str):
         result = self.get_with_joins(
             id=application_id,

@@ -36,4 +36,3 @@ List of yes’s on resume scan:
 - education level
 
 """
-

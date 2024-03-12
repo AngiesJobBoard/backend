@@ -1,4 +1,5 @@
 from enum import Enum
+from datetime import datetime
 import unittest
 from pydantic import BaseModel
 
@@ -11,6 +12,8 @@ from ajb.utils import (
     initialize_or_cast,
     replace_variables_in_html,
     closest_string_enum_match,
+    get_datetime_from_string,
+    get_miles_between_lat_long_pairs,
 )
 
 
@@ -159,3 +162,39 @@ def test_modify_query_parameters_in_url():
     new_params = {"param2": "newvalue2", "param3": "value3"}
     expected_url = "http://example.com?param1=value1&param2=newvalue2&param3=value3"
     assert modify_query_parameters_in_url(url, new_params) == expected_url
+
+
+def test_get_datetime_from_string():
+    test_dates = [
+        "2024-03-12T15:29:45",
+        "March 12, 2024 15:29:45",
+        "12-03-2024",
+        "15:29:45 12 March 2024",
+        "dec 2024",
+        "december, 2024",
+        "2024 december",
+    ]
+    for date in test_dates:
+        assert get_datetime_from_string(date) is not None
+        assert isinstance(get_datetime_from_string(date), datetime)
+
+
+def test_get_miles_between_lat_long_pairs():
+    lat_long_pairs = [
+        ((51.5074, 0.1278), (48.8566, 2.3522)),
+        ((40.7128, -74.0060), (34.0522, -118.2437)),
+        ((-33.8688, 151.2093), (35.6895, 139.6917)),
+    ]
+    for lat_long_pair in lat_long_pairs:
+        assert (
+            get_miles_between_lat_long_pairs(*lat_long_pair[0], *lat_long_pair[1]) > 0
+        )
+        assert isinstance(
+            get_miles_between_lat_long_pairs(*lat_long_pair[0], *lat_long_pair[1]), int
+        )
+
+    distance = get_miles_between_lat_long_pairs(51.5074, 0.1278, 51.5074, 0.1278)
+    assert distance == 0
+
+    distance = get_miles_between_lat_long_pairs(50, 10, 50, 0)
+    assert distance == 714

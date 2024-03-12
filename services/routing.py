@@ -12,6 +12,7 @@ ROUTER = {
     KafkaTopic.USERS: users_router,
 }
 
+
 async def topic_router(message: ConsumerRecord):
     if os.getenv("APP_IS_SLOW"):
         await asyncio.sleep(1)
