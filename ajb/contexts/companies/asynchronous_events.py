@@ -31,6 +31,7 @@ from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.applications.extract_data.usecase import ResumeExtractorUseCase
 from ajb.contexts.applications.application_questions.usecase import ApplicantQuestionsUsecase
+from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.sendgrid.templates.newly_created_company.models import (
     NewlyCreatedCompany,
@@ -257,7 +258,11 @@ class AsynchronousCompanyEvents:
         application_repo = ApplicationRepository(self.request_scope)
         data = ApplicationId.model_validate(self.message.data)
         application = application_repo.get(data.application_id)
-        application.extract_filter_information()
+        job = JobRepository(self.request_scope, application.company_id).get(application.job_id)
+        application.extract_filter_information(
+            job_lat=job.location_override.lat if job.location_override else None,
+            job_lon=job.location_override.lng if job.location_override else None,
+        )
         application_repo.update(
             data.application_id,
             UpdateApplication(additional_filters=application.additional_filters),

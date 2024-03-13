@@ -1,3 +1,4 @@
+import time
 import os
 import json
 import asyncio
@@ -18,5 +19,6 @@ async def topic_router(message: ConsumerRecord):
         await asyncio.sleep(1)
     message_data = BaseKafkaMessage(**json.loads(message.value))
     print(f"Received event: {message_data.event_type}")
+    start = time.time()
     await ROUTER[message_data.topic][message_data.event_type](message_data)
-    print(f"Completed processing event: {message_data.event_type}")
+    print(f"Completed processing event: {message_data.event_type} in {round(time.time() - start, 3)} seconds.")

@@ -79,7 +79,7 @@ class UserCreateJob(BaseModel):
 
     pay: Pay | None = None
 
-    application_questions: list[ApplicationQuestion] | None = None
+    application_questions_as_strings: list[str] | None = None
 
     language_requirements: t.List[str] | None = None
     license_requirements: t.List[str] | None = None

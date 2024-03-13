@@ -198,6 +198,7 @@ class UpdateApplication(BaseModel):
     viewed_by_company: bool | None = None
     qualifications: Qualifications | None = None
     additional_filters: AdditionalFilterInformation | None = None
+    application_questions: list[ApplicationQuestion] | None = None
     name: str | None = None
     email: str | None = None
     phone: str | None = None

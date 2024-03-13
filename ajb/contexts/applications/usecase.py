@@ -1,5 +1,6 @@
 from ajb.base import BaseUseCase, Collection, RepoFilterParams
 from ajb.base.events import SourceServices
+from ajb.common.models import ApplicationQuestion
 from ajb.contexts.resumes.models import Resume
 from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.contexts.companies.jobs.models import Job
@@ -12,7 +13,15 @@ class ApplicationUseCase(BaseUseCase):
 
     def _get_job_questions(self, job_id):
         job: Job = self.get_object(Collection.JOBS, job_id)
-        return job.application_questions
+        if not job.application_questions_as_strings:
+            return []
+        return [
+            ApplicationQuestion(
+                question=question
+            )
+            for question
+            in job.application_questions_as_strings
+        ]
 
     def create_application(
         self,
