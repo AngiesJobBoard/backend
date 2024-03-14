@@ -24,6 +24,7 @@ class KafkaTopic(str, Enum):
     """A topic represents a group of business actions"""
 
     COMPANIES = SETTINGS.KAFKA_COMPANIES_TOPIC
+    APPLICATIONS = SETTINGS.KAFKA_APPLICATIONS_TOPIC
     USERS = SETTINGS.KAFKA_USERS_TOPIC
 
     @classmethod
@@ -35,17 +36,17 @@ class CompanyEvent(str, Enum):
     """Represents a business action that can be taken on a company"""
 
     COMPANY_IS_CREATED = "company_is_created"
-
-    # Application related
     COMPANY_VIEWS_APPLICATIONS = "company_views_applications"
     COMPANY_CLICKS_ON_APPLICATION = "company_clicks_on_application"
     COMPANY_SHORTLISTS_APPLICATION = "company_shortlists_application"
     COMPANY_REJECTS_APPLICATION = "company_rejects_application"
 
-    COMPANY_CALCULATES_MATCH_SCORE = "company_calculates_match_score"
-    COMPANY_EXTRACTS_APPLICATION_FILTERS = "company_extracts_application_filters"
-    COMPANY_ANSWERS_JOB_FILTER_QUESTIONS = "company_answers_job_filter_questions"
-    COMPANY_UPLOADS_RESUME = "company_uploads_resume"
+
+class ApplicationEvent(str, Enum):
+    CALCULATE_MATCH_SCORE = "calculate_match_score"
+    EXTRACT_APPLICATION_FILTERS = "extract_application_filters"
+    ANSWER_JOB_FILTER_QUESTIONS = "answer_job_filter_questions"
+    UPLOAD_RESUME = "upload_resume"
 
 
 class UserEvent(str, Enum):

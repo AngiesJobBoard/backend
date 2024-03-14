@@ -17,11 +17,7 @@ class JobsUseCase(BaseUseCase):
         created_job = job_repo.create(job_to_create)
 
         # Update company job count
-        company = company_repo.get(company_id)
-        company_repo.update_fields(
-            company_id,
-            total_jobs=company.total_jobs + 1,
-        )
+        company_repo.increment_field(company_id, "total_jobs", 1)
         return created_job
 
     def create_many_jobs(self, company_id: str, jobs: list[UserCreateJob]) -> list[str]:
@@ -35,11 +31,7 @@ class JobsUseCase(BaseUseCase):
 
         # Update company job count
         company_repo = self.get_repository(Collection.COMPANIES)
-        company = company_repo.get(company_id)
-        company_repo.update_fields(
-            company_id,
-            total_jobs=company.total_jobs + len(jobs),
-        )
+        company_repo.increment_field(company_id, "total_jobs", len(jobs))
         return created_jobs
 
     def delete_job(self, company_id: str, job_id: str):
@@ -47,11 +39,7 @@ class JobsUseCase(BaseUseCase):
         company_repo = self.get_repository(Collection.COMPANIES)
         application_repo = self.get_repository(Collection.APPLICATIONS)
         job_repo.delete(job_id)
-        company = company_repo.get(company_id)
-        company_repo.update_fields(
-            company_id,
-            total_jobs=company.total_jobs - 1,
-        )
+        company_repo.decrement_field(company_id, "total_jobs", 1)
         applications = application_repo.query(
             repo_filters=RepoFilterParams(
                 filters=[

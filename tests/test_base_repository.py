@@ -466,7 +466,29 @@ def test_multiple_child_repository(request_scope):
     assert result.name == "test2"
 
 
-def test_sort_with_join(request_scope): ...
+def test_increment_field(request_scope):
+    parent_repo = TestRepository(request_scope)
+    example_item = parent_repo.create(CreateTestModel(name="test", age=1))
+
+    result = parent_repo.increment_field(example_item.id, "age", 1)
+    assert result.age == 2
+
+    queried_result = parent_repo.get(example_item.id)
+    assert queried_result.age == 2
+
+    big_result = parent_repo.increment_field(example_item.id, "age", 100)
+    assert big_result.age == 102
 
 
-def test_sort_with_nested_values(request_scope): ...
+def test_decrement_field(request_scope):
+    parent_repo = TestRepository(request_scope)
+    example_item = parent_repo.create(CreateTestModel(name="test", age=100))
+
+    result = parent_repo.decrement_field(example_item.id, "age", 1)
+    assert result.age == 99
+
+    queried_result = parent_repo.get(example_item.id)
+    assert queried_result.age == 99
+
+    big_result = parent_repo.decrement_field(example_item.id, "age", 100)
+    assert big_result.age == -1

@@ -458,12 +458,44 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         query.set_return_fields([field])
         results, _ = query.execute()
         return results
+    
+    def increment_field(self, id: str, field: str, amount: int) -> DataSchema:
+        statement = f"""
+            FOR doc IN {self.collection.value}
+            FILTER doc._key == @id
+            UPDATE doc WITH {{ {field}: doc.{field} + @amount }} IN {self.collection.value}
+            RETURN NEW
+        """
+        bind_vars = {
+            "id": id,
+            "amount": amount,
+        }
+        results = AQLQuery(self.db, self.collection.value).execute_custom_statement(
+            statement, bind_vars
+        )
+        return format_to_schema(results[0], self.entity_model)
+    
+    def decrement_field(self, id: str, field: str, amount: int) -> DataSchema:
+        statement = f"""
+            FOR doc IN {self.collection.value}
+            FILTER doc._key == @id
+            UPDATE doc WITH {{ {field}: doc.{field} - @amount }} IN {self.collection.value}
+            RETURN NEW
+        """
+        bind_vars = {
+            "id": id,
+            "amount": amount,
+        }
+        results = AQLQuery(self.db, self.collection.value).execute_custom_statement(
+            statement, bind_vars
+        )
+        return format_to_schema(results[0], self.entity_model)
 
-    def get_sub_entity(self) -> DataSchema:  # type: ignore
-        """This is a method only used by the single child repo"""
+    def get_sub_entity(self) -> DataSchema:
+        raise NotImplementedError("This method is only used by the single child repo")
 
-    def set_sub_entity(self, data: CreateDataSchema) -> DataSchema:  # type: ignore
-        """This is a method only used by the single child repo"""
+    def set_sub_entity(self, data: CreateDataSchema) -> DataSchema:
+        raise NotImplementedError("This method is only used by the single child repo")
 
 
 class ParentRepository(BaseRepository[CreateDataSchema, DataSchema]):

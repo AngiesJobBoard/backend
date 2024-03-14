@@ -6,11 +6,13 @@ from kafka.consumer.fetcher import ConsumerRecord
 from ajb.base.events import KafkaTopic, BaseKafkaMessage
 from services.contexts.companies import ROUTER as companies_router
 from services.contexts.users import ROUTER as users_router
+from services.contexts.applications import ROUTER as applications_router
 
 
 ROUTER = {
     KafkaTopic.COMPANIES: companies_router,
     KafkaTopic.USERS: users_router,
+    KafkaTopic.APPLICATIONS: applications_router,
 }
 
 

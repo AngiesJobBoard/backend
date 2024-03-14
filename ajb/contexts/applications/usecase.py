@@ -2,7 +2,7 @@ from ajb.base import BaseUseCase, Collection, RepoFilterParams
 from ajb.base.events import SourceServices
 from ajb.common.models import ApplicationQuestion
 from ajb.contexts.resumes.models import Resume
-from ajb.contexts.companies.events import CompanyEventProducer
+from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.companies.jobs.models import Job
 from ajb.vendor.arango.models import Filter
 
@@ -27,15 +27,13 @@ class ApplicationUseCase(BaseUseCase):
         self,
         job_id: str,
         partial_application: CreateApplication,
-        produce_submission_event: bool = True
     ) -> Application:
         application_repo = self.get_repository(Collection.APPLICATIONS)
         partial_application.application_questions = self._get_job_questions(job_id)
         created_application = application_repo.create(partial_application)
-        if produce_submission_event:
-            CompanyEventProducer(
-                self.request_scope, source_service=SourceServices.API
-            ).application_is_submited(created_application.id)
+        ApplicationEventProducer(
+            self.request_scope, source_service=SourceServices.API
+        ).application_is_submited(created_application.id)
         return created_application
     
     def create_many_applications(
@@ -59,9 +57,9 @@ class ApplicationUseCase(BaseUseCase):
             for candidate in raw_candidates
         ]
         created_applications = self.create_many_applications(job_id, partial_candidates)
-        event_producter = CompanyEventProducer(self.request_scope, SourceServices.API)
+        event_producer = ApplicationEventProducer(self.request_scope, SourceServices.API)
         for application in created_applications:
-            event_producter.application_is_submited(application)
+            event_producer.application_is_submited(application)
         return created_applications
 
     def create_application_from_resume(self, resume: Resume) -> Application:
@@ -75,14 +73,12 @@ class ApplicationUseCase(BaseUseCase):
             resume_scan_status=ScanStatus.PENDING,
             match_score_status=ScanStatus.PENDING,
         )
-        created_application = self.create_application(
-            resume.job_id,
-            partial_application,
-            produce_submission_event=False
-        )  # Create the application but don't produce submission event until the resume is parsed
+        application_repo = self.get_repository(Collection.APPLICATIONS)
+        partial_application.application_questions = self._get_job_questions(resume.job_id)
+        created_application = application_repo.create(partial_application)
 
         # Create kafka event for parsing the resume
-        CompanyEventProducer(
+        ApplicationEventProducer(
             self.request_scope, source_service=SourceServices.API
         ).company_uploads_resume(
             job_id=resume.job_id,

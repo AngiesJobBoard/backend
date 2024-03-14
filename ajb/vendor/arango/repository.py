@@ -200,6 +200,16 @@ class AQLQuery:
             stats = cursor.statistics()
             count = stats["scanned_full"] - stats["filtered"] if stats else 0
         return list(cursor), count
+    
+    def execute_custom_statement(self, statement: str, bind_vars: dict):
+        cursor = t.cast(
+            Cursor,
+            self.db.aql.execute(
+                statement,
+                bind_vars=bind_vars
+            ),
+        )
+        return list(cursor)
 
 
 def get_arango_db() -> StandardDatabase:
