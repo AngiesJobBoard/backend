@@ -40,18 +40,6 @@ class CompanyApplicationRepository(ApplicationRepository):
             raise EntityNotFound(NOT_FOUND_TEXT)
         return original_application
 
-    def company_updates_application_shortlist(
-        self, company_id: str, application_id: str, new_shortlist_status: bool
-    ):
-        assert self._company_get_application(company_id, application_id)
-        response = self.update_fields(
-            application_id, application_is_shortlisted=new_shortlist_status
-        )
-        CompanyEventProducer(
-            self.request_scope, SourceServices.API
-        ).company_shortlists_application(application_id)
-        return response
-
     def create_recruiter_note(
         self, company_id: str, application_id: str, note: CreateRecruiterNote
     ) -> Application:
