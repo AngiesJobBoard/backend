@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 
 from ajb.base.models import BaseDataModel, PaginatedResponse
-from ajb.common.models import DataReducedCompany, DataReducedJob
 
 from .enumerations import NumEmployeesEnum
 

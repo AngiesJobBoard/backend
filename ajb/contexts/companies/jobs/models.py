@@ -176,7 +176,7 @@ class CreateJob(UserCreateJob):
     company_id: str
     job_score: float | None = None
     total_applicants: int = 0
-    high_match_applicants: int = 0
+    high_matching_applicants: int = 0
     shortlisted_applicants: int = 0
     new_applicants: int = 0
 

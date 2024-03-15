@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 from ajb.base import BaseUseCase, Collection, RepoFilterParams
 from ajb.base.events import SourceServices
 from ajb.common.models import ApplicationQuestion
@@ -144,15 +146,28 @@ class ApplicationUseCase(BaseUseCase):
         self, company_id: str, job_id: str, application_id: str
     ):
         application_repo = self.get_repository(Collection.APPLICATIONS)
+        application: Application = application_repo.get(application_id)
         application_repo.delete(application_id)
         self.update_application_counts(
             company_id, job_id, ApplicationConstants.TOTAL_APPLICANTS, 1, False
         )
+        if application.application_is_shortlisted:
+            self.update_application_counts(
+                company_id, job_id, ApplicationConstants.SHORTLISTED_APPLICANTS, 1, False
+            )
+        if application.application_match_score and application.application_match_score > 70:
+            self.update_application_counts(
+                company_id, job_id, ApplicationConstants.HIGH_MATCHING_APPLICANTS, 1, False
+            )
+        if not application.viewed_by_company:
+            self.update_application_counts(
+                company_id, job_id, ApplicationConstants.NEW_APPLICANTS, 1, False
+            )
         return True
 
     def delete_all_applications_for_job(self, company_id: str, job_id: str):
         application_repo = self.get_repository(Collection.APPLICATIONS)
-        applications = application_repo.query(
+        applications: list[Application] = application_repo.query(
             repo_filters=RepoFilterParams(
                 filters=[
                     Filter(field="company_id", value=company_id),
@@ -160,14 +175,12 @@ class ApplicationUseCase(BaseUseCase):
                 ]
             )
         )[0]
-        application_repo.delete_many([application.id for application in applications])
-        self.update_application_counts(
-            company_id,
-            job_id,
-            ApplicationConstants.TOTAL_APPLICANTS,
-            len(applications),
-            False,
-        )
+
+        with ThreadPoolExecutor() as executor:
+            for application in applications:
+                executor.submit(
+                    self.delete_application_for_job, company_id, job_id, application.id
+                )
         return True
 
     def company_updates_application_shortlist(

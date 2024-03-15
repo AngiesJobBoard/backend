@@ -1,16 +1,26 @@
 from datetime import datetime
 from unittest.mock import patch
+from aiohttp import ClientSession
+import pytest
 
 from ajb.fixtures.applications import ApplicationFixture
 from ajb.contexts.applications.repository import CompanyApplicationRepository
+from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.applications.models import (
     Application,
     Qualifications,
     Location,
     WorkHistory,
     Education,
+    CreateApplication
 )
+from ajb.contexts.companies.repository import CompanyRepository
+from ajb.contexts.companies.jobs.repository import JobRepository
+from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
+from ajb.contexts.applications.matching.ai_matching import ApplicantMatchScore
+from ajb.fixtures.companies import CompanyFixture
 from ajb.vendor.arango.models import Filter, Operator
+from ajb.vendor.openai.repository import AsyncOpenAIRepository
 from ajb.base.models import RepoFilterParams
 
 
@@ -202,3 +212,176 @@ def test_extract_application_distance_and_same_state():
 
     assert miles_between_job_and_applicant == 157
     assert applicant_in_same_state is True
+
+
+
+def test_application_counts(request_scope):
+    company_fixture = CompanyFixture(request_scope)
+    company = company_fixture.create_company()
+    request_scope.company_id = company.id
+    job = company_fixture.create_company_job(company.id)
+
+    company_repo = CompanyRepository(request_scope)
+    job_repo = JobRepository(request_scope, company.id)
+
+    # Company and job should counts of 0
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 0
+    assert retrieved_company.shortlisted_applicants == 0
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 0
+
+    assert retrieved_job.total_applicants == 0
+    assert retrieved_job.shortlisted_applicants == 0
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 0
+
+    usecase = ApplicationUseCase(request_scope)
+    created_application = usecase.create_application(
+        company.id,
+        job.id,
+        CreateApplication(
+            company_id=company.id,
+            job_id=job.id,
+            name="apply guy",
+            email="apply@guy.com"
+        ),
+        False
+    )
+
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 1
+    assert retrieved_company.shortlisted_applicants == 0
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 1
+
+    assert retrieved_job.total_applicants == 1
+    assert retrieved_job.shortlisted_applicants == 0
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 1
+
+    usecase.company_updates_application_shortlist(
+        company.id,
+        created_application.id,
+        True
+    )
+
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 1
+    assert retrieved_company.shortlisted_applicants == 1
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 1
+
+    assert retrieved_job.total_applicants == 1
+    assert retrieved_job.shortlisted_applicants == 1
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 1
+
+    usecase.company_views_applications(
+        company.id,
+        [created_application.id]
+    )
+
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 1
+    assert retrieved_company.shortlisted_applicants == 1
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 0
+
+    assert retrieved_job.total_applicants == 1
+    assert retrieved_job.shortlisted_applicants == 1
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 0
+
+    usecase.delete_all_applications_for_job(
+        company.id,
+        job.id
+    )
+
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 0
+    assert retrieved_company.shortlisted_applicants == 0
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 0
+
+    assert retrieved_job.total_applicants == 0
+    assert retrieved_job.shortlisted_applicants == 0
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 0
+
+
+@pytest.mark.asyncio
+async def test_high_matching_applicants(request_scope):
+    company_fixture = CompanyFixture(request_scope)
+    company = company_fixture.create_company()
+    request_scope.company_id = company.id
+    job = company_fixture.create_company_job(company.id)
+    usecase = ApplicationUseCase(request_scope)
+    created_application = usecase.create_application(
+        company.id,
+        job.id,
+        CreateApplication(
+            company_id=company.id,
+            job_id=job.id,
+            name="apply guy",
+            email="apply@guy.com"
+        ),
+        False
+    )
+
+    company_repo = CompanyRepository(request_scope)
+    job_repo = JobRepository(request_scope, company.id)
+
+    async with ClientSession() as session:
+        matcher_usecase = ApplicantMatchUsecase(request_scope, AsyncOpenAIRepository(session))
+
+        with patch("ajb.contexts.applications.matching.usecase.ApplicantMatchUsecase.get_match") as mock_get_match:
+            mock_get_match.return_value = ApplicantMatchScore(
+                match_score=100,
+                match_reason="test"
+            )
+            await matcher_usecase.update_application_with_match_score(
+                created_application.id,
+                job
+            )
+
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 1
+    assert retrieved_company.shortlisted_applicants == 0
+    assert retrieved_company.high_matching_applicants == 1
+    assert retrieved_company.new_applicants == 1
+
+    assert retrieved_job.total_applicants == 1
+    assert retrieved_job.shortlisted_applicants == 0
+    assert retrieved_job.high_matching_applicants == 1
+    assert retrieved_job.new_applicants == 1
+
+    usecase.delete_all_applications_for_job(
+        company.id,
+        job.id
+    )
+
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 0
+    assert retrieved_company.shortlisted_applicants == 0
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 0
+
+    assert retrieved_job.total_applicants == 0
+    assert retrieved_job.shortlisted_applicants == 0
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 0
