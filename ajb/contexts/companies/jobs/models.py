@@ -17,7 +17,6 @@ from ajb.common.models import (
 )
 from ajb.common.models import Location, Location, convert_pay_to_hourly, ApplicationQuestion
 from ajb.static.enumerations import PayType
-from ajb.contexts.companies.offices.repository import OfficeRepository
 from ajb.exceptions import MissingJobFieldsException
 from ajb.vendor.arango.models import Filter, Operator, Sort
 
@@ -199,17 +198,6 @@ class Job(CreateJob, BaseDataModel):
             "drug_test_required",
             "experience_required",
         ]
-
-    def get_job_location(self, request_scope: RequestScope) -> Location | None:
-        if self.location_override:
-            return self.location_override
-        if self.company_office_id:
-            return (
-                OfficeRepository(request_scope, self.company_id)
-                .get(self.company_office_id)
-                .location
-            )
-        return None
 
     def get_missing_required_fields(self):
         return [

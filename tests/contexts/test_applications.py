@@ -25,7 +25,7 @@ from ajb.base.models import RepoFilterParams
 
 
 def test_company_view_list_basic(request_scope):
-    app_data = ApplicationFixture(request_scope).create_application()
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
     repo = CompanyApplicationRepository(request_scope)
 
     res, count = repo.get_company_view_list(app_data.company.id)
@@ -38,7 +38,7 @@ def test_company_view_list_basic(request_scope):
 
 
 def test_company_view_shortlist(request_scope):
-    app_data = ApplicationFixture(request_scope).create_application()
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
     repo = CompanyApplicationRepository(request_scope)
 
     res, count = repo.get_company_view_list(app_data.company.id, shortlist_only=True)
@@ -53,7 +53,7 @@ def test_company_view_shortlist(request_scope):
 
 
 def test_company_view_new_only(request_scope):
-    app_data = ApplicationFixture(request_scope).create_application()
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
     repo = CompanyApplicationRepository(request_scope)
 
     res, count = repo.get_company_view_list(app_data.company.id, new_only=True)
@@ -68,7 +68,7 @@ def test_company_view_new_only(request_scope):
 
 
 def test_match_score_minimum(request_scope):
-    app_data = ApplicationFixture(request_scope).create_application()
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
     repo = CompanyApplicationRepository(request_scope)
 
     # No match score on this record
@@ -92,7 +92,7 @@ def test_match_score_minimum(request_scope):
 
 
 def test_search_applicants_by_resume_text(request_scope):
-    app_data = ApplicationFixture(request_scope).create_application()
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
     repo = CompanyApplicationRepository(request_scope)
 
     # Update with some fake resume text
@@ -110,7 +110,7 @@ def test_search_applicants_by_resume_text(request_scope):
 
 
 def test_search_applications_by_skills(request_scope):
-    app_data = ApplicationFixture(request_scope).create_application()
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
     repo = CompanyApplicationRepository(request_scope)
 
     # Default job fixture comes with [Python, Another Fancy Skill]
@@ -124,15 +124,18 @@ def test_search_applications_by_skills(request_scope):
 
 
 def test_get_many_applications(request_scope):
-    app_data_1 = ApplicationFixture(request_scope).create_application()
-    app_data_2 = ApplicationFixture(request_scope).create_application()
+    fixture = ApplicationFixture(request_scope)
+    app_data_1 = fixture.create_all_application_data()
+    app_data_2 = fixture.create_application(
+        app_data_1.company.id, app_data_1.job.id, app_data_1.resume.id
+    )
 
     query = RepoFilterParams(
         filters=[
             Filter(
                 field="_key",
                 operator=Operator.ARRAY_IN,
-                value=[app_data_1.application.id, app_data_2.application.id],
+                value=[app_data_1.application.id, app_data_2.id],
             )
         ],
     )

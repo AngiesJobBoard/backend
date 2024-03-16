@@ -8,7 +8,7 @@ def get_bool_from_string(string: str):
 class AppSettings:
     # General
     APP_VERSION: str = os.getenv("APP_VERSION", "0.0.0")
-    SYSTEM_USER_EMAIL: str = "mike@angiesjobboard.com"
+    SYSTEM_USER_EMAIL: str = "sysadmin@angiesjobboard.com"
     APP_URL: str = os.getenv("APP_URL", "http://localhost:3000")
     DEFAULT_PAGE_SIZE: int = 25
 
@@ -33,14 +33,11 @@ class AppSettings:
     )
 
     # Kafka config
-    KAFKA_BOOTSTRAP_SERVER: str = os.getenv("KAFKA_BOOTSTRAP_SERVER", "")
+    KAFKA_BOOTSTRAP_SERVER: str = os.getenv("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")
     KAFKA_REST_URL: str = os.getenv("KAFKA_REST_URL", "")
     KAFKA_USERNAME: str = os.getenv("KAFKA_USERNAME", "")
     KAFKA_PASSWORD: str = os.getenv("KAFKA_PASSWORD", "")
     KAFKA_JWT_SECRET: str = os.getenv("KAFKA_JWT_SECRET", "")
-    KAFKA_USERS_TOPIC: str = os.getenv("KAFKA_USERS_TOPIC", "users")
-    KAFKA_COMPANIES_TOPIC: str = os.getenv("KAFKA_COMPANIES_TOPIC", "companies")
-    KAFKA_APPLICATIONS_TOPIC: str = os.getenv("KAFKA_APPLICATIONS_TOPIC", "applications")
 
     # Sendgrid config
     SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
@@ -63,6 +60,13 @@ class AppSettings:
 
     # Google API
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+
+    # Minio config
+    MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+    MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "minio")
+    MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "minio123")
+    MINIO_SECURE: bool = get_bool_from_string(os.getenv("MINIO_SECURE", "false"))
+    MINIO_BUCKET: str = os.getenv("MINIO_BUCKET", "ajb")
 
     # Deeplink secrets
     DEFAULT_EXPIRY_HOURS: int = int(os.getenv("RECRUITER_INVITATION_SECRET", 100))

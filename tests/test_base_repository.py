@@ -3,7 +3,7 @@ import pytest
 from pydantic import BaseModel
 from arango.exceptions import DocumentGetError
 
-from ajb.exceptions import EntityNotFound, MultipleEntitiesReturned
+from ajb.exceptions import EntityNotFound, MultipleEntitiesReturned, FailedToCreate
 from ajb.base import (
     ParentRepository,
     SingleChildRepository,
@@ -14,7 +14,6 @@ from ajb.base import (
     RepoFilterParams,
     QueryFilterParams,
 )
-from ajb.base.repository import format_child_key
 from ajb.vendor.arango.models import Filter, Sort, Operator
 
 
@@ -138,8 +137,8 @@ def test_basic_repository_actions(request_scope: RequestScope):
 
 def test_arango_document_get_error(request_scope):
     repo = TestRepository(request_scope)
-    with patch("arango.database.Database.collection") as mock_collection:
-        mock_collection.get.side_effect = DocumentGetError
+    with patch("ajb.vendor.arango.repository.ArangoDBRepository") as mock_repo:
+        mock_repo.get.side_effect = DocumentGetError
         with pytest.raises(EntityNotFound):
             repo.get("not_found")
 
@@ -335,10 +334,6 @@ def test_autocomplete(request_scope):
     assert len(result) == 0
 
 
-def test_format_child_key():
-    assert format_child_key("one", "two") == "one_two"
-
-
 def test_multiple_returns(request_scope):
     repo = TestRepository(request_scope)
     repo.create(CreateTestModel(name="test"))
@@ -492,3 +487,61 @@ def test_decrement_field(request_scope):
 
     big_result = parent_repo.decrement_field(example_item.id, "age", 100)
     assert big_result.age == -1
+
+
+def test_cant_create_with_existing_id(request_scope):
+    parent_repo = TestRepository(request_scope)
+    example_item = parent_repo.create(CreateTestModel(name="test"))
+
+    with pytest.raises(FailedToCreate):
+        parent_repo.create(CreateTestModel(name="test"), overridden_id=example_item.id)
+
+
+def test_cant_create_many_with_existing_id(request_scope):
+    parent_repo = TestRepository(request_scope)
+    example_item = parent_repo.create(CreateTestModel(name="test"))
+
+    with pytest.raises(FailedToCreate):
+        parent_repo.create_many(
+            [CreateTestModel(name="test"), CreateTestModel(name="test")],
+            override_ids=[example_item.id, "two"],
+        )
+
+    # Check that the second one was not created
+    with pytest.raises(EntityNotFound):
+        parent_repo.get("two")
+
+
+def test_upsert(request_scope):
+    parent_repo = TestRepository(request_scope)
+    example_item = parent_repo.create(CreateTestModel(name="test"))
+
+    result = parent_repo.upsert(CreateTestModel(name="test2"), overridden_id=example_item.id)
+    assert result.name == "test2"
+
+    queried_result = parent_repo.get(example_item.id)
+    assert queried_result.name == "test2"
+
+    result = parent_repo.upsert(CreateTestModel(name="test3"), overridden_id="not_found")
+    assert result.name == "test3"
+
+    queried_result = parent_repo.get("not_found")
+    assert queried_result.name == "test3"
+
+
+def test_upsert_many(request_scope):
+    parent_repo = TestRepository(request_scope)
+    example_item = parent_repo.create(CreateTestModel(name="test"))
+
+    result = parent_repo.upsert_many(
+        [CreateTestModel(name="test2"), CreateTestModel(name="test3")],
+        [example_item.id, "not_found"],
+    )
+    assert result[0] == example_item.id
+    assert result[1] == "not_found"
+
+    queried_result = parent_repo.get(example_item.id)
+    assert queried_result.name == "test2"
+
+    queried_result = parent_repo.get("not_found")
+    assert queried_result.name == "test3"

@@ -17,7 +17,7 @@ class Seeder:
         self.request_scope = RequestScope(user_id="db_seed", db=db, company_id=None)
 
     def seed_applications(self):
-        ApplicationFixture(self.request_scope).create_application()
+        ApplicationFixture(self.request_scope).create_all_application_data()
 
 
 def seed_db():

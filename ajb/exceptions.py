@@ -31,6 +31,14 @@ class MultipleEntitiesReturned(HTTPException):
         )
 
 
+class FailedToCreate(Exception):
+    def __init__(self, collection: str, overridden_id: str | None):
+        self.message = f"Failed to create {collection}"
+        if overridden_id:
+            self.message += f" with id {overridden_id}"
+        super().__init__(self.message)
+
+
 class InvalidTokenException(Exception):
     def __init__(self, message="Invalid token"):
         self.message = message

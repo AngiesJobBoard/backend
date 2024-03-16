@@ -186,32 +186,5 @@ class CompanyApplicationRepository(ApplicationRepository):
         casted_result = t.cast(CompanyApplicationView, result)
         return casted_result
 
-    def get_application_count(
-        self,
-        company_id: str,
-        new_only: bool = False,
-        start_date_filter: datetime | None = None,
-        end_date_filter: datetime | None = None,
-    ) -> int:
-        bind_vars = {"company_id": company_id}
-        query_text = f"FOR doc in {self.collection.value}"
-        query_text += " FILTER doc.company_id == @company_id"
-        if new_only:
-            query_text += " FILTER LENGTH(ATTRIBUTES(doc.viewed_by_recruiters)) == 0"
-        if start_date_filter:
-            query_text += " FILTER doc.created_at >= @start_date"
-            bind_vars["start_date"] = start_date_filter.isoformat()
-        if end_date_filter:
-            query_text += " FILTER doc.created_at <= @end_date"
-            bind_vars["end_date"] = end_date_filter.isoformat()
-        query_text += " RETURN doc"
-        cursor = t.cast(
-            Cursor,
-            self.db.aql.execute(
-                query_text, bind_vars=bind_vars, count=True  # type: ignore
-            ),
-        )
-        return cursor.count() or 0
-
 
 RepositoryRegistry.register(ApplicationRepository)

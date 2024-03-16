@@ -21,10 +21,8 @@ from api.contexts.users.users import router as users_router
 from api.contexts.companies.companies import router as companies_router
 from api.contexts.companies.invitations import router as company_invitations_router
 from api.contexts.companies.recruiters import router as recruiters_router
-from api.contexts.companies.offices import router as offices_router
 from api.contexts.companies.jobs import router as jobs_router
 from api.contexts.companies.job_applications import router as job_applications_router
-from api.contexts.companies.job_templates import router as job_templates_router
 from api.contexts.companies.applications import router as company_applications_router
 from api.contexts.companies.notifications import router as company_notifications_router
 from api.contexts.companies.description_generator import (
@@ -62,10 +60,8 @@ app.include_router(users_router)
 app.include_router(companies_router)
 app.include_router(company_invitations_router)
 app.include_router(recruiters_router)
-app.include_router(offices_router)
 app.include_router(jobs_router)
 app.include_router(job_applications_router)
-app.include_router(job_templates_router)
 app.include_router(company_applications_router)
 app.include_router(company_notifications_router)
 app.include_router(description_generator_router)

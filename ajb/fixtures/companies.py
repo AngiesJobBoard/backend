@@ -23,8 +23,6 @@ from ajb.contexts.companies.jobs.models import (
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.recruiters.models import RecruiterRole
-from ajb.contexts.companies.offices.repository import OfficeRepository
-from ajb.contexts.companies.offices.models import CreateOffice, Location
 from ajb.fixtures.users import UserFixture
 
 
@@ -100,24 +98,5 @@ class CompanyFixture:
             CreateJob(
                 company_id=company_id,
                 position_title="Software Engineer",
-            )
-        )
-
-    def create_company_office(self, company_id: str):
-        repo = OfficeRepository(self.request_scope, company_id)
-        return repo.create(
-            CreateOffice(
-                company_id=company_id,
-                name="Test Office",
-                default_job_location=True,
-                location=Location(
-                    address_line_1="100 state st",
-                    city="Boston",
-                    state="MA",
-                    country="USA",
-                    zipcode="02109",
-                    lat=42.35843,
-                    lng=-71.05977,
-                ),
             )
         )

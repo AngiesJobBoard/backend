@@ -11,7 +11,12 @@ from warnings import warn
 from datetime import datetime
 from pydantic import BaseModel
 from arango.database import StandardDatabase, TransactionDatabase
-from arango.exceptions import DocumentUpdateError, DocumentGetError, DocumentDeleteError
+from arango.exceptions import (
+    DocumentUpdateError,
+    DocumentGetError,
+    DocumentDeleteError,
+    DocumentInsertError,
+)
 from arango.cursor import Cursor
 
 from ajb.vendor.arango.models import (
@@ -19,8 +24,8 @@ from ajb.vendor.arango.models import (
     Operator,
     Join,
 )
-from ajb.vendor.arango.repository import AQLQuery
-from ajb.exceptions import EntityNotFound, MultipleEntitiesReturned
+from ajb.vendor.arango.repository import ArangoDBRepository, CreateManyInsertError
+from ajb.exceptions import EntityNotFound, MultipleEntitiesReturned, FailedToCreate
 
 from ajb.base.models import (
     DataSchema,
@@ -38,19 +43,6 @@ def format_to_schema(
     document: t.Any, entity_model: t.Type[BaseDataModel] | None
 ) -> DataSchema:  # type: ignore
     return entity_model.from_arango(document) if entity_model else document  # type: ignore
-
-
-def check_if_parent_exists(
-    db: StandardDatabase | TransactionDatabase, parent_collection: str, parent_id: str
-) -> None:
-    try:
-        assert db.collection(parent_collection).get(parent_id)
-    except AssertionError:
-        raise EntityNotFound(collection=parent_collection, entity_id=parent_id)
-
-
-def format_child_key(parent_collection: str, parent_id: str) -> str:
-    return f"{parent_collection}_{parent_id}"
 
 
 def convert_filter_type_based_on_datamodel(
@@ -91,7 +83,7 @@ def build_and_execute_query(
         repo_filters = RepoFilterParams()
     if isinstance(repo_filters, QueryFilterParams):
         repo_filters = repo_filters.convert_to_repo_filters(search_fields)
-    query = AQLQuery(db, collection_name)
+    query = ArangoDBRepository(db, collection_name)
 
     for join in joins:
         query.add_join(join)
@@ -200,12 +192,11 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         request_scope: RequestScope,
     ):
         self.request_scope = request_scope
-        self.db = request_scope.db
-        self.db_collection = self.db.collection(self.collection.value)
+        self.db = ArangoDBRepository(request_scope.db, self.collection.value)
 
     def get(self, id: str) -> DataSchema:
         try:
-            result = self.db_collection.get(id)
+            result = self.db.get(id)
         except DocumentGetError:
             raise EntityNotFound(collection=self.collection.value, entity_id=id)
         if result is None:
@@ -216,6 +207,8 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         self,
         data: CreateDataSchema,
         overridden_id: str | None = None,
+        parent_collection: str | None = None,
+        parent_id: str | None = None,
     ) -> DataSchema:
         create_dict = {
             **data.model_dump(mode="json"),
@@ -226,9 +219,12 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         }
         if overridden_id is not None:
             create_dict[BaseConstants.KEY] = overridden_id
-        results = self.db_collection.insert(
-            create_dict, return_new=True, overwrite=True
-        )
+        if parent_collection and parent_id:
+            create_dict[parent_collection] = parent_id
+        try:
+            results = self.db.create(create_dict)
+        except DocumentInsertError:
+            raise FailedToCreate(self.collection.value, overridden_id)
         return format_to_schema(
             t.cast(dict, results)[BaseConstants.NEW], self.entity_model
         )
@@ -241,9 +237,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             BaseConstants.KEY: id,
         }
         try:
-            results = self.db_collection.update(
-                update_dict, merge=True, return_new=True
-            )
+            results = self.db.update(update_dict)
         except DocumentUpdateError:
             raise EntityNotFound(collection=self.collection.value, entity_id=id)
         return format_to_schema(
@@ -258,25 +252,67 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             BaseConstants.KEY: id,
         }
         try:
-            results = self.db_collection.update(
-                update_dict,
-                merge=False,
-                return_new=True,
-            )
+            results = self.db.update(update_dict)
         except DocumentUpdateError:
             raise EntityNotFound(collection=self.collection.value, entity_id=id)
         return format_to_schema(
             t.cast(dict, results)[BaseConstants.NEW], self.entity_model
         )
 
+    def upsert(
+        self,
+        data: CreateDataSchema,
+        overridden_id: str | None = None,
+        parent_collection: str | None = None,
+        parent_id: str | None = None,
+    ) -> DataSchema:
+        create_dict = {
+            **data.model_dump(mode="json"),
+            BaseConstants.CREATED_AT: datetime.utcnow().isoformat(),
+            BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
+            BaseConstants.CREATED_BY: self.request_scope.user_id,
+            BaseConstants.UPDATED_BY: self.request_scope.user_id,
+        }
+        if overridden_id is not None:
+            create_dict[BaseConstants.KEY] = overridden_id
+        if parent_collection and parent_id:
+            create_dict[parent_collection] = parent_id
+        results = self.db.upsert(create_dict)
+        return format_to_schema(
+            t.cast(dict, results)[BaseConstants.NEW], self.entity_model
+        )
+
+    def upsert_many(
+        self, create_list: list[CreateDataSchema], override_ids: list[str] = []
+    ) -> list[str]:
+        if override_ids and len(create_list) != len(override_ids):
+            raise ValueError(
+                "Length of override_ids must be equal to length of create_list"
+            )
+        create_docs = [
+            {
+                **create_data.model_dump(mode="json"),
+                BaseConstants.CREATED_AT: datetime.utcnow().isoformat(),
+                BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
+                BaseConstants.CREATED_BY: self.request_scope.user_id,
+                BaseConstants.UPDATED_BY: self.request_scope.user_id,
+            }
+            for create_data in create_list
+        ]
+        if override_ids:
+            for index, override_id in enumerate(override_ids):
+                create_docs[index][BaseConstants.KEY] = override_id
+        created_docs = self.db.upsert_many(create_docs)
+        return [doc[BaseConstants.KEY] for doc in created_docs]  #  type: ignore
+
     def delete(self, id: str) -> bool:
         try:
-            return bool(self.db_collection.delete({BaseConstants.KEY: id}))
+            return self.db.delete(id)
         except DocumentDeleteError:
             raise EntityNotFound(collection=self.collection.value, entity_id=id)
 
     def get_one(self, **kwargs) -> DataSchema:
-        query = AQLQuery(self.db, self.collection.value)
+        query = ArangoDBRepository(self.request_scope.db, self.collection.value)
         for filter_field, filter_value in kwargs.items():
             query.add_filter(
                 Filter(field=filter_field, operator=Operator.EQUALS, value=filter_value)
@@ -296,7 +332,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         **kwargs,
     ):
         response = build_and_execute_query(
-            db=self.db,
+            db=self.request_scope.db,
             collection_name=self.collection.value,
             repo_filters=repo_filters,
             search_fields=self.search_fields,
@@ -343,7 +379,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         **kwargs,
     ) -> tuple[list[DataSchema], int]:
         response = build_and_execute_query(
-            db=self.db,
+            db=self.request_scope.db,
             collection_name=self.collection.value,
             repo_filters=repo_filters,
             search_fields=self.search_fields,
@@ -361,7 +397,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         self, repo_filters: RepoFilterParams | QueryFilterParams | None = None, **kwargs
     ) -> int:
         response = build_and_execute_query(
-            db=self.db,
+            db=self.request_scope.db,
             collection_name=self.collection.value,
             repo_filters=repo_filters,
             search_fields=self.search_fields,
@@ -380,7 +416,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         joins: list[Join],
         return_model: t.Type[BaseDataModel] | None = None,
     ) -> t.Type[BaseDataModel] | dict:
-        query = AQLQuery(self.db, self.collection.value)
+        query = ArangoDBRepository(self.request_scope.db, self.collection.value)
         for join in joins:
             query.add_join(join)
         query.return_single_document(id)
@@ -393,7 +429,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         return format_to_schema(results[0], return_model)
 
     def get_many_by_id(self, document_ids: list[str]) -> list[DataSchema | None]:
-        results = self.db_collection.get_many(document_ids)
+        results = self.db.get_many(document_ids)
         return [
             format_to_schema(result, self.entity_model) if result else None
             for result in results  # type: ignore
@@ -419,8 +455,12 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         if override_ids:
             for index, override_id in enumerate(override_ids):
                 create_docs[index][BaseConstants.KEY] = override_id
-        created_docs = self.db_collection.insert_many(create_docs)
-        return [doc[BaseConstants.KEY] for doc in created_docs]  #  type: ignore
+
+        try:
+            created_docs = self.db.create_many(create_docs)
+        except CreateManyInsertError:
+            raise FailedToCreate(self.collection.value, None)
+        return [doc[BaseConstants.KEY] for doc in created_docs]  # type: ignore
 
     def update_many(
         self, document_updates: dict[str, CreateDataSchema | dict[str, t.Any]]
@@ -442,15 +482,15 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             }
             for key, update_data in updates_as_dict.items()
         ]
-        self.db_collection.update_many(update_docs, merge=True)
+        self.db.update_many(update_docs)
         return True
 
     def delete_many(self, document_ids: list[str]) -> bool:
-        self.db_collection.delete_many(document_ids)  # type: ignore
+        self.db.delete_many(document_ids)
         return True
 
     def get_autocomplete(self, field: str, prefix: str) -> list[dict]:
-        query = AQLQuery(self.db, self.collection.value)
+        query = ArangoDBRepository(self.request_scope.db, self.collection.value)
         query.add_search_filter(
             Filter(field=field, operator=Operator.STARTS_WITH, value=prefix)
         )
@@ -458,7 +498,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         query.set_return_fields([field])
         results, _ = query.execute()
         return results
-    
+
     def increment_field(self, id: str, field: str, amount: int) -> DataSchema:
         statement = f"""
             FOR doc IN {self.collection.value}
@@ -470,11 +510,11 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             "id": id,
             "amount": amount,
         }
-        results = AQLQuery(self.db, self.collection.value).execute_custom_statement(
-            statement, bind_vars
-        )
+        results = ArangoDBRepository(
+            self.request_scope.db, self.collection.value
+        ).execute_custom_statement(statement, bind_vars)
         return format_to_schema(results[0], self.entity_model)
-    
+
     def decrement_field(self, id: str, field: str, amount: int) -> DataSchema:
         statement = f"""
             FOR doc IN {self.collection.value}
@@ -486,9 +526,9 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             "id": id,
             "amount": amount,
         }
-        results = AQLQuery(self.db, self.collection.value).execute_custom_statement(
-            statement, bind_vars
-        )
+        results = ArangoDBRepository(
+            self.request_scope.db, self.collection.value
+        ).execute_custom_statement(statement, bind_vars)
         return format_to_schema(results[0], self.entity_model)
 
     def get_sub_entity(self) -> DataSchema:
@@ -505,6 +545,15 @@ class ParentRepository(BaseRepository[CreateDataSchema, DataSchema]):
 
     An example is a company, this is a root level object
     """
+
+
+def check_if_parent_exists(
+    db: StandardDatabase | TransactionDatabase, parent_collection: str, parent_id: str
+) -> None:
+    try:
+        assert db.collection(parent_collection).get(parent_id)
+    except AssertionError:
+        raise EntityNotFound(collection=parent_collection, entity_id=parent_id)
 
 
 class SingleChildRepository(BaseRepository[CreateDataSchema, DataSchema]):
@@ -530,21 +579,22 @@ class SingleChildRepository(BaseRepository[CreateDataSchema, DataSchema]):
         super().__init__(request_scope)
         self.parent_collection = parent_collection
         self.parent_id = parent_id
-        check_if_parent_exists(self.db, parent_collection, parent_id)
+        check_if_parent_exists(self.request_scope.db, parent_collection, parent_id)
+
+    @staticmethod
+    def _format_child_key(parent_collection: str, parent_id: str) -> str:
+        return f"{parent_collection}_{parent_id}"
 
     def get_sub_entity(self) -> DataSchema:
-        return self.get(format_child_key(self.parent_collection, self.parent_id))
+        return self.get(self._format_child_key(self.parent_collection, self.parent_id))
 
     def set_sub_entity(self, data: CreateDataSchema) -> DataSchema:
-        try:
-            return self.update(
-                format_child_key(self.parent_collection, self.parent_id), data
-            )
-        except EntityNotFound:
-            return self.create(
-                data,
-                overridden_id=format_child_key(self.parent_collection, self.parent_id),
-            )
+        return self.upsert(
+            data,
+            overridden_id=self._format_child_key(
+                self.parent_collection, self.parent_id
+            ),
+        )
 
 
 class MultipleChildrenRepository(BaseRepository[CreateDataSchema, DataSchema]):
@@ -567,26 +617,15 @@ class MultipleChildrenRepository(BaseRepository[CreateDataSchema, DataSchema]):
         self.parent_id = parent_id
 
         if parent_id is not None:
-            check_if_parent_exists(self.db, parent_collection, parent_id)
+            check_if_parent_exists(self.request_scope.db, parent_collection, parent_id)
         else:
             warn("No parent id provided, parent collection may not exist")
 
     def create(
         self, data: CreateDataSchema, overridden_id: str | None = None
     ) -> DataSchema:
-        create_dict = {
-            **data.model_dump(mode="json"),
-            BaseConstants.CREATED_AT: datetime.utcnow().isoformat(),
-            BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
-            BaseConstants.CREATED_BY: self.request_scope.user_id,
-            BaseConstants.UPDATED_BY: self.request_scope.user_id,
-            self.parent_collection: self.parent_id,
-        }
-        if overridden_id is not None:
-            create_dict[BaseConstants.KEY] = overridden_id
-        results = self.db_collection.insert(create_dict, return_new=True)
-        return format_to_schema(
-            t.cast(dict, results)[BaseConstants.NEW], self.entity_model
+        return super().create(
+            data, overridden_id, self.parent_collection, self.parent_id
         )
 
 
@@ -603,7 +642,7 @@ class BaseViewRepository:
         self.db = request_scope.db
 
     def get(self, id: str) -> dict:
-        query = AQLQuery(self.db, self.view.value)
+        query = ArangoDBRepository(self.db, self.view.value)
         query.add_filter(
             Filter(field=BaseConstants.KEY, operator=Operator.EQUALS, value=id)
         )

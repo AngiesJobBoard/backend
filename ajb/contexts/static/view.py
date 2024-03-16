@@ -1,6 +1,6 @@
 from ajb.base import BaseViewRepository, View
 
-from ajb.vendor.arango.repository import AQLQuery
+from ajb.vendor.arango.repository import ArangoDBRepository
 from ajb.vendor.arango.models import Filter, Operator
 from .models import StaticDataTypes
 
@@ -12,7 +12,7 @@ class StaticDataViewRepository(BaseViewRepository):
     def basic_search(
         self, type: StaticDataTypes, search: str | None = None, limit: int | None = None
     ) -> list[str]:
-        query = AQLQuery(self.request_scope.db, self.view.value)
+        query = ArangoDBRepository(self.request_scope.db, self.view.value)
         query.add_filter(
             Filter(field="type", operator=Operator.EQUALS, value=type.value)
         )
