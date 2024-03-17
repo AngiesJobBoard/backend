@@ -4,7 +4,9 @@ from ajb.base import RequestScope
 from api.vendors import db
 
 
-WEBHOOK_REQUEST_SCOPE = RequestScope(user_id="companies_webhook", db=db, company_id=None)
+WEBHOOK_REQUEST_SCOPE = RequestScope(
+    user_id="companies_webhook", db=db, company_id=None
+)
 
 
 router = APIRouter(
@@ -15,9 +17,21 @@ router = APIRouter(
 
 @router.post("/jobs", status_code=status.HTTP_204_NO_CONTENT)
 async def jobs_webhook_handler(
-    request: Request
+    subject: str = Form(...),
+    from_: str = Form(..., alias="from"),
+    to: str = Form(...),
+    text: str | None = Form(None),
+    attachments: list[UploadFile] | None = File(None),
 ):
-    print(request.__dict__)
+    # Process the received data here
+    print(f"Subject: {subject}")
+    print(f"From: {from_}")
+    print(f"To: {to}")
+    print(f"Text: {text}")
+    if attachments:
+        for attachment in attachments:
+            # Process your attachments here
+            print(f"Received attachment: {attachment.filename}")
     return {"message": "Email received successfully"}
 
 
@@ -25,7 +39,7 @@ async def jobs_webhook_handler(
 async def applicants_webhook_handler(
     from_email: str = Form(...),
     subject: str = Form(...),
-    files: list[UploadFile] = File(default=None)
+    files: list[UploadFile] = File(default=None),
 ):
     print(f"Email from: {from_email}")
     print(f"Subject: {subject}")
@@ -33,7 +47,7 @@ async def applicants_webhook_handler(
     for file in files:
         contents = await file.read()
         # with open(file_location, "wb") as f:
-            # f.write(contents)
+        # f.write(contents)
         print(f"Saved file: {file.filename}")
 
     return {"message": "Email received successfully"}
