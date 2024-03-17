@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, File, Form, UploadFile, Request
-from email import message_from_bytes
+from email import message_from_string
 
 from ajb.base import RequestScope
 from api.vendors import db
@@ -17,12 +17,11 @@ router = APIRouter(
 
 
 @router.post("/jobs", status_code=status.HTTP_204_NO_CONTENT)
-async def jobs_webhook_handler(request: Request):
+async def jobs_webhook_handler(email: str = Form(...)):
     # Assuming the raw email is sent in the request body, we read it as bytes.
-    raw_email = await request.body()
-    
+   
     # Parse the raw email content.
-    email_message = message_from_bytes(raw_email)
+    email_message = message_from_string(email)
     
     # Extracting information from the parsed email.
     subject = email_message.get('Subject')
