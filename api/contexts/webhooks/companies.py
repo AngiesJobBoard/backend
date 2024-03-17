@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, File, Form, UploadFile
+from fastapi import APIRouter, status, File, Form, UploadFile, Request
 
 from ajb.base import RequestScope
 from api.vendors import db
@@ -15,12 +15,9 @@ router = APIRouter(
 
 @router.post("/jobs", status_code=status.HTTP_204_NO_CONTENT)
 async def jobs_webhook_handler(
-    headers: str = Form(...),
-    to: str = Form(...),
-    from_: str = Form(..., alias="from"),
-    subject: str = Form(...),
+    request: Request
 ):
-    print(subject)
+    print(request.__dict__)
     return {"message": "Email received successfully"}
 
 
