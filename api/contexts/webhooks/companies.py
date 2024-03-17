@@ -17,18 +17,12 @@ router = APIRouter(
 
 
 @router.post("/jobs", status_code=status.HTTP_204_NO_CONTENT)
-async def jobs_webhook_handler(email: str = Form(...)):
-    # Assuming the raw email is sent in the request body, we read it as bytes.
-   
-    # Parse the raw email content.
+async def jobs_webhook_handler(request: Request, email: str = Form(...)):
+    print(request.__dict__)
     email_message = message_from_string(email)
-    
-    # Extracting information from the parsed email.
     subject = email_message.get('Subject')
     sender = email_message.get('From')
     recipients = email_message.get('To')
-    # Depending on the email content type, you might need to handle it differently.
-    # This is a simple example to get the body for a plain text email.
     if email_message.is_multipart():
         for part in email_message.walk():
             content_type = part.get_content_type()
@@ -37,9 +31,7 @@ async def jobs_webhook_handler(email: str = Form(...)):
                 body = part.get_payload(decode=True).decode()
     else:
         body = email_message.get_payload(decode=True).decode()
-    
-    # Process the email content as needed.
-    # For this example, we'll just return some of the extracted information.
+
     print(f"Email from: {sender}")
     print(f"Recipients: {recipients}")
     print(f"Subject: {subject}")
