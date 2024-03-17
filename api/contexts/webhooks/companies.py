@@ -14,7 +14,7 @@ async def verify_webhook_event(request: Request) -> dict:
 
 router = APIRouter(
     tags=["Webhooks"],
-    prefix="/webhooks/companies/{company_id}",
+    prefix="/webhooks/companies",
     dependencies=[Depends(verify_webhook_event)],
 )
 
