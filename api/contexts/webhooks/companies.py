@@ -21,17 +21,12 @@ async def jobs_webhook_handler(
     from_: str = Form(..., alias="from"),
     to: str = Form(...),
     text: str | None = Form(None),
-    attachments: list[UploadFile] | None = File(None),
 ):
     # Process the received data here
     print(f"Subject: {subject}")
     print(f"From: {from_}")
     print(f"To: {to}")
     print(f"Text: {text}")
-    if attachments:
-        for attachment in attachments:
-            # Process your attachments here
-            print(f"Received attachment: {attachment.filename}")
     return {"message": "Email received successfully"}
 
 
