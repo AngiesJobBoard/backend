@@ -41,12 +41,10 @@ async def jobs_webhook_handler(request: Request):
     
     # Process the email content as needed.
     # For this example, we'll just return some of the extracted information.
-    return {
-        "subject": subject,
-        "sender": sender,
-        "recipients": recipients,
-        "body": body,
-    }
+    print(f"Email from: {sender}")
+    print(f"Recipients: {recipients}")
+    print(f"Subject: {subject}")
+    return {"message": "Email received successfully"}
 
 
 @router.post("/applicants", status_code=status.HTTP_204_NO_CONTENT)
