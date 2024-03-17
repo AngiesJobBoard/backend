@@ -9,7 +9,7 @@ from ajb.vendor.clerk.models import (
 from api.vendors import db
 
 
-WEBHOOK_REQUEST_SCOPE = RequestScope(user_id="webhook", db=db, company_id=None)
+WEBHOOK_REQUEST_SCOPE = RequestScope(user_id="clerk_webhook", db=db, company_id=None)
 
 
 async def verify_clerk_webhook_event(request: Request) -> dict:

@@ -32,14 +32,10 @@ USER_COMPANY_CACHE = TTLCache(
 PUBLIC_ROUTES = [
     "/docs",
     "/openapi.json",
-    "/webhooks/clerk/users",
-    "/webhooks/clerk/companies",
-    "/webhooks/clerk/recruiters",
-    "/webhooks/clerk/recruiter-invitations",
     "/health/check",
     "/health/version",
     "/search/jobs/",
-]
+]  # All webhooks are included as well
 
 LOGGING_EXCLUDED_ROUTES = [
     "/health/check",
@@ -135,7 +131,7 @@ async def verify_user(
         # User trying to authenticate
         request.state.user = get_user(credentials.credentials)
 
-    if request.url.path not in PUBLIC_ROUTES and not request.state.user:
+    if request.url.path not in PUBLIC_ROUTES and "/webhooks" not in request.url.path and not request.state.user:
         raise Forbidden
 
     if request.state.user:

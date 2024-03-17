@@ -2,7 +2,6 @@ import typing as t
 
 from ajb.base import BaseUseCase, Collection
 from ajb.contexts.users.repository import CreateUser, User
-from ajb.exceptions import EntityNotFound
 
 from ajb.vendor.clerk.models import (
     ClerkUser,

@@ -30,6 +30,7 @@ from api.contexts.companies.description_generator import (
 )
 
 from api.contexts.webhooks.clerk import router as clerk_webhooks_router
+from api.contexts.webhooks.companies import router as companies_webhooks_router
 from api.contexts.static.static_data import router as static_data_router
 from api.contexts.static.enumerations import router as static_enumerations_router
 from api.contexts.admin.users import router as admin_create_users_router
@@ -67,6 +68,8 @@ app.include_router(company_notifications_router)
 app.include_router(description_generator_router)
 
 app.include_router(clerk_webhooks_router)
+app.include_router(companies_webhooks_router)
+
 app.include_router(static_data_router)
 app.include_router(static_enumerations_router)
 
