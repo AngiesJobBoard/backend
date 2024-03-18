@@ -22,7 +22,6 @@ pandas = "*"
 croniter = "*"
 aiohttp = "*"
 python-docx = "*"
-minio = "*"
 
 [dev-packages]
 mypy = "*"

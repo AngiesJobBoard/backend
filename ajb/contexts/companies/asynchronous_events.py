@@ -4,38 +4,24 @@ These are triggered when a company event is published to the Kafka topic
 and is then routed to the appropriate handler based on the event type.
 """
 
-import asyncio
-
 from ajb.base import RequestScope
 from ajb.contexts.companies.models import Company
-from ajb.base.events import CompanyEvent, BaseKafkaMessage, SourceServices
-from ajb.common.models import Location
+from ajb.base.events import CompanyEvent, BaseKafkaMessage
 from ajb.contexts.companies.events import (
     RecruiterAndApplication,
     RecruiterAndApplications,
 )
-from ajb.contexts.applications.models import (
-    ScanStatus,
-    Qualifications,
-    WorkHistory,
-    UpdateApplication,
-)
-from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
-from ajb.contexts.applications.repository import ApplicationRepository
-from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
-from ajb.contexts.companies.actions.repository import CompanyActionRepository
-from ajb.contexts.companies.actions.models import CreateCompanyAction
-from ajb.contexts.companies.events import CompanyEventProducer
+from ajb.contexts.companies.actions.repository import CompanyActionRepository, CreateCompanyAction
+from ajb.contexts.companies.email_ingress_webhooks.repository import CompanyEmailIngressRepository
+from ajb.contexts.companies.email_ingress_webhooks.models import CreateCompanyEmailIngress, EmailIngressType
+from ajb.contexts.companies.api_ingress_webhooks.repository import CompanyAPIIngressRepository
+from ajb.contexts.companies.api_ingress_webhooks.models import CreateCompanyAPIIngress
 from ajb.contexts.users.repository import UserRepository
-from ajb.contexts.applications.extract_data.usecase import ResumeExtractorUseCase
-from ajb.contexts.applications.application_questions.usecase import ApplicantQuestionsUsecase
-from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.sendgrid.templates.newly_created_company.models import (
     NewlyCreatedCompany,
 )
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
-from ajb.contexts.companies.events import CompanyEventProducer
 
 
 class AsynchronousCompanyEvents:
@@ -52,6 +38,21 @@ class AsynchronousCompanyEvents:
         self.sendgrid = sendgrid or SendgridRepository()
         self.openai = openai
         self.async_openai = async_openai
+    
+    def create_company_subdomain_and_webhook_secrets(self, company_id: str):
+        """
+        For emails we need a subdomain generated
+        For API webhooks we a full JWT provided
+        """
+
+        # Create the email ingress subdomain relationships
+        email_ingress_repo = CompanyEmailIngressRepository(self.request_scope, company_id)
+        for ingress_type in EmailIngressType:
+            email_ingress_repo.create(CreateCompanyEmailIngress.generate(company_id, ingress_type))
+        
+        # Create the API ingress JWT relationship
+        CompanyAPIIngressRepository(self.request_scope, company_id).set_sub_entity(CreateCompanyAPIIngress.generate(company_id))
+
 
     async def company_is_created(self) -> None:
         created_company = Company.model_validate(self.message.data)
@@ -65,6 +66,7 @@ class AsynchronousCompanyEvents:
                 supportEmail="support@angiesjobboard.com",
             ),
         )
+        self.create_company_subdomain_and_webhook_secrets(created_company.id)
 
     async def company_views_applications(self) -> None:
         data = RecruiterAndApplications.model_validate(self.message.data)

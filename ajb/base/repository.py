@@ -546,6 +546,14 @@ class ParentRepository(BaseRepository[CreateDataSchema, DataSchema]):
     An example is a company, this is a root level object
     """
 
+    def delete_all_children(self, parent_id: str) -> bool:
+        """
+        Ooofie this is a tough method name...
+        When a parent record is deleted, this will delete all of the
+        children records that are associated with it.
+        """
+        return True
+
 
 def check_if_parent_exists(
     db: StandardDatabase | TransactionDatabase, parent_collection: str, parent_id: str

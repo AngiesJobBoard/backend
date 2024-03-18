@@ -23,9 +23,9 @@ class KafkaGroup(str, Enum):
 class KafkaTopic(str, Enum):
     """A topic represents a group of business actions"""
 
-    COMPANIES = "companies"
-    APPLICATIONS = "applications"
-    USERS = "users"
+    COMPANIES = SETTINGS.KAFKA_COMPANIES_TOPIC
+    APPLICATIONS = SETTINGS.KAFKA_APPLICATIONS_TOPIC
+    USERS = SETTINGS.KAFKA_USERS_TOPIC
 
     @classmethod
     def get_all_topics(cls):

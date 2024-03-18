@@ -19,7 +19,6 @@ class Collection(str, Enum):
     USERS = "users"
 
     # Companies
-
     COMPANIES = "companies"
     COMPANY_RECRUITERS = "company_recruiters"
     COMPANY_ACTIONS = "company_actions"
@@ -30,6 +29,9 @@ class Collection(str, Enum):
     APPLICATIONS = "applications"
     RESUMES = "resumes"
     COMPANY_NOTIFICATIONS = "company_notifications"
+    COMPANY_EMAIL_INGRESS_WEBHOOKS = "company_email_ingress_webhooks"
+    COMPANY_API_INGRESS_WEBHOOKS = "company_api_ingress_webhooks"
+    COMPANY_API_EGRESS_WEBHOOKS = "company_api_egress_webhooks"
 
     # System
     SCHEDULED_EVENTS = "scheduled_events"
