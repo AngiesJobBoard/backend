@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from ajb.base.models import (
     BaseDataModel,
     PaginatedResponse,
-    RequestScope,
     RepoFilterParams,
     Pagination,
 )
@@ -15,7 +14,7 @@ from ajb.common.models import (
     DataReducedCompany,
     JobLocationType,
 )
-from ajb.common.models import Location, Location, convert_pay_to_hourly, ApplicationQuestion
+from ajb.common.models import Location, Location, convert_pay_to_hourly
 from ajb.static.enumerations import PayType
 from ajb.exceptions import MissingJobFieldsException
 from ajb.vendor.arango.models import Filter, Operator, Sort
@@ -97,7 +96,7 @@ class UserCreateJob(BaseModel):
     num_candidates_required: int | None = None
     ongoing_recruitment: bool | None = None
     ideal_days_to_hire: int | None = None
-    internal_reference_code: str | None = None
+    external_reference_code: str | None = None
     job_associated_company_description: str | None = None
     job_tags: list[str] | None = None
     position_filled: bool = False
@@ -107,7 +106,7 @@ class UserCreateJob(BaseModel):
             "num_candidates_required",
             "ongoing_recruitment",
             "ideal_days_to_hire",
-            "internal_reference_code",
+            "external_reference_code",
             "job_tags",
             "desired_start_date",
         }
@@ -134,7 +133,7 @@ class UserCreateJob(BaseModel):
             "felons_accepted": 2,
             "disability_accepted": 2,
             "ideal_days_to_hire": 2,
-            "internal_reference_code": 1,
+            "external_reference_code": 1,
             "job_associated_company_description": 4,
             "desired_start_date": 3,
         }

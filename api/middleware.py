@@ -16,6 +16,9 @@ from ajb.contexts.companies.recruiters.repository import (
     RecruiterRepository,
     CompanyAndRole,
 )
+from ajb.contexts.companies.api_ingress_webhooks.repository import CompanyAPIIngressRepository
+from ajb.contexts.companies.api_ingress_webhooks.models import APIIngressJWTData
+from ajb.vendor.jwt import decode_jwt
 
 from .exceptions import Forbidden, InvalidToken
 from .vendors import db, kafka_producer
@@ -116,6 +119,18 @@ async def get_companies_from_user(request_scope: RequestScope) -> list[CompanyAn
     return results
 
 
+async def verify_webhook_request(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
+):
+    request.state.request_scope = RequestScope(
+        user_id="webhook",
+        db=db,
+        kafka_producer=kafka_producer,
+        company_id=None,
+    )
+
+
 async def verify_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
@@ -125,13 +140,17 @@ async def verify_user(
     or sets them as anonymous
     """
 
+    if "webhooks" in request.url.path:
+        await verify_webhook_request(request, credentials)
+        return
+
     request.state.user = None
     request.state.companies = []
     if credentials and credentials.credentials:
         # User trying to authenticate
         request.state.user = get_user(credentials.credentials)
 
-    if request.url.path not in PUBLIC_ROUTES and "/webhooks" not in request.url.path and not request.state.user:
+    if request.url.path not in PUBLIC_ROUTES and not request.state.user:
         raise Forbidden
 
     if request.state.user:
@@ -195,3 +214,21 @@ class ValidationErrorLoggingMiddleware(BaseHTTPMiddleware):
                 body += chunk
             raise RuntimeError(f"Validation error: {body.decode()}")
         return response
+
+
+class WebhookValidator:
+    def __init__(self, request: Request):
+        self.request = request
+    
+    def validate_api_ingress_request(self) -> str:
+        authorization = self.request.headers["Authorization"]
+        if "Bearer " in authorization:
+            authorization = authorization.split("Bearer")[1].strip()
+        company_id, token = authorization.split(":")
+        company_ingress_record = CompanyAPIIngressRepository(
+            self.request.state.request_scope,
+            company_id=company_id
+        ).get_sub_entity()
+        token_data = APIIngressJWTData(**decode_jwt(token, company_ingress_record.secret_key))
+        assert token_data.company_id == company_id
+        return company_id

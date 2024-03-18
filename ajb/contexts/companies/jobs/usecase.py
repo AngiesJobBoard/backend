@@ -9,7 +9,11 @@ from .models import (
 
 
 class JobsUseCase(BaseUseCase):
-    def create_job(self, company_id: str, job: UserCreateJob) -> Job:
+    def create_job(
+        self,
+        company_id: str,
+        job: UserCreateJob
+    ) -> Job:
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         company_repo = self.get_repository(Collection.COMPANIES)
         job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
