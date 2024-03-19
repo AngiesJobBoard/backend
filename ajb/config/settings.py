@@ -40,9 +40,9 @@ class AppSettings:
     KAFKA_JWT_SECRET: str = os.getenv("KAFKA_JWT_SECRET", "")
 
     # Kafka Topics
-    KAFKA_USERS_TOPIC: str = os.getenv("KAFKA_USERS_TOPIC", "")
-    KAFKA_COMPANIES_TOPIC: str = os.getenv("KAFKA_COMPANIES_TOPIC", "")
-    KAFKA_APPLICATIONS_TOPIC: str = os.getenv("KAFKA_APPLICATIONS_TOPIC", "")
+    KAFKA_USERS_TOPIC: str = os.getenv("KAFKA_USERS_TOPIC", "users")
+    KAFKA_COMPANIES_TOPIC: str = os.getenv("KAFKA_COMPANIES_TOPIC", "companies")
+    KAFKA_APPLICATIONS_TOPIC: str = os.getenv("KAFKA_APPLICATIONS_TOPIC", "applications")
 
 
     # Sendgrid config
