@@ -27,6 +27,7 @@ class JobsUseCase(BaseUseCase):
         company_repo.increment_field(company_id, "total_jobs", 1)
 
         # Create event
+        self.request_scope.company_id = company_id
         CompanyEventProducer(self.request_scope, SourceServices.API).company_creates_job(
             job_id=created_job.id
         )
@@ -46,8 +47,10 @@ class JobsUseCase(BaseUseCase):
         company_repo.increment_field(company_id, "total_jobs", len(jobs))
 
         # Create even for each job
+        self.request_scope.company_id = company_id
+        event_producer = CompanyEventProducer(self.request_scope, SourceServices.API)
         for created_job_id in created_jobs:
-            CompanyEventProducer(self.request_scope, SourceServices.API).company_creates_job(
+            event_producer.company_creates_job(
                 job_id=created_job_id
             )
         return created_jobs

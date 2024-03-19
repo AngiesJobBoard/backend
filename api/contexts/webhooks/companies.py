@@ -21,28 +21,41 @@ router = APIRouter(
     prefix="/webhooks/companies",
 )
 
+
 @router.post("/api-ingress/jobs", status_code=status.HTTP_204_NO_CONTENT)
 async def jobs_api_webhook_handler(request: Request, payload: JobsWebhook):
     ingress_record = WebhookValidator(request).validate_api_ingress_request()
-    WebhookJobsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(ingress_record.company_id, payload)
+    WebhookJobsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
+        ingress_record.company_id, payload
+    )
     return status.HTTP_204_NO_CONTENT
 
 
 @router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
 async def applicants_api_webhook_handler(request: Request, payload: ApplicantsWebhook):
     ingress_record = WebhookValidator(request).validate_api_ingress_request()
-    WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(ingress_record.company_id, payload)
+    WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
+        ingress_record.company_id, payload
+    )
     return status.HTTP_204_NO_CONTENT
 
 
-
-def upload_email_ingress_attachment(company_id: str, job_id: str | None, attachment: bytes, filename: str, content_type: str):
+def upload_email_ingress_attachment(
+    company_id: str,
+    job_id: str | None,
+    attachment: bytes,
+    filename: str,
+    content_type: str,
+):
     from api.vendors import storage
+
     if job_id:
         remote_file_path = f"{company_id}/jobs/{job_id}/email-ingress/{filename}"
     else:
         remote_file_path = f"{company_id}/email-ingress/{filename}"
-    storage.upload_bytes(attachment, content_type, remote_file_path, publicly_accessible=True)
+    storage.upload_bytes(
+        attachment, content_type, remote_file_path, publicly_accessible=True
+    )
 
 
 @router.post("/email-ingress", status_code=status.HTTP_204_NO_CONTENT)
@@ -60,7 +73,13 @@ async def jobs_email_webhook_handler(
             if content_disposition and "attachment" in content_disposition:
                 filename = part.get_filename()
                 content = part.get_payload(decode=True)
-                upload_email_ingress_attachment(ingress_record.company_id, ingress_record.job_id, content, filename, part.get_content_type())  # type: ignore
+                upload_email_ingress_attachment(
+                    ingress_record.company_id,
+                    ingress_record.job_id,
+                    content,  # type: ignore
+                    filename,  # type: ignore
+                    part.get_content_type()
+                )
 
     print(f"Processing email ingress for record {ingress_record}")
     return status.HTTP_204_NO_CONTENT
