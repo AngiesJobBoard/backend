@@ -15,7 +15,7 @@ class CompanyEmailIngressRepository(MultipleChildrenRepository[CreateCompanyEmai
     collection = Collection.COMPANY_EMAIL_INGRESS_WEBHOOKS
     entity_model = CompanyEmailIngress
 
-    def __init__(self, request_scope: RequestScope, company_id: str):
+    def __init__(self, request_scope: RequestScope, company_id: str | None = None):
         super().__init__(
             request_scope,
             parent_collection=Collection.COMPANIES.value,

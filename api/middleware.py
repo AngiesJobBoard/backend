@@ -18,6 +18,7 @@ from ajb.contexts.companies.recruiters.repository import (
 )
 from ajb.contexts.companies.api_ingress_webhooks.repository import CompanyAPIIngressRepository
 from ajb.contexts.companies.api_ingress_webhooks.models import APIIngressJWTData
+from ajb.contexts.companies.email_ingress_webhooks.repository import CompanyEmailIngressRepository
 from ajb.vendor.jwt import decode_jwt
 
 from .exceptions import Forbidden, InvalidToken
@@ -237,4 +238,8 @@ class WebhookValidator:
         return company_id
 
     def validate_email_ingress_request(self) -> str:
+        # subdomain = "something from request..."
+        # company_ingress_record = CompanyEmailIngressRepository(
+        #     self.request.state.request_scope
+        # ).get_one(subdomain=subdomain)
         return "1"
