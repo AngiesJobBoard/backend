@@ -1,16 +1,7 @@
-import random
-from string import ascii_letters
-from datetime import datetime
-
 from ajb.base import BaseUseCase, RequestScope, Collection
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 
 from .models import Resume, CreateResume, UserCreateResume
-
-
-def random_salt():
-    return "".join(random.choice(ascii_letters) for _ in range(10))
-
 
 class ResumeUseCase(BaseUseCase):
     def __init__(
@@ -20,23 +11,6 @@ class ResumeUseCase(BaseUseCase):
     ):
         self.request_scope = request_scope
         self.storage_repo = storage or FirebaseStorageRepository()
-
-    def _create_file_path(self, company_id: str, job_id: str):
-        return f"{company_id}/{job_id}/resumes/{int(datetime.now().timestamp())}-{random_salt()}"
-
-    def create_resume(self, data: UserCreateResume) -> Resume:
-        resume_repo = self.get_repository(Collection.RESUMES)
-        remote_file_path = self._create_file_path(data.company_id, data.job_id)
-        resume_url = self.storage_repo.upload_bytes(
-            data.resume_data, data.file_type, remote_file_path, True
-        )
-        return resume_repo.create(
-            CreateResume(
-                resume_url=resume_url,
-                remote_file_path=remote_file_path,
-                **data.model_dump(),
-            )
-        )
 
     def delete_resume(self, resume_id: str) -> bool:
         resume_repo = self.get_repository(Collection.RESUMES)

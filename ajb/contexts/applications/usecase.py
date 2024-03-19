@@ -1,9 +1,13 @@
+from datetime import datetime
+import random
+from string import ascii_letters
 from concurrent.futures import ThreadPoolExecutor
 
-from ajb.base import BaseUseCase, Collection, RepoFilterParams
+from ajb.base import BaseUseCase, Collection, RepoFilterParams, RequestScope
+from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 from ajb.base.events import SourceServices
 from ajb.common.models import ApplicationQuestion
-from ajb.contexts.resumes.models import Resume
+from ajb.contexts.resumes.models import Resume, UserCreateResume, CreateResume
 from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.companies.events import CompanyEventProducer
@@ -13,7 +17,21 @@ from .models import CreateApplication, Application, ScanStatus
 from .constants import ApplicationConstants
 
 
+def random_salt():
+    return "".join(random.choice(ascii_letters) for _ in range(10))
+
+
 class ApplicationUseCase(BaseUseCase):
+    def __init__(
+        self,
+        request_scope: RequestScope,
+        storage: FirebaseStorageRepository | None = None,
+    ):
+        self.request_scope = request_scope
+        self.storage_repo = storage or FirebaseStorageRepository()
+
+    def _create_resume_file_path(self, company_id: str, job_id: str):
+        return f"{company_id}/{job_id}/resumes/{int(datetime.now().timestamp())}-{random_salt()}"
 
     def _get_job_questions(self, job_id):
         job: Job = self.get_object(Collection.JOBS, job_id)
@@ -114,8 +132,20 @@ class ApplicationUseCase(BaseUseCase):
         ]
         return self.create_many_applications(company_id, job_id, partial_candidates)
 
-    def create_application_from_resume(self, resume: Resume) -> Application:
+    def create_application_from_resume(self, data: UserCreateResume) -> Application:
         # Create an application for this resume
+        resume_repo = self.get_repository(Collection.RESUMES)
+        remote_file_path = self._create_resume_file_path(data.company_id, data.job_id)
+        resume_url = self.storage_repo.upload_bytes(
+            data.resume_data, data.file_type, remote_file_path, True
+        )
+        resume: Resume = resume_repo.create(
+            CreateResume(
+                resume_url=resume_url,
+                remote_file_path=remote_file_path,
+                **data.model_dump(),
+            )
+        )
         partial_application = CreateApplication(
             company_id=resume.company_id,
             job_id=resume.job_id,

@@ -54,12 +54,11 @@ async def upload_applications_from_resume(
     request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)
 ):
     files_processed = 0
-    created_resume_files = []
-    resume_usecase = ResumeUseCase(request.state.request_scope, storage)
-    application_usecase = ApplicationUseCase(request.state.request_scope)
+    created_applications = []
+    application_usecase = ApplicationUseCase(request.state.request_scope, storage)
     for file in files:
         file_end = file.filename.split(".")[-1]  # type: ignore
-        created_resume = resume_usecase.create_resume(
+        created_application = application_usecase.create_application_from_resume(
             UserCreateResume(
                 file_type=file.content_type or file_end,
                 file_name=file.filename or f"resume.{file_end}",
@@ -68,9 +67,8 @@ async def upload_applications_from_resume(
                 job_id=job_id,
             )
         )
-        application_usecase.create_application_from_resume(created_resume)
-        created_resume_files.append(created_resume)
+        created_applications.append(created_application)
         files_processed += 1
     if not files_processed:
         raise HTTPException(status_code=400, detail="No valid files found")
-    return {"files_processed": files_processed, "resumes": created_resume_files}
+    return {"files_processed": files_processed, "applications": created_applications}
