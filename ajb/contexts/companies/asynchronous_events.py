@@ -129,5 +129,5 @@ class AsynchronousCompanyEvents:
 
         # Create email ingress record
         CompanyEmailIngressRepository(self.request_scope).create(
-            CreateCompanyEmailIngress.generate(data.company_id, EmailIngressType.CREATE_JOB, data.job_id)
+            CreateCompanyEmailIngress.generate(data.company_id, EmailIngressType.CREATE_APPLICATION, data.job_id)
         )
