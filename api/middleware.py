@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import json
 from typing import Callable
 from cachetools import TTLCache
 
@@ -19,6 +20,7 @@ from ajb.contexts.companies.recruiters.repository import (
 from ajb.contexts.companies.api_ingress_webhooks.repository import CompanyAPIIngressRepository
 from ajb.contexts.companies.api_ingress_webhooks.models import APIIngressJWTData
 from ajb.contexts.companies.email_ingress_webhooks.repository import CompanyEmailIngressRepository
+from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
 from ajb.vendor.jwt import decode_jwt
 
 from .exceptions import Forbidden, InvalidToken
@@ -233,13 +235,30 @@ class WebhookValidator:
         if not company_ingress_record.is_active:
             raise Forbidden
 
+        # Other checks on allowed ip address or etc...
         token_data = APIIngressJWTData(**decode_jwt(token, company_ingress_record.secret_key))
         assert token_data.company_id == company_id
         return company_id
 
-    def validate_email_ingress_request(self) -> str:
-        # subdomain = "something from request..."
-        # company_ingress_record = CompanyEmailIngressRepository(
-        #     self.request.state.request_scope
-        # ).get_one(subdomain=subdomain)
-        return "1"
+    def validate_email_ingress_request(
+        self,
+        envelope: str,
+    ) -> CompanyEmailIngress:
+        json_loaded_envelope = json.loads(envelope)
+        from_email = json_loaded_envelope["from"]
+        to_email = [
+            email
+            for email
+            in json_loaded_envelope["to"]
+            if SETTINGS.APP_DOMAIN
+            in email
+        ]
+        to_subdomain = to_email[0].split("@")[0]
+        company_ingress_record = CompanyEmailIngressRepository(
+            self.request.state.request_scope
+        ).get_one(subdomain=to_subdomain)
+        if not company_ingress_record.is_active:
+            raise Forbidden
+        
+        # Other checks on allowed domains...
+        return company_ingress_record

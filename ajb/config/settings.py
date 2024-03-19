@@ -9,6 +9,7 @@ class AppSettings:
     # General
     APP_VERSION: str = os.getenv("APP_VERSION", "0.0.0")
     SYSTEM_USER_EMAIL: str = "sysadmin@angiesjobboard.com"
+    APP_DOMAIN: str = os.getenv("APP_DOMAIN", "angiesjobboard.com")
     APP_URL: str = os.getenv("APP_URL", "http://localhost:3000")
     DEFAULT_PAGE_SIZE: int = 25
 
