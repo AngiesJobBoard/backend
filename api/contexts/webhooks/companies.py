@@ -45,6 +45,7 @@ async def applicants_api_webhook_handler(request: Request, payload: ApplicantsWe
 
 
 def process_email_ingress(request_scope: RequestScope, ingress_email: Message, ingress_record: CompanyEmailIngress):
+    request_scope.company_id = ingress_record.company_id
     application_usecase = ApplicationUseCase(request_scope, storage)
 
     if not ingress_email.is_multipart():
