@@ -229,6 +229,12 @@ class WebhookValidator:
             self.request.state.request_scope,
             company_id=company_id
         ).get_sub_entity()
+        if not company_ingress_record.is_active:
+            raise Forbidden
+
         token_data = APIIngressJWTData(**decode_jwt(token, company_ingress_record.secret_key))
         assert token_data.company_id == company_id
         return company_id
+
+    def validate_email_ingress_request(self) -> str:
+        return "1"

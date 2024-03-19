@@ -18,6 +18,7 @@ class CreateCompanyEmailIngress(BaseModel):
     ingress_type: EmailIngressType
     allowed_email_domains: list[str] = Field(default_factory=list)
     allowed_email_addresses: list[str] = Field(default_factory=list)
+    is_active: bool = False
 
     @classmethod
     def generate(cls, company_id: str, ingress_type: EmailIngressType) -> "CreateCompanyEmailIngress":

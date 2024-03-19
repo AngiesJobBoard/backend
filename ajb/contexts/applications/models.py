@@ -113,6 +113,7 @@ class UserCreatedApplication(BaseModel):
     email: str
     phone: str | None = None
     user_location: Location | None = None
+    external_reference_code: str | None = None
 
     @classmethod
     def from_csv_record(cls, company_id: str, job_id: str, record: dict):
@@ -204,6 +205,7 @@ class UpdateApplication(BaseModel):
     phone: str | None = None
     user_location: Location | None = None
     resume_url: str | None = None
+    external_reference_code: str | None = None
 
 
 class UserCreateRecruiterNote(BaseModel):

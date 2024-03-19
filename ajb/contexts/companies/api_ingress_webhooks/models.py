@@ -15,6 +15,7 @@ class CreateCompanyAPIIngress(BaseModel):
     secret_key: str
     expected_jwt: str
     allowed_ips: list[str] = Field(default_factory=list)
+    is_active: bool = False
 
     @classmethod
     def generate(cls, company_id: str) -> "CreateCompanyAPIIngress":

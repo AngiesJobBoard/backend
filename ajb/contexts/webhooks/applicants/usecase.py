@@ -1,52 +1,39 @@
-from enum import Enum
-from pydantic import BaseModel
-
 from ajb.base import BaseUseCase, Collection
-
-
-class ApplicantsWebhookType(str, Enum):
-    applicant_created = "applicant_created"
-    applicant_updated = "applicant_updated"
-    applicant_deleted = "applicant_deleted"
-    applicant_hired = "applicant_hired"
-    applicant_rejected = "applicant_rejected"
-
-
-class ApplicantsWebookEvent(BaseModel):
-    token: str
-    resume_file_url: str | None = None
-    event_type: ApplicantsWebhookType
+from ajb.contexts.applications.usecase import ApplicationUseCase
+from ajb.contexts.applications.models import CreateApplication
+from ajb.contexts.companies.jobs.models import Job
+from .models import (
+    ApplicantsWebhook,
+    CreateApplicantWebhook,
+    ApplicantWebhookEventType
+)
 
 
 class WebhookApplicantsUseCase(BaseUseCase):
-
-    def generate_webhook_api_key(self, company_id: str, job_id: str):
-        ...
     
-    def handle_webhook_event(self, event: ApplicantsWebookEvent):
-        ...
+    def handle_webhook_event(self, company_id: str, event: ApplicantsWebhook):
+        if event.type == ApplicantWebhookEventType.CREATE:
+            return self.create_applicant(company_id, CreateApplicantWebhook(**event.data))
+
+        raise NotImplementedError(f"Event type {event.type} is not yet supported")
 
     def create_applicant(
         self,
+        company_id: str,
+        data: CreateApplicantWebhook
     ):
-        ...
-
-    def update_applicant(
-        self,
-    ):
-        ...
-    
-    def delete_applicant(
-        self,
-    ):
-        ...
-
-    def mark_applicant_as_hired(
-        self,
-    ):
-        ...
-
-    def mark_applicant_as_rejected(
-        self,
-    ):
-        ...
+        job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
+        job: Job = job_repo.get_one(
+            company_id=company_id,
+            external_reference_code=data.external_reference_code
+        )
+        ApplicationUseCase(self.request_scope).create_application(
+            company_id,
+            data.external_job_reference_code,
+            CreateApplication(
+                **data.model_dump(),
+                company_id=company_id,
+                job_id=job.id
+            ),
+            True
+        )

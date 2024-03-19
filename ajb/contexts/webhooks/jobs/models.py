@@ -1,8 +1,3 @@
-"""
-We expect the job ID to passed in the data object
-we can alias this but it will be the external_reference_code field
-"""
-
 from enum import Enum
 from pydantic import BaseModel
 from ajb.contexts.companies.jobs.models import UserCreateJob
@@ -31,6 +26,6 @@ class MarkJobAsHiredWebhook(BaseModel):
     external_reference_code: str
 
 
-class JobsWebhook(UserCreateJob):
+class JobsWebhook(BaseModel):
     data: dict
     type: JobWebhookEventType
