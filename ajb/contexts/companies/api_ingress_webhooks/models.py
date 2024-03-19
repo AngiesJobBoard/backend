@@ -33,6 +33,5 @@ class CreateCompanyAPIIngress(BaseModel):
         )
 
 
-
 class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel):
     ...

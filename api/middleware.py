@@ -18,7 +18,7 @@ from ajb.contexts.companies.recruiters.repository import (
     CompanyAndRole,
 )
 from ajb.contexts.companies.api_ingress_webhooks.repository import CompanyAPIIngressRepository
-from ajb.contexts.companies.api_ingress_webhooks.models import APIIngressJWTData
+from ajb.contexts.companies.api_ingress_webhooks.models import APIIngressJWTData, CompanyAPIIngress
 from ajb.contexts.companies.email_ingress_webhooks.repository import CompanyEmailIngressRepository
 from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
 from ajb.vendor.jwt import decode_jwt
@@ -223,7 +223,7 @@ class WebhookValidator:
     def __init__(self, request: Request):
         self.request = request
     
-    def validate_api_ingress_request(self) -> str:
+    def validate_api_ingress_request(self) -> CompanyAPIIngress:
         authorization = self.request.headers["Authorization"]
         if "Bearer " in authorization:
             authorization = authorization.split("Bearer")[1].strip()
@@ -238,7 +238,7 @@ class WebhookValidator:
         # TODO Other checks on allowed ip address or etc...
         token_data = APIIngressJWTData(**decode_jwt(token, company_ingress_record.secret_key))
         assert token_data.company_id == company_id
-        return company_id
+        return company_ingress_record
 
     def validate_email_ingress_request(
         self,
