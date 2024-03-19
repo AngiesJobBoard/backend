@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Request
+from fastapi import APIRouter, status, Request, Form
 
 from ajb.base import RequestScope
 from ajb.contexts.webhooks.jobs.models import JobsWebhook
@@ -33,9 +33,17 @@ async def applicants_api_webhook_handler(request: Request, payload: ApplicantsWe
 
 
 @router.post("/email-ingress/jobs", status_code=status.HTTP_204_NO_CONTENT)
-async def jobs_email_webhook_handler(request: Request):
-    company_id = WebhookValidator(request).validate_email_ingress_request()
-    print(request.__dict__)
+async def jobs_email_webhook_handler(
+    request: Request,
+    envelope: str = Form(...),
+    subject: str = Form(...),
+    email: str = Form(...),
+):
+    # company_id = WebhookValidator(request).validate_email_ingress_request()
+    # print(request.__dict__)
+    print(f"\nRECEIEVED EMAIL WEBHOOK\n")
+    print(envelope, subject, email)
+    print(f"\nRECEIEVED EMAIL WEBHOOK\n")
 
 
 @router.post("/email-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
