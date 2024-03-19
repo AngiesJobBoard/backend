@@ -250,8 +250,8 @@ class WebhookValidator:
             email
             for email
             in json_loaded_envelope["to"]
-            if SETTINGS.APP_DOMAIN
-            in email
+            # if SETTINGS.APP_DOMAIN
+            # in email
         ]
         to_subdomain = to_email[0].split("@")[0]
         company_ingress_record = CompanyEmailIngressRepository(
