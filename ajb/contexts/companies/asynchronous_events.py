@@ -10,11 +10,22 @@ from ajb.base.events import CompanyEvent, BaseKafkaMessage
 from ajb.contexts.companies.events import (
     RecruiterAndApplication,
     RecruiterAndApplications,
+    CompanyAndJob
 )
-from ajb.contexts.companies.actions.repository import CompanyActionRepository, CreateCompanyAction
-from ajb.contexts.companies.email_ingress_webhooks.repository import CompanyEmailIngressRepository
-from ajb.contexts.companies.email_ingress_webhooks.models import CreateCompanyEmailIngress, EmailIngressType
-from ajb.contexts.companies.api_ingress_webhooks.repository import CompanyAPIIngressRepository
+from ajb.contexts.companies.actions.repository import (
+    CompanyActionRepository,
+    CreateCompanyAction,
+)
+from ajb.contexts.companies.email_ingress_webhooks.repository import (
+    CompanyEmailIngressRepository,
+)
+from ajb.contexts.companies.email_ingress_webhooks.models import (
+    CreateCompanyEmailIngress,
+    EmailIngressType,
+)
+from ajb.contexts.companies.api_ingress_webhooks.repository import (
+    CompanyAPIIngressRepository,
+)
 from ajb.contexts.companies.api_ingress_webhooks.models import CreateCompanyAPIIngress
 from ajb.contexts.users.repository import UserRepository
 from ajb.vendor.sendgrid.repository import SendgridRepository
@@ -38,7 +49,7 @@ class AsynchronousCompanyEvents:
         self.sendgrid = sendgrid or SendgridRepository()
         self.openai = openai
         self.async_openai = async_openai
-    
+
     def create_company_subdomain_and_webhook_secrets(self, company_id: str):
         """
         For emails we need a subdomain generated
@@ -46,13 +57,14 @@ class AsynchronousCompanyEvents:
         """
 
         # Create the email ingress subdomain relationships
-        email_ingress_repo = CompanyEmailIngressRepository(self.request_scope, company_id)
-        for ingress_type in EmailIngressType:
-            email_ingress_repo.create(CreateCompanyEmailIngress.generate(company_id, ingress_type))
-        
-        # Create the API ingress JWT relationship
-        CompanyAPIIngressRepository(self.request_scope, company_id).set_sub_entity(CreateCompanyAPIIngress.generate(company_id))
+        CompanyEmailIngressRepository(self.request_scope, company_id).create(
+            CreateCompanyEmailIngress.generate(company_id, EmailIngressType.CREATE_JOB)
+        )
 
+        # Create the API ingress JWT relationship
+        CompanyAPIIngressRepository(self.request_scope, company_id).set_sub_entity(
+            CreateCompanyAPIIngress.generate(company_id)
+        )
 
     async def company_is_created(self) -> None:
         created_company = Company.model_validate(self.message.data)
@@ -110,4 +122,12 @@ class AsynchronousCompanyEvents:
                 application_id=data.application_id,
                 company_id=data.company_id,
             )
+        )
+    
+    async def company_creates_job(self) -> None:
+        data = CompanyAndJob.model_validate(self.message.data)
+
+        # Create email ingress record
+        CompanyEmailIngressRepository(self.request_scope).create(
+            CreateCompanyEmailIngress.generate(data.company_id, EmailIngressType.CREATE_JOB, data.job_id)
         )

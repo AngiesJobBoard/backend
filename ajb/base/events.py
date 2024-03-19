@@ -40,6 +40,7 @@ class CompanyEvent(str, Enum):
     COMPANY_CLICKS_ON_APPLICATION = "company_clicks_on_application"
     COMPANY_SHORTLISTS_APPLICATION = "company_shortlists_application"
     COMPANY_REJECTS_APPLICATION = "company_rejects_application"
+    COMPANY_CREATES_JOB = "company_creates_job"
 
 
 class ApplicationEvent(str, Enum):

@@ -35,6 +35,13 @@ async def applicants_api_webhook_handler(request: Request, payload: ApplicantsWe
     return status.HTTP_204_NO_CONTENT
 
 
+
+def upload_email_ingress_attachment(company_id: str, attachment: bytes, filename: str, content_type: str):
+    from api.vendors import storage
+    remote_file_path = f"{company_id}/email-ingress/{filename}"
+    storage.upload_bytes(attachment, content_type, remote_file_path, publicly_accessible=True)
+
+
 @router.post("/email-ingress", status_code=status.HTTP_204_NO_CONTENT)
 async def jobs_email_webhook_handler(
     request: Request,

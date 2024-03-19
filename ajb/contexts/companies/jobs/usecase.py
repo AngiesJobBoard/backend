@@ -1,4 +1,7 @@
 from ajb.base import BaseUseCase, Collection, RepoFilterParams
+from ajb.base.events import SourceServices
+from ajb.contexts.companies.events import CompanyEventProducer
+from ajb.contexts.companies.jobs.models import Job
 from ajb.vendor.arango.models import Filter
 
 from .models import (
@@ -18,10 +21,15 @@ class JobsUseCase(BaseUseCase):
         company_repo = self.get_repository(Collection.COMPANIES)
         job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
         job_to_create.job_score = job.calculate_score()
-        created_job = job_repo.create(job_to_create)
+        created_job: Job = job_repo.create(job_to_create)
 
-        # Update company job count
+        # Update company  job count
         company_repo.increment_field(company_id, "total_jobs", 1)
+
+        # Create event
+        CompanyEventProducer(self.request_scope, SourceServices.API).company_creates_job(
+            job_id=created_job.id
+        )
         return created_job
 
     def create_many_jobs(self, company_id: str, jobs: list[UserCreateJob]) -> list[str]:
@@ -36,6 +44,12 @@ class JobsUseCase(BaseUseCase):
         # Update company job count
         company_repo = self.get_repository(Collection.COMPANIES)
         company_repo.increment_field(company_id, "total_jobs", len(jobs))
+
+        # Create even for each job
+        for created_job_id in created_jobs:
+            CompanyEventProducer(self.request_scope, SourceServices.API).company_creates_job(
+                job_id=created_job_id
+            )
         return created_jobs
 
     def delete_job(self, company_id: str, job_id: str):
