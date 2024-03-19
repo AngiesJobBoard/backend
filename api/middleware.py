@@ -235,7 +235,7 @@ class WebhookValidator:
         if not company_ingress_record.is_active:
             raise Forbidden
 
-        # Other checks on allowed ip address or etc...
+        # TODO Other checks on allowed ip address or etc...
         token_data = APIIngressJWTData(**decode_jwt(token, company_ingress_record.secret_key))
         assert token_data.company_id == company_id
         return company_id
@@ -260,5 +260,5 @@ class WebhookValidator:
         if not company_ingress_record.is_active:
             raise Forbidden
         
-        # Other checks on allowed domains...
+        # TODO Other checks on allowed domains...
         return company_ingress_record

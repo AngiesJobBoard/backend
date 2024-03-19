@@ -1,4 +1,5 @@
 from fastapi import APIRouter, status, Request, Form
+from email import message_from_string
 
 from ajb.base import RequestScope
 from ajb.contexts.webhooks.jobs.models import JobsWebhook
@@ -39,7 +40,17 @@ async def jobs_email_webhook_handler(
     email: str = Form(...),
 ):
     ingress_record = WebhookValidator(request).validate_email_ingress_request(envelope)
+    ingress_email = message_from_string(email)
+    if ingress_email.is_multipart():
+        for part in ingress_email.walk():
+            content_type = part.get_content_type()
+            content_disposition = part.get("Content-Disposition")
+            if content_type == "text/plain" and content_disposition is None:
+                body = part.get_payload(decode=True)
+    else:
+        body = ingress_email.get_payload(decode=True)
     print(f"Processing email ingress for record {ingress_record}")
+    print(body)
 
 
 @router.post("/email-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
@@ -49,4 +60,14 @@ async def applicants_email_webhook_handler(
     email: str = Form(...),
 ):
     ingress_record = WebhookValidator(request).validate_email_ingress_request(envelope)
+    ingress_email = message_from_string(email)
+    if ingress_email.is_multipart():
+        for part in ingress_email.walk():
+            content_type = part.get_content_type()
+            content_disposition = part.get("Content-Disposition")
+            if content_type == "text/plain" and content_disposition is None:
+                body = part.get_payload()
+    else:
+        body = ingress_email.get_payload()
     print(f"Processing email ingress for record {ingress_record}")
+    print(body)
