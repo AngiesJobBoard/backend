@@ -36,9 +36,12 @@ async def applicants_api_webhook_handler(request: Request, payload: ApplicantsWe
 
 
 
-def upload_email_ingress_attachment(company_id: str, attachment: bytes, filename: str, content_type: str):
+def upload_email_ingress_attachment(company_id: str, job_id: str | None, attachment: bytes, filename: str, content_type: str):
     from api.vendors import storage
-    remote_file_path = f"{company_id}/email-ingress/{filename}"
+    if job_id:
+        remote_file_path = f"{company_id}/jobs/{job_id}/email-ingress/{filename}"
+    else:
+        remote_file_path = f"{company_id}/email-ingress/{filename}"
     storage.upload_bytes(attachment, content_type, remote_file_path, publicly_accessible=True)
 
 
@@ -50,14 +53,14 @@ async def jobs_email_webhook_handler(
 ):
     ingress_record = WebhookValidator(request).validate_email_ingress_request(envelope)
     ingress_email = message_from_string(email)
+
     if ingress_email.is_multipart():
         for part in ingress_email.walk():
-            content_type = part.get_content_type()
             content_disposition = part.get("Content-Disposition")
-            if content_type == "text/plain" and content_disposition is None:
-                body = part.get_payload(decode=True)
-    else:
-        body = ingress_email.get_payload(decode=True)
+            if content_disposition and "attachment" in content_disposition:
+                filename = part.get_filename()
+                content = part.get_payload(decode=True)
+                upload_email_ingress_attachment(ingress_record.company_id, ingress_record.job_id, content, filename, part.get_content_type())  # type: ignore
+
     print(f"Processing email ingress for record {ingress_record}")
-    print(body)
     return status.HTTP_204_NO_CONTENT
