@@ -194,7 +194,7 @@ def add_app_middleware(app: FastAPI):
         start_time = time.time()
 
         if os.getenv("APP_IS_SLOW") == "true":
-            time.sleep(0.5)
+            time.sleep(2)
 
         response = await call_next(request)
         process_time = time.time() - start_time

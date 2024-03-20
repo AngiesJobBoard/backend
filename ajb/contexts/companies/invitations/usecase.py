@@ -15,7 +15,7 @@ from ajb.exceptions import (
 )
 from ajb.vendor.jwt import decode_jwt
 from ajb.vendor.sendgrid.repository import SendgridRepository
-from ajb.vendor.sendgrid.templates.company_invitation.models import CompanyInvitation
+from ajb.vendor.sendgrid.templates.recruiter_invitation import RecruiterInvitationData
 
 from .models import UserCreateInvitation, CreateInvitation, Invitation, InvitationData
 from ..models import RecruiterRole
@@ -60,13 +60,14 @@ class CompanyInvitationUseCase(BaseUseCase):
             invitation_link = (
                 f"{SETTINGS.APP_URL}/confirm-invite?invite={deeplink_param}"
             )
-            SendgridRepository().send_rendered_email_template(
+            SendgridRepository().send_email_template(
                 to_emails=data.email_address,
                 subject="You've been invited to Angie's Job Board!",
-                template_name="company_invitation",
-                template_data=CompanyInvitation(
+                template_data=RecruiterInvitationData(
                     companyName=company_name,
+                    platformName=SETTINGS.APP_NAME,
                     invitationLink=invitation_link,
+                    supportEmail=SETTINGS.SUPPORT_EMAIL,
                 ),
             )
             return created_invitation

@@ -29,9 +29,7 @@ from ajb.contexts.companies.api_ingress_webhooks.repository import (
 from ajb.contexts.companies.api_ingress_webhooks.models import CreateCompanyAPIIngress
 from ajb.contexts.users.repository import UserRepository
 from ajb.vendor.sendgrid.repository import SendgridRepository
-from ajb.vendor.sendgrid.templates.newly_created_company.models import (
-    NewlyCreatedCompany,
-)
+from ajb.vendor.sendgrid.templates.newly_created_company import NewlyCreatedCompany
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 
 
@@ -69,10 +67,9 @@ class AsynchronousCompanyEvents:
     async def company_is_created(self) -> None:
         created_company = Company.model_validate(self.message.data)
         user = UserRepository(self.request_scope).get(self.request_scope.user_id)
-        self.sendgrid.send_rendered_email_template(
+        self.sendgrid.send_email_template(
             to_emails=user.email,
             subject="Welcome to Angie's Job Board!",
-            template_name="newly_created_company",
             template_data=NewlyCreatedCompany(
                 companyName=created_company.name,
                 supportEmail="support@angiesjobboard.com",

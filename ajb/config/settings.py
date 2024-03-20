@@ -11,6 +11,8 @@ class AppSettings:
     SYSTEM_USER_EMAIL: str = "sysadmin@angiesjobboard.com"
     APP_DOMAIN: str = os.getenv("APP_DOMAIN", "angiesjobboard.com")
     APP_URL: str = os.getenv("APP_URL", "http://localhost:3000")
+    APP_NAME: str = os.getenv("APP_NAME", "Angie's Job Board")
+    SUPPORT_EMAIL: str = f"support@{APP_DOMAIN}"
     DEFAULT_PAGE_SIZE: int = 25
 
     # Firebase config
