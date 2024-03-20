@@ -68,6 +68,7 @@ class AsynchronousCompanyEvents:
     async def company_is_created(self) -> None:
         created_company = Company.model_validate(self.message.data)
         user = UserRepository(self.request_scope).get(self.request_scope.user_id)
+        self.create_company_subdomain_and_webhook_secrets(created_company.id)
         self.sendgrid.send_email_template(
             to_emails=user.email,
             subject="Welcome to Angie's Job Board!",
@@ -76,7 +77,6 @@ class AsynchronousCompanyEvents:
                 supportEmail="support@angiesjobboard.com",
             ),
         )
-        self.create_company_subdomain_and_webhook_secrets(created_company.id)
 
     async def company_views_applications(self) -> None:
         data = RecruiterAndApplications.model_validate(self.message.data)
