@@ -47,9 +47,9 @@ class CompanyEvent(str, Enum):
 
 
 class ApplicationEvent(str, Enum):
-    CALCULATE_MATCH_SCORE = "calculate_match_score"
-    EXTRACT_APPLICATION_FILTERS = "extract_application_filters"
-    ANSWER_JOB_FILTER_QUESTIONS = "answer_job_filter_questions"
+    APPLICATION_IS_SUBMITTED = "application_is_submitted"
+    APPLICATION_IS_UPDATED = "application_is_updated"
+    APPLICATION_IS_DELETED = "application_is_deleted"
     UPLOAD_RESUME = "upload_resume"
 
 

@@ -11,7 +11,7 @@ from ajb.base.events import BaseKafkaMessage, SourceServices
 from ajb.common.models import Location
 from ajb.contexts.applications.events import (
     ResumeAndApplication,
-    ApplicationId,
+    ApplicantAndCompany,
 )
 from ajb.contexts.applications.models import (
     ScanStatus,
@@ -28,6 +28,7 @@ from ajb.contexts.applications.application_questions.usecase import (
     ApplicantQuestionsUsecase,
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
+from ajb.contexts.webhooks.egress.applicants.usecase import CompanyApplicantsWebhookEgress
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 
@@ -120,7 +121,10 @@ class AsynchronousApplicationEvents:
                     resume_information=resume_information,
                     application_repository=application_repository,
                 )
-                event_producer.application_is_submited(matched_application.id)
+                event_producer.application_is_created(
+                    matched_application.company_id,
+                    matched_application.id
+                )
 
             # Delete the original application (like a merge operation)
             application_repository.delete(data.application_id)
@@ -134,7 +138,10 @@ class AsynchronousApplicationEvents:
             resume_information=resume_information,
             application_repository=application_repository,
         )
-        event_producer.application_is_submited(data.application_id)
+        event_producer.application_is_created(
+            data.company_id,
+            data.application_id
+        )
         original_application_deleted = False
         return original_application_deleted
 
@@ -187,13 +194,13 @@ class AsynchronousApplicationEvents:
     async def calculate_match_score(self) -> None:
         if not self.async_openai:
             raise RuntimeError("Async OpenAI Repository is not provided")
-        data = ApplicationId.model_validate(self.message.data)
+        data = ApplicantAndCompany.model_validate(self.message.data)
         matcher_usecase = ApplicantMatchUsecase(self.request_scope, self.async_openai)
         await matcher_usecase.update_application_with_match_score(data.application_id)
 
     async def extract_application_filters(self) -> None:
         application_repo = ApplicationRepository(self.request_scope)
-        data = ApplicationId.model_validate(self.message.data)
+        data = ApplicantAndCompany.model_validate(self.message.data)
         application = application_repo.get(data.application_id)
         job = JobRepository(self.request_scope, application.company_id).get(
             application.job_id
@@ -210,10 +217,35 @@ class AsynchronousApplicationEvents:
     async def answer_application_questions(self) -> None:
         if not self.async_openai:
             raise RuntimeError("Async OpenAI Repository is not provided")
-        data = ApplicationId.model_validate(self.message.data)
+        data = ApplicantAndCompany.model_validate(self.message.data)
         question_usecase = ApplicantQuestionsUsecase(
             self.request_scope, self.async_openai
         )
         await question_usecase.update_application_with_questions_answered(
             data.application_id
+        )
+
+    async def application_is_submitted(self) -> None:
+        await asyncio.gather(
+            self.calculate_match_score(),
+            self.extract_application_filters(),
+            self.answer_application_questions(),
+        )
+
+        # Send out application webhook
+        data = ApplicantAndCompany.model_validate(self.message.data)
+        CompanyApplicantsWebhookEgress(self.request_scope).send_create_applicant_webhook(
+            data.company_id, data.application_id
+        )
+    
+    async def application_is_updated(self) -> None:
+        data = ApplicantAndCompany.model_validate(self.message.data)
+        CompanyApplicantsWebhookEgress(self.request_scope).send_update_applicant_webhook(
+            data.company_id, data.application_id
+        )
+    
+    async def application_is_deleted(self) -> None:
+        data = ApplicantAndCompany.model_validate(self.message.data)
+        CompanyApplicantsWebhookEgress(self.request_scope).send_delete_applicant_webhook(
+            data.company_id, data.application_id
         )

@@ -81,7 +81,10 @@ class ApplicationUseCase(BaseUseCase):
         if produce_submission_event:
             ApplicationEventProducer(
                 self.request_scope, source_service=SourceServices.API
-            ).application_is_submited(created_application.id)
+            ).application_is_created(
+                created_application.company_id,
+                created_application.id
+            )
         return created_application
 
     def create_many_applications(
@@ -120,7 +123,7 @@ class ApplicationUseCase(BaseUseCase):
                 self.request_scope, SourceServices.API
             )
             for application in created_applications:
-                event_producer.application_is_submited(application)
+                event_producer.application_is_created(company_id, application)
         return created_applications
 
     def create_applications_from_csv(
@@ -204,6 +207,9 @@ class ApplicationUseCase(BaseUseCase):
             self.update_application_counts(
                 company_id, job_id, ApplicationConstants.NEW_APPLICANTS, 1, False
             )
+        ApplicationEventProducer(
+            self.request_scope, SourceServices.API
+        ).application_is_deleted(company_id, application_id)
         return True
 
     def delete_all_applications_for_job(self, company_id: str, job_id: str):
@@ -222,6 +228,11 @@ class ApplicationUseCase(BaseUseCase):
                 executor.submit(
                     self.delete_application_for_job, company_id, job_id, application.id
                 )
+        event_producer = ApplicationEventProducer(
+            self.request_scope, SourceServices.API
+        )
+        for application in applications:
+            event_producer.application_is_deleted(application.company_id, application.id)
         return True
 
     def company_updates_application_shortlist(
@@ -242,6 +253,9 @@ class ApplicationUseCase(BaseUseCase):
         CompanyEventProducer(
             self.request_scope, SourceServices.API
         ).company_shortlists_application(application_id)
+        ApplicationEventProducer(
+            self.request_scope, SourceServices.API
+        ).application_is_updated(company_id, application_id)
         return response
 
     def company_views_applications(self, company_id: str, application_ids: list[str]):
@@ -263,4 +277,10 @@ class ApplicationUseCase(BaseUseCase):
         CompanyEventProducer(
             self.request_scope, SourceServices.API
         ).company_views_applications(application_ids)
+
+        application_event_producer = ApplicationEventProducer(
+            self.request_scope, SourceServices.API
+        )
+        for application_id in application_ids:
+            application_event_producer.application_is_updated(company_id, application_id)
         return response

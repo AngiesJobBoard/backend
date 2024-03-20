@@ -16,7 +16,8 @@ class ResumeAndApplication(BaseModel):
     resume_id: str
 
 
-class ApplicationId(BaseModel):
+class ApplicantAndCompany(BaseModel):
+    company_id: str
     application_id: str
 
 
@@ -48,16 +49,29 @@ class ApplicationEventProducer(BaseEventProducer):
             event=ApplicationEvent.UPLOAD_RESUME,
         )
 
-    def application_is_submited(self, application_id: str):
+    def application_is_created(self, company_id: str, application_id: str):
         self._application_event(
-            data=ApplicationId(application_id=application_id).model_dump(),
-            event=ApplicationEvent.CALCULATE_MATCH_SCORE,
+            data=ApplicantAndCompany(
+                company_id=company_id,
+                application_id=application_id
+            ).model_dump(),
+            event=ApplicationEvent.APPLICATION_IS_SUBMITTED,
         )
+    
+    def application_is_updated(self, company_id: str, application_id: str):
         self._application_event(
-            data=ApplicationId(application_id=application_id).model_dump(),
-            event=ApplicationEvent.EXTRACT_APPLICATION_FILTERS,
+            data=ApplicantAndCompany(
+                company_id=company_id,
+                application_id=application_id
+            ).model_dump(),
+            event=ApplicationEvent.APPLICATION_IS_UPDATED,
         )
+    
+    def application_is_deleted(self, company_id: str, application_id: str):
         self._application_event(
-            data=ApplicationId(application_id=application_id).model_dump(),
-            event=ApplicationEvent.ANSWER_JOB_FILTER_QUESTIONS,
+            data=ApplicantAndCompany(
+                company_id=company_id,
+                application_id=application_id
+            ).model_dump(),
+            event=ApplicationEvent.APPLICATION_IS_DELETED,
         )

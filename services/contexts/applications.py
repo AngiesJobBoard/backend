@@ -16,37 +16,35 @@ async def company_uploads_resume(message: BaseKafkaMessage):
         await repo.upload_resume()
 
 
-async def company_calculates_match_score(message: BaseKafkaMessage):
+async def application_is_submitted(message: BaseKafkaMessage):
     async with aiohttp.ClientSession() as session:
         repo = AsynchronousApplicationEvents(
             message,
             make_request_scope(message),
             async_openai=AsyncOpenAIRepository(session),
         )
-        await repo.calculate_match_score()
+        await repo.application_is_submitted()
 
 
-async def company_extracts_application_filters(message: BaseKafkaMessage):
+async def application_is_updated(message: BaseKafkaMessage):
     repo = AsynchronousApplicationEvents(
         message,
         make_request_scope(message),
     )
-    await repo.extract_application_filters()
+    await repo.application_is_updated()
 
 
-async def company_answers_job_filter_questions(message: BaseKafkaMessage):
-    async with aiohttp.ClientSession() as session:
-        repo = AsynchronousApplicationEvents(
-            message,
-            make_request_scope(message),
-            async_openai=AsyncOpenAIRepository(session),
-        )
-        await repo.answer_application_questions()
+async def application_is_deleted(message: BaseKafkaMessage):
+    repo = AsynchronousApplicationEvents(
+        message,
+        make_request_scope(message),
+    )
+    await repo.application_is_deleted()
 
 
 ROUTER = {
     ApplicationEvent.UPLOAD_RESUME.value: company_uploads_resume,
-    ApplicationEvent.CALCULATE_MATCH_SCORE.value: company_calculates_match_score,
-    ApplicationEvent.EXTRACT_APPLICATION_FILTERS.value: company_extracts_application_filters,
-    ApplicationEvent.ANSWER_JOB_FILTER_QUESTIONS.value: company_answers_job_filter_questions,
+    ApplicationEvent.APPLICATION_IS_SUBMITTED.value: application_is_submitted,
+    ApplicationEvent.APPLICATION_IS_UPDATED.value: application_is_updated,
+    ApplicationEvent.APPLICATION_IS_DELETED.value: application_is_deleted,
 }
