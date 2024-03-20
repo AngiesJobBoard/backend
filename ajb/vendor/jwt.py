@@ -6,11 +6,11 @@ from ajb.exceptions import ExpiredTokenException, InvalidTokenException
 
 
 def generate_jwt(
-    username: str,
+    username: str | None,
     jwt_secret: str,
     expire_datetime: datetime = (datetime.utcnow() + timedelta(seconds=60)),
 ) -> str:
-    payload = {"iss": username, "iat": datetime.utcnow(), "exp": expire_datetime}
+    payload = {"iss": username or "ajb", "iat": datetime.utcnow(), "exp": expire_datetime}
     return jwt.encode(payload, jwt_secret, algorithm="HS256")
 
 

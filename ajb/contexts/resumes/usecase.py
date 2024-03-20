@@ -3,6 +3,7 @@ from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 
 from .models import Resume, CreateResume, UserCreateResume
 
+
 class ResumeUseCase(BaseUseCase):
     def __init__(
         self,

@@ -1,5 +1,8 @@
 from ajb.vendor.sendgrid.repository import SendgridRepository, SendgridFactory
-from ajb.vendor.sendgrid.templates.base_email_data import BaseEmailData, SendgridTemplateId
+from ajb.vendor.sendgrid.templates.base_email_data import (
+    BaseEmailData,
+    SendgridTemplateId,
+)
 
 
 def test_send_custom_email():
@@ -21,8 +24,6 @@ def test_send_email_template():
     repo.send_email_template(
         to_emails="test@email.com",
         subject="test subject",
-        template_data=BaseEmailData(
-            templateId=SendgridTemplateId.RECRUITER_INVITATION
-        ),
+        template_data=BaseEmailData(templateId=SendgridTemplateId.RECRUITER_INVITATION),
     )
     assert len(client.sent_emails) == 1

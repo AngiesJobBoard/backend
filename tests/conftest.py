@@ -42,4 +42,3 @@ def request_scope(db: StandardDatabase):
         kafka_producer=KafkaProducerFactory._return_mock(),
         company_id=None,
     )
-    

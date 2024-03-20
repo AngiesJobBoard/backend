@@ -15,7 +15,8 @@ class CreateManyInsertError(Exception):
 
 class ArangoDBRepository:
     def __init__(
-        self, db: StandardDatabase | TransactionDatabase,
+        self,
+        db: StandardDatabase | TransactionDatabase,
         collection_view_or_graph: str,
         include_soft_deleted: bool = False,
     ):
@@ -31,44 +32,58 @@ class ArangoDBRepository:
         self.offset: int = 0
         self.return_fields: list[str] = []
         self.bind_vars: dict[str, t.Any] = {}
-    
+
     def get(self, id: str):
         return self.db[self.collection_view_or_graph][id]
-    
+
     def get_many(self, ids: list[str]):
         return self.db[self.collection_view_or_graph].get_many(ids)
-    
+
     def create(self, create_dict: dict):
-        return self.db[self.collection_view_or_graph].insert(create_dict, return_new=True, overwrite=False)
-    
+        return self.db[self.collection_view_or_graph].insert(
+            create_dict, return_new=True, overwrite=False
+        )
+
     def create_many(self, create_dicts: list[dict]):
         # Forces the use of a transaction on the DB to make sure all documents are created otherwise none are created
         if not isinstance(self.db, TransactionDatabase):
-            transaction_db = self.db.begin_transaction(write=[self.collection_view_or_graph])
+            transaction_db = self.db.begin_transaction(
+                write=[self.collection_view_or_graph]
+            )
         else:
             transaction_db = self.db
-        results = transaction_db[self.collection_view_or_graph].insert_many(create_dicts, overwrite=False)
+        results = transaction_db[self.collection_view_or_graph].insert_many(
+            create_dicts, overwrite=False
+        )
         if any(isinstance(result, DocumentInsertError) for result in results):  # type: ignore
             transaction_db.abort_transaction()
             raise CreateManyInsertError
         transaction_db.commit_transaction()
         return results
-    
+
     def upsert(self, upsert_dict: dict):
-        return self.db[self.collection_view_or_graph].insert(upsert_dict, return_new=True, overwrite=True)
-    
+        return self.db[self.collection_view_or_graph].insert(
+            upsert_dict, return_new=True, overwrite=True
+        )
+
     def upsert_many(self, upsert_dicts: list[dict]):
-        return self.db[self.collection_view_or_graph].insert_many(upsert_dicts, overwrite=True)
-    
+        return self.db[self.collection_view_or_graph].insert_many(
+            upsert_dicts, overwrite=True
+        )
+
     def update(self, update_dict: dict):
-        return self.db[self.collection_view_or_graph].update(update_dict, return_new=True, merge=True)
-    
+        return self.db[self.collection_view_or_graph].update(
+            update_dict, return_new=True, merge=True
+        )
+
     def update_many(self, update_dicts: list[dict]):
-        return self.db[self.collection_view_or_graph].update_many(update_dicts, merge=True)
-    
+        return self.db[self.collection_view_or_graph].update_many(
+            update_dicts, merge=True
+        )
+
     def delete(self, id: str):
         return bool(self.db[self.collection_view_or_graph].delete(id))
-    
+
     def delete_many(self, ids: list[str]):
         return bool(self.db[self.collection_view_or_graph].delete_many(ids))  # type: ignore
 

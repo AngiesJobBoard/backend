@@ -251,6 +251,7 @@ class ApplicationQuestion(BaseModel):
     Users can create a set of questions that are answered from information on an application
     They will be answered with "yes", "no", or "unsure"
     """
+
     question: str
     question_status: QuestionStatus = QuestionStatus.PENDING_ANSWER
     answer: AnwserEnum | None = None

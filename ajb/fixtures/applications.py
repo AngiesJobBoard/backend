@@ -92,7 +92,9 @@ class ApplicationFixture:
             job=job,
         )
 
-    def create_application(self, company_id: str, job_id: str, resume_id: str) -> Application:
+    def create_application(
+        self, company_id: str, job_id: str, resume_id: str
+    ) -> Application:
         application_repo = ApplicationRepository(self.request_scope)
         return application_repo.create(
             CreateApplication(

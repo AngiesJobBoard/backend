@@ -17,9 +17,16 @@ from ajb.contexts.companies.recruiters.repository import (
     RecruiterRepository,
     CompanyAndRole,
 )
-from ajb.contexts.companies.api_ingress_webhooks.repository import CompanyAPIIngressRepository
-from ajb.contexts.companies.api_ingress_webhooks.models import APIIngressJWTData, CompanyAPIIngress
-from ajb.contexts.companies.email_ingress_webhooks.repository import CompanyEmailIngressRepository
+from ajb.contexts.companies.api_ingress_webhooks.repository import (
+    CompanyAPIIngressRepository,
+)
+from ajb.contexts.companies.api_ingress_webhooks.models import (
+    APIIngressJWTData,
+    CompanyAPIIngress,
+)
+from ajb.contexts.companies.email_ingress_webhooks.repository import (
+    CompanyEmailIngressRepository,
+)
 from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
 from ajb.vendor.jwt import decode_jwt
 
@@ -222,21 +229,22 @@ class ValidationErrorLoggingMiddleware(BaseHTTPMiddleware):
 class WebhookValidator:
     def __init__(self, request: Request):
         self.request = request
-    
+
     def validate_api_ingress_request(self) -> CompanyAPIIngress:
         authorization = self.request.headers["Authorization"]
         if "Bearer " in authorization:
             authorization = authorization.split("Bearer")[1].strip()
         company_id, token = authorization.split(":")
         company_ingress_record = CompanyAPIIngressRepository(
-            self.request.state.request_scope,
-            company_id=company_id
+            self.request.state.request_scope, company_id=company_id
         ).get_sub_entity()
         if not company_ingress_record.is_active:
             raise Forbidden
 
         # TODO Other checks on allowed ip address or etc...
-        token_data = APIIngressJWTData(**decode_jwt(token, company_ingress_record.secret_key))
+        token_data = APIIngressJWTData(
+            **decode_jwt(token, company_ingress_record.secret_key)
+        )
         assert token_data.company_id == company_id
         return company_ingress_record
 
@@ -248,8 +256,7 @@ class WebhookValidator:
         from_email = json_loaded_envelope["from"]
         to_email = [
             email
-            for email
-            in json_loaded_envelope["to"]
+            for email in json_loaded_envelope["to"]
             # if SETTINGS.APP_DOMAIN
             # in email
         ]
@@ -259,6 +266,6 @@ class WebhookValidator:
         ).get_one(subdomain=to_subdomain)
         if not company_ingress_record.is_active:
             raise Forbidden
-        
+
         # TODO Other checks on allowed domains...
         return company_ingress_record

@@ -516,13 +516,17 @@ def test_upsert(request_scope):
     parent_repo = TestRepository(request_scope)
     example_item = parent_repo.create(CreateTestModel(name="test"))
 
-    result = parent_repo.upsert(CreateTestModel(name="test2"), overridden_id=example_item.id)
+    result = parent_repo.upsert(
+        CreateTestModel(name="test2"), overridden_id=example_item.id
+    )
     assert result.name == "test2"
 
     queried_result = parent_repo.get(example_item.id)
     assert queried_result.name == "test2"
 
-    result = parent_repo.upsert(CreateTestModel(name="test3"), overridden_id="not_found")
+    result = parent_repo.upsert(
+        CreateTestModel(name="test3"), overridden_id="not_found"
+    )
     assert result.name == "test3"
 
     queried_result = parent_repo.get("not_found")

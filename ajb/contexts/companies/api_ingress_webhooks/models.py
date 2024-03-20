@@ -23,15 +23,12 @@ class CreateCompanyAPIIngress(BaseModel):
         partial_expected_jwt = encode_jwt(
             data=APIIngressJWTData(company_id=company_id).model_dump(),
             secret=secret_key,
-            expiry=datetime.now() + timedelta(days=365)
+            expiry=datetime.now() + timedelta(days=365),
         )
         expected_jwt = f"{company_id}:{partial_expected_jwt}"
         return cls(
-            company_id=company_id,
-            secret_key=secret_key,
-            expected_jwt=expected_jwt
+            company_id=company_id, secret_key=secret_key, expected_jwt=expected_jwt
         )
 
 
-class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel):
-    ...
+class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel): ...

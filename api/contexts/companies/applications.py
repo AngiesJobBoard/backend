@@ -134,9 +134,7 @@ def delete_company_application(request: Request, company_id: str, application_id
     application = ApplicationRepository(request.state.request_scope).get(application_id)
     assert application.company_id == company_id
     return ApplicationUseCase(request.state.request_scope).delete_application_for_job(
-        application.company_id,
-        application.job_id,
-        application.id
+        application.company_id, application.job_id, application.id
     )
 
 
@@ -160,9 +158,9 @@ def remove_application_to_shortlist(
 
 @router.patch("/{application_id}/view")
 def view_applications(request: Request, company_id: str, application_ids: list[str]):
-    return ApplicationUseCase(
-        request.state.request_scope
-    ).company_views_applications(company_id, application_ids)
+    return ApplicationUseCase(request.state.request_scope).company_views_applications(
+        company_id, application_ids
+    )
 
 
 @router.post("/{application_id}/notes")

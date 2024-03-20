@@ -11,22 +11,15 @@ which we can use to compare against the payload being sent
 
 """
 
-from ajb.base import (
-    Collection,
-    SingleChildRepository,
-    RepositoryRegistry,
-    RequestScope
-)
+from ajb.base import Collection, SingleChildRepository, RepositoryRegistry, RequestScope
 from ajb.vendor.jwt import decode_jwt
 
-from .models import (
-    CreateCompanyAPIIngress,
-    CompanyAPIIngress,
-    APIIngressJWTData
-)
+from .models import CreateCompanyAPIIngress, CompanyAPIIngress, APIIngressJWTData
 
 
-class CompanyAPIIngressRepository(SingleChildRepository[CreateCompanyAPIIngress, CompanyAPIIngress]):
+class CompanyAPIIngressRepository(
+    SingleChildRepository[CreateCompanyAPIIngress, CompanyAPIIngress]
+):
     collection = Collection.COMPANY_API_INGRESS_WEBHOOKS
     entity_model = CompanyAPIIngress
 
@@ -42,7 +35,7 @@ class CompanyAPIIngressRepository(SingleChildRepository[CreateCompanyAPIIngress,
         cls,
         request_scope: RequestScope,
         received_encoded_jwt: str,
-        company_id_being_accessed: str
+        company_id_being_accessed: str,
     ):
         jwt_company_id, jwt = received_encoded_jwt.split(":")
         this_repo = cls(request_scope, jwt_company_id)
@@ -51,7 +44,6 @@ class CompanyAPIIngressRepository(SingleChildRepository[CreateCompanyAPIIngress,
             **decode_jwt(jwt, ingress_record.secret_key)
         )
         assert decoded_jwt_data.company_id == company_id_being_accessed
-
 
 
 RepositoryRegistry.register(CompanyAPIIngressRepository)

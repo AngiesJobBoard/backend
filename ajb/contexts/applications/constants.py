@@ -4,4 +4,3 @@ class ApplicationConstants:
     HIGH_MATCHING_APPLICANTS = "high_matching_applicants"
     NEW_APPLICANTS = "new_applicants"
     VIEWED_BY_COMPANY = "viewed_by_company"
-

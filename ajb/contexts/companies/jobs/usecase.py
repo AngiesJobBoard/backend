@@ -12,11 +12,7 @@ from .models import (
 
 
 class JobsUseCase(BaseUseCase):
-    def create_job(
-        self,
-        company_id: str,
-        job: UserCreateJob
-    ) -> Job:
+    def create_job(self, company_id: str, job: UserCreateJob) -> Job:
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         company_repo = self.get_repository(Collection.COMPANIES)
         job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
@@ -28,9 +24,9 @@ class JobsUseCase(BaseUseCase):
 
         # Create event
         self.request_scope.company_id = company_id
-        CompanyEventProducer(self.request_scope, SourceServices.API).company_creates_job(
-            job_id=created_job.id
-        )
+        CompanyEventProducer(
+            self.request_scope, SourceServices.API
+        ).company_creates_job(job_id=created_job.id)
         return created_job
 
     def create_many_jobs(self, company_id: str, jobs: list[UserCreateJob]) -> list[str]:
@@ -50,9 +46,7 @@ class JobsUseCase(BaseUseCase):
         self.request_scope.company_id = company_id
         event_producer = CompanyEventProducer(self.request_scope, SourceServices.API)
         for created_job_id in created_jobs:
-            event_producer.company_creates_job(
-                job_id=created_job_id
-            )
+            event_producer.company_creates_job(job_id=created_job_id)
         return created_jobs
 
     def delete_job(self, company_id: str, job_id: str):

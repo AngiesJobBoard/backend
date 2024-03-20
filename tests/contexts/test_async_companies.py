@@ -1,8 +1,12 @@
 import pytest
 
 from ajb.contexts.companies.asynchronous_events import AsynchronousCompanyEvents
-from ajb.contexts.companies.email_ingress_webhooks.repository import CompanyEmailIngressRepository
-from ajb.contexts.companies.api_ingress_webhooks.repository import CompanyAPIIngressRepository
+from ajb.contexts.companies.email_ingress_webhooks.repository import (
+    CompanyEmailIngressRepository,
+)
+from ajb.contexts.companies.api_ingress_webhooks.repository import (
+    CompanyAPIIngressRepository,
+)
 from ajb.base.events import BaseKafkaMessage, KafkaTopic, CompanyEvent
 from ajb.vendor.sendgrid.client_factory import SendgridFactory
 from ajb.vendor.sendgrid.repository import SendgridRepository
@@ -32,16 +36,16 @@ async def test_async_company_creation(request_scope, mock_sendgrid):
         source_service="test",
     )
     await AsynchronousCompanyEvents(
-        message=message,
-        request_scope=request_scope,
-        sendgrid=mock_sendgrid
+        message=message, request_scope=request_scope, sendgrid=mock_sendgrid
     ).company_is_created()
 
     # Check that the email was sent
     assert len(mock_sendgrid.client.sent_emails) == 1
 
     # Check that the subdomain relationships were created
-    email_ingress_repo = CompanyEmailIngressRepository(request_scope, created_company.id)
+    email_ingress_repo = CompanyEmailIngressRepository(
+        request_scope, created_company.id
+    )
     results, _ = email_ingress_repo.query()
     assert len(results) == 2
 

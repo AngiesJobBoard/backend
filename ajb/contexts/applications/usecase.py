@@ -183,11 +183,22 @@ class ApplicationUseCase(BaseUseCase):
         )
         if application.application_is_shortlisted:
             self.update_application_counts(
-                company_id, job_id, ApplicationConstants.SHORTLISTED_APPLICANTS, 1, False
+                company_id,
+                job_id,
+                ApplicationConstants.SHORTLISTED_APPLICANTS,
+                1,
+                False,
             )
-        if application.application_match_score and application.application_match_score > 70:
+        if (
+            application.application_match_score
+            and application.application_match_score > 70
+        ):
             self.update_application_counts(
-                company_id, job_id, ApplicationConstants.HIGH_MATCHING_APPLICANTS, 1, False
+                company_id,
+                job_id,
+                ApplicationConstants.HIGH_MATCHING_APPLICANTS,
+                1,
+                False,
             )
         if not application.viewed_by_company:
             self.update_application_counts(

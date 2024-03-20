@@ -39,7 +39,7 @@ class ApplicantMatchUsecase(BaseUseCase):
                     application.job_id,
                     ApplicationConstants.HIGH_MATCHING_APPLICANTS,
                     1,
-                    True
+                    True,
                 )
             return application_repo.update_fields(
                 application_id,

@@ -10,7 +10,7 @@ from ajb.base.events import CompanyEvent, BaseKafkaMessage
 from ajb.contexts.companies.events import (
     RecruiterAndApplication,
     RecruiterAndApplications,
-    CompanyAndJob
+    CompanyAndJob,
 )
 from ajb.contexts.companies.actions.repository import (
     CompanyActionRepository,
@@ -120,11 +120,13 @@ class AsynchronousCompanyEvents:
                 company_id=data.company_id,
             )
         )
-    
+
     async def company_creates_job(self) -> None:
         data = CompanyAndJob.model_validate(self.message.data)
 
         # Create email ingress record
         CompanyEmailIngressRepository(self.request_scope).create(
-            CreateCompanyEmailIngress.generate(data.company_id, EmailIngressType.CREATE_APPLICATION, data.job_id)
+            CreateCompanyEmailIngress.generate(
+                data.company_id, EmailIngressType.CREATE_APPLICATION, data.job_id
+            )
         )

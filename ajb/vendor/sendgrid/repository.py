@@ -20,7 +20,9 @@ class SendgridRepository:
         )
         return self.client.send(mail)
 
-    def send_email_template(self, to_emails: str, subject: str, template_data: BaseEmailData):
+    def send_email_template(
+        self, to_emails: str, subject: str, template_data: BaseEmailData
+    ):
         if template_data.templateId.value is None:
             raise ValueError("TemplateId is required")
 

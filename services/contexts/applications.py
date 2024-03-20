@@ -34,14 +34,12 @@ async def company_extracts_application_filters(message: BaseKafkaMessage):
     await repo.extract_application_filters()
 
 
-async def company_answers_job_filter_questions(
-        message: BaseKafkaMessage
-):
+async def company_answers_job_filter_questions(message: BaseKafkaMessage):
     async with aiohttp.ClientSession() as session:
         repo = AsynchronousApplicationEvents(
             message,
             make_request_scope(message),
-            async_openai=AsyncOpenAIRepository(session)
+            async_openai=AsyncOpenAIRepository(session),
         )
         await repo.answer_application_questions()
 

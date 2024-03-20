@@ -2,16 +2,15 @@ from ajb.base import (
     Collection,
     MultipleChildrenRepository,
     RepositoryRegistry,
-    RequestScope
+    RequestScope,
 )
 
-from .models import (
-    CreateCompanyEmailIngress,
-    CompanyEmailIngress
-)
+from .models import CreateCompanyEmailIngress, CompanyEmailIngress
 
 
-class CompanyEmailIngressRepository(MultipleChildrenRepository[CreateCompanyEmailIngress, CompanyEmailIngress]):
+class CompanyEmailIngressRepository(
+    MultipleChildrenRepository[CreateCompanyEmailIngress, CompanyEmailIngress]
+):
     collection = Collection.COMPANY_EMAIL_INGRESS_WEBHOOKS
     entity_model = CompanyEmailIngress
 

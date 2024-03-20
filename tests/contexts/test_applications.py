@@ -12,7 +12,7 @@ from ajb.contexts.applications.models import (
     Location,
     WorkHistory,
     Education,
-    CreateApplication
+    CreateApplication,
 )
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.jobs.repository import JobRepository
@@ -217,7 +217,6 @@ def test_extract_application_distance_and_same_state():
     assert applicant_in_same_state is True
 
 
-
 def test_application_counts(request_scope):
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
@@ -249,9 +248,9 @@ def test_application_counts(request_scope):
             company_id=company.id,
             job_id=job.id,
             name="apply guy",
-            email="apply@guy.com"
+            email="apply@guy.com",
         ),
-        False
+        False,
     )
 
     retrieved_company = company_repo.get(company.id)
@@ -268,9 +267,7 @@ def test_application_counts(request_scope):
     assert retrieved_job.new_applicants == 1
 
     usecase.company_updates_application_shortlist(
-        company.id,
-        created_application.id,
-        True
+        company.id, created_application.id, True
     )
 
     retrieved_company = company_repo.get(company.id)
@@ -286,10 +283,7 @@ def test_application_counts(request_scope):
     assert retrieved_job.high_matching_applicants == 0
     assert retrieved_job.new_applicants == 1
 
-    usecase.company_views_applications(
-        company.id,
-        [created_application.id]
-    )
+    usecase.company_views_applications(company.id, [created_application.id])
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
@@ -304,10 +298,7 @@ def test_application_counts(request_scope):
     assert retrieved_job.high_matching_applicants == 0
     assert retrieved_job.new_applicants == 0
 
-    usecase.delete_all_applications_for_job(
-        company.id,
-        job.id
-    )
+    usecase.delete_all_applications_for_job(company.id, job.id)
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
@@ -337,25 +328,27 @@ async def test_high_matching_applicants(request_scope):
             company_id=company.id,
             job_id=job.id,
             name="apply guy",
-            email="apply@guy.com"
+            email="apply@guy.com",
         ),
-        False
+        False,
     )
 
     company_repo = CompanyRepository(request_scope)
     job_repo = JobRepository(request_scope, company.id)
 
     async with ClientSession() as session:
-        matcher_usecase = ApplicantMatchUsecase(request_scope, AsyncOpenAIRepository(session))
+        matcher_usecase = ApplicantMatchUsecase(
+            request_scope, AsyncOpenAIRepository(session)
+        )
 
-        with patch("ajb.contexts.applications.matching.usecase.ApplicantMatchUsecase.get_match") as mock_get_match:
+        with patch(
+            "ajb.contexts.applications.matching.usecase.ApplicantMatchUsecase.get_match"
+        ) as mock_get_match:
             mock_get_match.return_value = ApplicantMatchScore(
-                match_score=100,
-                match_reason="test"
+                match_score=100, match_reason="test"
             )
             await matcher_usecase.update_application_with_match_score(
-                created_application.id,
-                job
+                created_application.id, job
             )
 
     retrieved_company = company_repo.get(company.id)
@@ -371,10 +364,7 @@ async def test_high_matching_applicants(request_scope):
     assert retrieved_job.high_matching_applicants == 1
     assert retrieved_job.new_applicants == 1
 
-    usecase.delete_all_applications_for_job(
-        company.id,
-        job.id
-    )
+    usecase.delete_all_applications_for_job(company.id, job.id)
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)

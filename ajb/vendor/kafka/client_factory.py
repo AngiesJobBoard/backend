@@ -12,13 +12,15 @@ class KafkaProducerFactory(VendorClientFactory):
 
     @staticmethod
     def _return_client():
-        return KafkaProducer(
-            bootstrap_servers=[SETTINGS.KAFKA_BOOTSTRAP_SERVER],
-            sasl_mechanism="SCRAM-SHA-256",
-            security_protocol="SASL_SSL",
-            sasl_plain_username=SETTINGS.KAFKA_USERNAME,
-            sasl_plain_password=SETTINGS.KAFKA_PASSWORD,
-        )
+        config = {
+            "bootstrap_servers": [SETTINGS.KAFKA_BOOTSTRAP_SERVER],
+            "sasl_mechanism": SETTINGS.KAFKA_SASL_MECHANISM,
+            "security_protocol": SETTINGS.KAFKA_SECURITY_PROTOCOL,
+            "sasl_plain_username": SETTINGS.KAFKA_USERNAME,
+            "sasl_plain_password": SETTINGS.KAFKA_PASSWORD,
+        }
+        non_null_config = {k: v for k, v in config.items() if v is not None}
+        return KafkaProducer(**non_null_config)
 
 
 class KafkaConsumerFactory(VendorClientFactory):
@@ -32,15 +34,17 @@ class KafkaConsumerFactory(VendorClientFactory):
     # pylint: disable=arguments-differ
     @staticmethod
     def _return_client(group_id: str):  # type: ignore
-        consumer = KafkaConsumer(
-            bootstrap_servers=[SETTINGS.KAFKA_BOOTSTRAP_SERVER],
-            sasl_mechanism="SCRAM-SHA-256",
-            security_protocol="SASL_SSL",
-            sasl_plain_username=SETTINGS.KAFKA_USERNAME,
-            sasl_plain_password=SETTINGS.KAFKA_PASSWORD,
-            auto_offset_reset="earliest",
-            group_id=group_id,
-        )
+        config = {
+            "bootstrap_servers": [SETTINGS.KAFKA_BOOTSTRAP_SERVER],
+            "sasl_mechanism": SETTINGS.KAFKA_SASL_MECHANISM,
+            "security_protocol": SETTINGS.KAFKA_SECURITY_PROTOCOL,
+            "sasl_plain_username": SETTINGS.KAFKA_USERNAME,
+            "sasl_plain_password": SETTINGS.KAFKA_PASSWORD,
+            "auto_offset_reset": "earliest",
+            "group_id": group_id,
+        }
+        non_null_config = {k: v for k, v in config.items() if v is not None}
+        consumer = KafkaConsumer(**non_null_config)
         return consumer
 
     def get_client(self):

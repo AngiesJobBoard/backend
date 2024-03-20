@@ -61,6 +61,7 @@ async def consumer():
     consumer = KafkaConsumerFactory(group_id=KafkaGroup.DEFAULT.value).get_client()
     topics_to_subscribe = [topic.value for topic in KafkaTopic]
     consumer.subscribe(topics_to_subscribe)
+    print(f"Connected to server {consumer.config['bootstrap_servers'][0]}")
     print(f"Consumer Subscribed to {topics_to_subscribe}...")
     task = asyncio.create_task(handle_messages(consumer))
     try:

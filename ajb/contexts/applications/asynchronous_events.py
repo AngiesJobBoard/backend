@@ -24,7 +24,9 @@ from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.applications.extract_data.usecase import ResumeExtractorUseCase
-from ajb.contexts.applications.application_questions.usecase import ApplicantQuestionsUsecase
+from ajb.contexts.applications.application_questions.usecase import (
+    ApplicantQuestionsUsecase,
+)
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
@@ -106,7 +108,9 @@ class AsynchronousApplicationEvents:
         )[0]
 
         self.request_scope.company_id = data.company_id
-        event_producer = ApplicationEventProducer(self.request_scope, SourceServices.API)
+        event_producer = ApplicationEventProducer(
+            self.request_scope, SourceServices.API
+        )
         if existing_applicants_that_match_email:
             for matched_application in existing_applicants_that_match_email:
                 self._update_application_with_parsed_information(
@@ -191,7 +195,9 @@ class AsynchronousApplicationEvents:
         application_repo = ApplicationRepository(self.request_scope)
         data = ApplicationId.model_validate(self.message.data)
         application = application_repo.get(data.application_id)
-        job = JobRepository(self.request_scope, application.company_id).get(application.job_id)
+        job = JobRepository(self.request_scope, application.company_id).get(
+            application.job_id
+        )
         application.extract_filter_information(
             job_lat=job.location_override.lat if job.location_override else None,
             job_lon=job.location_override.lng if job.location_override else None,
@@ -205,5 +211,9 @@ class AsynchronousApplicationEvents:
         if not self.async_openai:
             raise RuntimeError("Async OpenAI Repository is not provided")
         data = ApplicationId.model_validate(self.message.data)
-        question_usecase = ApplicantQuestionsUsecase(self.request_scope, self.async_openai)
-        await question_usecase.update_application_with_questions_answered(data.application_id)
+        question_usecase = ApplicantQuestionsUsecase(
+            self.request_scope, self.async_openai
+        )
+        await question_usecase.update_application_with_questions_answered(
+            data.application_id
+        )

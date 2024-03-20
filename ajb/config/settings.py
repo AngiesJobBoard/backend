@@ -37,16 +37,18 @@ class AppSettings:
 
     # Kafka config
     KAFKA_BOOTSTRAP_SERVER: str = os.getenv("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")
-    KAFKA_REST_URL: str = os.getenv("KAFKA_REST_URL", "")
-    KAFKA_USERNAME: str = os.getenv("KAFKA_USERNAME", "")
-    KAFKA_PASSWORD: str = os.getenv("KAFKA_PASSWORD", "")
+    KAFKA_USERNAME: str | None = os.getenv("KAFKA_USERNAME")
+    KAFKA_PASSWORD: str | None = os.getenv("KAFKA_PASSWORD")
+    KAFKA_SASL_MECHANISM: str | None = os.getenv("KAFKA_SASL_MECHANISM")
+    KAFKA_SECURITY_PROTOCOL: str | None = os.getenv("KAFKA_SECURITY_PROTOCOL")
     KAFKA_JWT_SECRET: str = os.getenv("KAFKA_JWT_SECRET", "")
 
     # Kafka Topics
     KAFKA_USERS_TOPIC: str = os.getenv("KAFKA_USERS_TOPIC", "users")
     KAFKA_COMPANIES_TOPIC: str = os.getenv("KAFKA_COMPANIES_TOPIC", "companies")
-    KAFKA_APPLICATIONS_TOPIC: str = os.getenv("KAFKA_APPLICATIONS_TOPIC", "applications")
-
+    KAFKA_APPLICATIONS_TOPIC: str = os.getenv(
+        "KAFKA_APPLICATIONS_TOPIC", "applications"
+    )
 
     # Sendgrid config
     SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")

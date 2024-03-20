@@ -23,4 +23,6 @@ async def topic_router(message: ConsumerRecord):
     print(f"Received event: {message_data.event_type}")
     start = time.time()
     await ROUTER[message_data.topic][message_data.event_type](message_data)
-    print(f"Completed processing event: {message_data.event_type} in {round(time.time() - start, 3)} seconds.")
+    print(
+        f"Completed processing event: {message_data.event_type} in {round(time.time() - start, 3)} seconds."
+    )

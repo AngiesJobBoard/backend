@@ -85,6 +85,7 @@ class AdditionalFilterInformation(BaseModel):
     These are additional attributes that are parsed from an application
     and used to further filter and rank applications
     """
+
     average_job_duration_in_months: int | None = None
     average_gap_duration_in_months: int | None = None
     total_years_in_workforce: int | None = None

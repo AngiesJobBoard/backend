@@ -44,7 +44,11 @@ async def applicants_api_webhook_handler(request: Request, payload: ApplicantsWe
     return status.HTTP_204_NO_CONTENT
 
 
-def process_email_ingress(request_scope: RequestScope, ingress_email: Message, ingress_record: CompanyEmailIngress):
+def process_email_ingress(
+    request_scope: RequestScope,
+    ingress_email: Message,
+    ingress_record: CompanyEmailIngress,
+):
     request_scope.company_id = ingress_record.company_id
     application_usecase = ApplicationUseCase(request_scope, storage)
 
