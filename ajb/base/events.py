@@ -26,6 +26,7 @@ class KafkaTopic(str, Enum):
     COMPANIES = SETTINGS.KAFKA_COMPANIES_TOPIC
     APPLICATIONS = SETTINGS.KAFKA_APPLICATIONS_TOPIC
     USERS = SETTINGS.KAFKA_USERS_TOPIC
+    WEBHOOKS = SETTINGS.KAFKA_WEBHOOKS_TOPIC
 
     @classmethod
     def get_all_topics(cls):
@@ -41,6 +42,8 @@ class CompanyEvent(str, Enum):
     COMPANY_SHORTLISTS_APPLICATION = "company_shortlists_application"
     COMPANY_REJECTS_APPLICATION = "company_rejects_application"
     COMPANY_CREATES_JOB = "company_creates_job"
+    COMPANY_UPDATES_JOB = "company_updates_job"
+    COMPANY_DELETES_JOB = "company_deletes_job"
 
 
 class ApplicationEvent(str, Enum):

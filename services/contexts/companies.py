@@ -54,6 +54,20 @@ async def company_creates_job(message: BaseKafkaMessage):
     ).company_creates_job()
 
 
+async def company_updates_job(message: BaseKafkaMessage):
+    await AsynchronousCompanyEvents(
+        message,
+        make_request_scope(message),
+    ).company_updates_job()
+
+
+async def company_deletes_job(message: BaseKafkaMessage):
+    await AsynchronousCompanyEvents(
+        message,
+        make_request_scope(message),
+    ).company_deletes_job()
+
+
 ROUTER = {
     CompanyEvent.COMPANY_IS_CREATED.value: company_is_created,
     CompanyEvent.COMPANY_VIEWS_APPLICATIONS.value: company_views_applications,
@@ -61,4 +75,6 @@ ROUTER = {
     CompanyEvent.COMPANY_SHORTLISTS_APPLICATION.value: company_shortlists_application,
     CompanyEvent.COMPANY_REJECTS_APPLICATION.value: company_rejects_application,
     CompanyEvent.COMPANY_CREATES_JOB.value: company_creates_job,
+    CompanyEvent.COMPANY_UPDATES_JOB.value: company_updates_job,
+    CompanyEvent.COMPANY_DELETES_JOB.value: company_deletes_job,
 }

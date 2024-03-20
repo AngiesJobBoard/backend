@@ -5,10 +5,10 @@ from email.message import Message
 from ajb.base import RequestScope
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.resumes.models import UserCreateResume
-from ajb.contexts.webhooks.jobs.models import JobsWebhook
-from ajb.contexts.webhooks.jobs.usecase import WebhookJobsUseCase
-from ajb.contexts.webhooks.applicants.models import ApplicantsWebhook
-from ajb.contexts.webhooks.applicants.usecase import WebhookApplicantsUseCase
+from ajb.contexts.webhooks.ingress.jobs.models import JobsWebhook
+from ajb.contexts.webhooks.ingress.jobs.usecase import WebhookJobsUseCase
+from ajb.contexts.webhooks.ingress.applicants.models import ApplicantsWebhook
+from ajb.contexts.webhooks.ingress.applicants.usecase import WebhookApplicantsUseCase
 from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
 from api.vendors import db, storage
 

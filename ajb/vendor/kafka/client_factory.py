@@ -8,7 +8,7 @@ from ..vendor_client_factory import VendorClientFactory
 class KafkaProducerFactory(VendorClientFactory):
     @staticmethod
     def _return_mock():
-        return MockKafkaProducer()
+        return KafkaProducer(bootstrap_servers=["localhost:9092"])
 
     @staticmethod
     def _return_client():
@@ -29,7 +29,7 @@ class KafkaConsumerFactory(VendorClientFactory):
 
     @staticmethod
     def _return_mock():
-        return MockKafkaConsumer()
+        return KafkaConsumer(bootstrap_servers=["localhost:9092"])
 
     # pylint: disable=arguments-differ
     @staticmethod

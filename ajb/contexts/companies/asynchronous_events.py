@@ -28,6 +28,7 @@ from ajb.contexts.companies.api_ingress_webhooks.repository import (
 )
 from ajb.contexts.companies.api_ingress_webhooks.models import CreateCompanyAPIIngress
 from ajb.contexts.users.repository import UserRepository
+from ajb.contexts.webhooks.egress.jobs.usecase import CompanyJobWebhookEgress
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.sendgrid.templates.newly_created_company import NewlyCreatedCompany
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
@@ -129,4 +130,21 @@ class AsynchronousCompanyEvents:
             CreateCompanyEmailIngress.generate(
                 data.company_id, EmailIngressType.CREATE_APPLICATION, data.job_id
             )
+        )
+
+        # Send out job creation webhooks
+        CompanyJobWebhookEgress(self.request_scope).send_create_job_webhook(
+            data.company_id, data.job_id
+        )
+
+    async def company_updates_job(self) -> None:
+        data = CompanyAndJob.model_validate(self.message.data)
+        CompanyJobWebhookEgress(self.request_scope).send_update_job_webhook(
+            data.company_id, data.job_id
+        )
+    
+    async def company_deletes_job(self) -> None:
+        data = CompanyAndJob.model_validate(self.message.data)
+        CompanyJobWebhookEgress(self.request_scope).send_delete_job_webhook(
+            data.company_id, data.job_id
         )

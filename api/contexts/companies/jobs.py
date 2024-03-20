@@ -11,7 +11,6 @@ from ajb.contexts.companies.jobs.models import (
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.jobs.usecase import JobsUseCase
-from ajb.contexts.applications.repository import CompanyApplicationRepository
 
 
 router = APIRouter(tags=["Company Jobs"], prefix="/companies/{company_id}/jobs")
@@ -41,10 +40,8 @@ def get_job(request: Request, company_id: str, job_id: str):
 
 @router.put("/{job_id}", response_model=Job)
 def update_job(request: Request, company_id: str, job_id: str, job: UserCreateJob):
-    job_to_update = CreateJob(**job.model_dump(), company_id=company_id)
-    job_to_update.job_score = job.calculate_score()
-    return JobRepository(request.state.request_scope, company_id).update(
-        job_id, job_to_update
+    return JobsUseCase(request.state.request_scope).update_job(
+        company_id, job_id, job
     )
 
 

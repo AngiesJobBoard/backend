@@ -98,3 +98,21 @@ class CompanyEventProducer(BaseEventProducer):
             data=data,
             event=CompanyEvent.COMPANY_CREATES_JOB,
         )
+
+    def company_updates_job(self, job_id: str):
+        data = CompanyAndJob(
+            company_id=str(self.request_scope.company_id), job_id=job_id
+        ).model_dump()
+        self._company_event(
+            data=data,
+            event=CompanyEvent.COMPANY_UPDATES_JOB,
+        )
+    
+    def company_deletes_job(self, job_id: str):
+        data = CompanyAndJob(
+            company_id=str(self.request_scope.company_id), job_id=job_id
+        ).model_dump()
+        self._company_event(
+            data=data,
+            event=CompanyEvent.COMPANY_DELETES_JOB,
+        )

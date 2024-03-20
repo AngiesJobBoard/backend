@@ -293,6 +293,7 @@ class ArangoDBRepository:
 
 
 def get_arango_db() -> StandardDatabase:
+    print(f"Connecting DB to {SETTINGS.ARANGO_URL}, {SETTINGS.ARANGO_DB_NAME}")
     return ArangoClientFactory.get_client().db(
         name=SETTINGS.ARANGO_DB_NAME,
         username=SETTINGS.ARANGO_USERNAME,

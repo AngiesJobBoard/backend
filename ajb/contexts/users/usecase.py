@@ -2,7 +2,7 @@ from ajb.base import BaseUseCase, Collection
 from ajb.contexts.users.models import User
 from ajb.vendor.clerk.models import SimpleClerkCreateUser, ClerkCreateUser
 from ajb.vendor.clerk.repository import ClerkAPIRepository
-from ajb.contexts.webhooks.users.usecase import (
+from ajb.contexts.webhooks.ingress.users.usecase import (
     WebhookUserUseCase,
     ClerkUserWebhookEvent,
     ClerkUserWebhookType,

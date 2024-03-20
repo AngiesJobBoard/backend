@@ -1,4 +1,4 @@
-from ajb.contexts.webhooks.users.usecase import (
+from ajb.contexts.webhooks.ingress.users.usecase import (
     WebhookUserUseCase,
     ClerkUser,
     ClerkUserWebhookEvent,

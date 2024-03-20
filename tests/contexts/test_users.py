@@ -6,7 +6,7 @@ from ajb.exceptions import EntityNotFound
 from ajb.contexts.users.models import CreateUser
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.users.usecase import UserUseCase
-from ajb.contexts.webhooks.users.usecase import WebhookUserUseCase
+from ajb.contexts.webhooks.ingress.users.usecase import WebhookUserUseCase
 from ajb.vendor.clerk.models import (
     SimpleClerkCreateUser,
     ClerkUserWebhookEvent,

@@ -16,4 +16,5 @@ class ArangoClientFactory(VendorClientFactory[ArangoClient]):
 
     @staticmethod
     def _return_client():
+        print(f"Connecting DB to {SETTINGS.ARANGO_URL}")
         return ArangoClient(hosts=SETTINGS.ARANGO_URL)

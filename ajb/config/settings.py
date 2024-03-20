@@ -49,6 +49,7 @@ class AppSettings:
     KAFKA_APPLICATIONS_TOPIC: str = os.getenv(
         "KAFKA_APPLICATIONS_TOPIC", "applications"
     )
+    KAFKA_WEBHOOKS_TOPIC: str = os.getenv("KAFKA_WEBHOOKS_TOPIC", "webhooks")
 
     # Sendgrid config
     SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")

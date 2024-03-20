@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, status, Depends
 
 from ajb.base import RequestScope
-from ajb.contexts.webhooks.users.usecase import WebhookUserUseCase
+from ajb.contexts.webhooks.ingress.users.usecase import WebhookUserUseCase
 from ajb.vendor.clerk.models import (
     ClerkUserWebhookEvent,
 )

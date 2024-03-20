@@ -52,16 +52,20 @@ class JobsUseCase(BaseUseCase):
     def delete_job(self, company_id: str, job_id: str):
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         company_repo = self.get_repository(Collection.COMPANIES)
-        application_repo = self.get_repository(Collection.APPLICATIONS)
         job_repo.delete(job_id)
-        company_repo.decrement_field(company_id, "total_jobs", 1)
-        applications = application_repo.query(
-            repo_filters=RepoFilterParams(
-                filters=[
-                    Filter(field="company_id", value=company_id),
-                    Filter(field="job_id", value=job_id),
-                ]
-            )
-        )[0]
-        application_repo.delete_many([application.id for application in applications])
+        company_repo.decrement_field(company_id, "total_jobs", 1)         
+        CompanyEventProducer(
+            self.request_scope, SourceServices.API
+        ).company_deletes_job(job_id=job_id)
         return True
+
+    def update_job(self, company_id: str, job_id: str, job: UserCreateJob) -> Job:
+        job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
+        job_to_update = CreateJob(**job.model_dump(), company_id=company_id)
+        job_to_update.job_score = job.calculate_score()
+        updated_job = job_repo.update(job_id, job_to_update)
+
+        CompanyEventProducer(
+            self.request_scope, SourceServices.API
+        ).company_updates_job(job_id=job_id)
+        return updated_job
