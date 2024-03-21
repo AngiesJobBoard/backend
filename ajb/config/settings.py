@@ -85,7 +85,7 @@ class AppSettings:
     RECRUITER_INVITATION_SECRET: str = os.getenv("RECRUITER_INVITATION_SECRET", "test")
 
     # Mixpanel for product analytics
-    MIXPANEL_TOKEN: str = os.getenv("MIXPANEL_TOKEN", "")
+    MIXPANEL_TOKEN: str = os.getenv("MIXPANEL_TOKEN", "38f552bd01fdd7399ad3a2aac8becdba")
 
     class Config:
         env_file = ".env"
