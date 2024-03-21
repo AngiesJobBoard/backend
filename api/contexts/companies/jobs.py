@@ -5,12 +5,13 @@ import pandas as pd
 from ajb.base import QueryFilterParams, build_pagination_response
 from ajb.contexts.companies.jobs.models import (
     UserCreateJob,
-    CreateJob,
     Job,
     PaginatedJob,
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.jobs.usecase import JobsUseCase
+
+from api.vendors import mixpanel
 
 
 router = APIRouter(tags=["Company Jobs"], prefix="/companies/{company_id}/jobs")
@@ -30,7 +31,14 @@ def get_all_jobs(
 
 @router.post("/", response_model=Job)
 def create_job(request: Request, company_id: str, job: UserCreateJob):
-    return JobsUseCase(request.state.request_scope).create_job(company_id, job)
+    response = JobsUseCase(request.state.request_scope).create_job(company_id, job)
+    mixpanel.job_created_from_portal(
+        request.state.request_scope.user_id,
+        company_id,
+        response.id,
+        response.position_title,
+    )
+    return response
 
 
 @router.get("/{job_id}", response_model=Job)
@@ -40,9 +48,7 @@ def get_job(request: Request, company_id: str, job_id: str):
 
 @router.put("/{job_id}", response_model=Job)
 def update_job(request: Request, company_id: str, job_id: str, job: UserCreateJob):
-    return JobsUseCase(request.state.request_scope).update_job(
-        company_id, job_id, job
-    )
+    return JobsUseCase(request.state.request_scope).update_job(company_id, job_id, job)
 
 
 @router.delete("/{job_id}")

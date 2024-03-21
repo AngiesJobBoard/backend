@@ -20,6 +20,8 @@ from ajb.contexts.applications.repository import (
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.vendor.arango.models import Filter, Operator
 
+from api.vendors import mixpanel
+
 
 router = APIRouter(
     tags=["Company Applications"], prefix="/companies/{company_id}/applications"
@@ -133,18 +135,32 @@ def delete_company_application(request: Request, company_id: str, application_id
     # First make sure that the application exists for this company
     application = ApplicationRepository(request.state.request_scope).get(application_id)
     assert application.company_id == company_id
-    return ApplicationUseCase(request.state.request_scope).delete_application_for_job(
+    response = ApplicationUseCase(request.state.request_scope).delete_application_for_job(
         application.company_id, application.job_id, application.id
     )
+    mixpanel.application_is_deleted(
+        request.state.request_scope.user_id,
+        company_id,
+        application.job_id,
+        application.id
+    )
+    return response
 
 
 @router.patch("/{application_id}/add-shortlist")
 def add_application_to_shortlist(
     request: Request, company_id: str, application_id: str
 ):
-    return ApplicationUseCase(
+    response = ApplicationUseCase(
         request.state.request_scope
     ).company_updates_application_shortlist(company_id, application_id, True)
+    mixpanel.application_is_shortlisted(
+        request.state.request_scope.user_id,
+        company_id,
+        response.job_id,
+        application_id
+    )
+    return response
 
 
 @router.patch("/{application_id}/remove-shortlist")
@@ -158,9 +174,17 @@ def remove_application_to_shortlist(
 
 @router.patch("/{application_id}/view")
 def view_applications(request: Request, company_id: str, application_ids: list[str]):
-    return ApplicationUseCase(request.state.request_scope).company_views_applications(
-        company_id, application_ids
-    )
+    response = ApplicationUseCase(
+        request.state.request_scope
+    ).company_views_applications(company_id, application_ids)
+    for application_id in application_ids:
+        mixpanel.application_is_viewed(
+            request.state.request_scope.user_id,
+            company_id,
+            None,
+            application_id
+        )
+    return response
 
 
 @router.post("/{application_id}/notes")
@@ -226,6 +250,14 @@ def update_application_status(
         updated_by_user_id=request.state.request_scope.user_id,
         update_made_by_admin=False
     )
-    return CompanyApplicationRepository(
+    response = CompanyApplicationRepository(
         request.state.request_scope
     ).update_application_status(company_id, application_id, new_update)
+    mixpanel.application_status_is_updated(
+        request.state.request_scope.user_id,
+        company_id,
+        response.job_id,
+        application_id,
+        new_status.status.value
+    )
+    return response

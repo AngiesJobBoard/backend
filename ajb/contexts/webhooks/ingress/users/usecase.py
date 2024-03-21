@@ -20,7 +20,6 @@ class WebhookUserUseCase(BaseUseCase):
     def create_user(
         self,
         event: ClerkUserWebhookEvent,
-        return_user: bool = False,
         internal_creation: bool = False,
     ) -> bool | User:
         user_repo = self.get_repository(Collection.USERS)
@@ -45,4 +44,4 @@ class WebhookUserUseCase(BaseUseCase):
             ),
             overridden_id=create_event.id,
         )
-        return created_user if return_user else True
+        return created_user

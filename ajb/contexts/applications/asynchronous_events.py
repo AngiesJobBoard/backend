@@ -123,6 +123,7 @@ class AsynchronousApplicationEvents:
                 )
                 event_producer.application_is_created(
                     matched_application.company_id,
+                    matched_application.job_id,
                     matched_application.id
                 )
 
@@ -140,6 +141,7 @@ class AsynchronousApplicationEvents:
         )
         event_producer.application_is_created(
             data.company_id,
+            data.job_id,
             data.application_id
         )
         original_application_deleted = False

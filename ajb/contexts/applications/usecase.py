@@ -69,7 +69,7 @@ class ApplicationUseCase(BaseUseCase):
     ) -> Application:
         application_repo = self.get_repository(Collection.APPLICATIONS)
         partial_application.application_questions = self._get_job_questions(job_id)
-        created_application = application_repo.create(partial_application)
+        created_application: Application = application_repo.create(partial_application)
         self.update_application_counts(
             company_id, job_id, ApplicationConstants.TOTAL_APPLICANTS, 1, True
         )
@@ -82,7 +82,8 @@ class ApplicationUseCase(BaseUseCase):
                 self.request_scope, source_service=SourceServices.API
             ).application_is_created(
                 created_application.company_id,
-                created_application.id
+                created_application.job_id,
+                created_application.id,
             )
         return created_application
 
@@ -122,7 +123,7 @@ class ApplicationUseCase(BaseUseCase):
                 self.request_scope, SourceServices.API
             )
             for application in created_applications:
-                event_producer.application_is_created(company_id, application)
+                event_producer.application_is_created(company_id, job_id, application)
         return created_applications
 
     def create_applications_from_csv(
@@ -208,7 +209,7 @@ class ApplicationUseCase(BaseUseCase):
             )
         ApplicationEventProducer(
             self.request_scope, SourceServices.API
-        ).application_is_deleted(company_id, application_id)
+        ).application_is_deleted(company_id, job_id, application_id)
         return True
 
     def delete_all_applications_for_job(self, company_id: str, job_id: str):
@@ -231,14 +232,16 @@ class ApplicationUseCase(BaseUseCase):
             self.request_scope, SourceServices.API
         )
         for application in applications:
-            event_producer.application_is_deleted(application.company_id, application.id)
+            event_producer.application_is_deleted(
+                application.company_id, application.job_id, application.id
+            )
         return True
 
     def company_updates_application_shortlist(
         self, company_id: str, application_id: str, is_adding_to_shortlist: bool
     ):
         application_repo = self.get_repository(Collection.APPLICATIONS)
-        response = application_repo.update_fields(
+        response: Application = application_repo.update_fields(
             application_id, application_is_shortlisted=is_adding_to_shortlist
         )
         self.update_application_counts(
@@ -250,7 +253,7 @@ class ApplicationUseCase(BaseUseCase):
         )
         ApplicationEventProducer(
             self.request_scope, SourceServices.API
-        ).application_is_updated(company_id, application_id)
+        ).application_is_updated(company_id, response.job_id, application_id)
         return response
 
     def company_views_applications(self, company_id: str, application_ids: list[str]):
@@ -273,5 +276,7 @@ class ApplicationUseCase(BaseUseCase):
             self.request_scope, SourceServices.API
         )
         for application_id in application_ids:
-            application_event_producer.application_is_updated(company_id, application_id)
+            application_event_producer.application_is_updated(
+                company_id, first_application.job_id, application_id
+            )
         return response

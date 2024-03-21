@@ -34,5 +34,4 @@ class SendgridRepository:
         mail.template_id = template_data.templateId.value
         mail.dynamic_template_data = template_data.to_str_dict()
         r = self.client.send(mail)
-        print(f"Email sent to {to_emails} with status code {r.status_code}")
         return r

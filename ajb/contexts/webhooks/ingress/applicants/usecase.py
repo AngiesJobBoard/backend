@@ -20,7 +20,7 @@ class WebhookApplicantsUseCase(BaseUseCase):
         job: Job = job_repo.get_one(
             company_id=company_id, external_reference_code=data.external_reference_code
         )
-        ApplicationUseCase(self.request_scope).create_application(
+        return ApplicationUseCase(self.request_scope).create_application(
             company_id,
             data.external_job_reference_code,
             CreateApplication(

@@ -10,6 +10,7 @@ from ajb.contexts.companies.invitations.usecase import CompanyInvitationUseCase
 from ajb.contexts.companies.invitations.repository import InvitationRepository
 from ajb.exceptions import RecruiterCreateException
 
+from api.vendors import mixpanel
 from api.exceptions import GenericHTTPException
 
 
@@ -39,9 +40,16 @@ def get_company_invitations(
 def create_invitation(request: Request, company_id: str, data: UserCreateInvitation):
     """Creates an invitation for a company"""
     try:
-        return CompanyInvitationUseCase(
+        response = CompanyInvitationUseCase(
             request.state.request_scope
         ).user_creates_invite(data, request.state.request_scope.user_id, company_id)
+        mixpanel.recruiter_is_invited_to_company(
+            request.state.request_scope.user_id,
+            company_id,
+            data.role.value,
+            response.id,
+        )
+        return response
     except RecruiterCreateException as e:
         raise GenericHTTPException(400, str(e))
 
@@ -59,6 +67,13 @@ def cancel_invitation(request: Request, company_id: str, invitation_id: str):
 @router.post("/confirm-recruiter-invitation")
 def confirm_invitation(request: Request, encoded_invitation: str):
     """Assumes user is logged in and accepts invitation"""
-    return CompanyInvitationUseCase(
+    response = CompanyInvitationUseCase(
         request.state.request_scope
     ).user_confirms_invitations(request.state.request_scope.user_id, encoded_invitation)
+    mixpanel.recruiter_invitation_is_accepted(
+        request.state.request_scope.user_id,
+        response.company_id,
+        response.role.value,
+        response.id,
+    )
+    return response

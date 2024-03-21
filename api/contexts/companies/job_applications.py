@@ -4,9 +4,8 @@ import pandas as pd
 
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.resumes.models import UserCreateResume
-from ajb.contexts.resumes.usecase import ResumeUseCase
 
-from api.vendors import storage
+from api.vendors import storage, mixpanel
 
 
 router = APIRouter(
@@ -39,11 +38,18 @@ async def upload_applications_from_csv(
     all_created_applications = []
     application_repo = ApplicationUseCase(request.state.request_scope)
     for file in files:
-        all_created_applications.extend(
-            await _process_applications_csv_file(
-                company_id, job_id, file, application_repo
-            )  # type: ignore
-        )
+        application = await _process_applications_csv_file(
+            company_id, job_id, file, application_repo
+        )  # type: ignore
+        all_created_applications.extend(application)
+        for created_application_id in application:
+            mixpanel.application_created_from_portal(
+                request.state.request_scope.user_id,
+                company_id,
+                job_id,
+                created_application_id,
+                "csv",
+            )
     if not all_created_applications:
         raise HTTPException(status_code=400, detail="No valid applications found")
     return all_created_applications
@@ -68,6 +74,13 @@ async def upload_applications_from_resume(
             )
         )
         created_applications.append(created_application)
+        mixpanel.application_created_from_portal(
+            request.state.request_scope.user_id,
+            company_id,
+            job_id,
+            created_application.id,
+            "pdf",
+        )
         files_processed += 1
     if not files_processed:
         raise HTTPException(status_code=400, detail="No valid files found")

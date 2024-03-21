@@ -47,7 +47,7 @@ async def test_async_company_creation(request_scope, mock_sendgrid):
         request_scope, created_company.id
     )
     results, _ = email_ingress_repo.query()
-    assert len(results) == 2
+    assert len(results) == 1
 
     # Check that the API ingress relationship was created
     api_ingress_repo = CompanyAPIIngressRepository(request_scope, created_company.id)

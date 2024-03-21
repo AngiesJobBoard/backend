@@ -48,7 +48,6 @@ class UserUseCase(BaseUseCase):
                 object="user",
                 type=ClerkUserWebhookType.user_created,
             ),
-            return_user=True,
             internal_creation=True,
         )
         if not isinstance(response, User):
