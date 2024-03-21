@@ -6,6 +6,7 @@ so that we don't have to extend the definition of an event related to kafka. Thi
 and not for system events.
 """
 from typing import Literal
+import threading
 from enum import Enum
 from mixpanel import Mixpanel
 from ajb.config.settings import SETTINGS
@@ -18,6 +19,9 @@ class MixpanelService:
             self.mp = Mixpanel(SETTINGS.MIXPANEL_TOKEN)
 
     def track(self, user_id: str, company_id: str | None,  event: str, properties: dict = {}):
+        threading.Thread(target=self._track, args=(user_id, company_id, event, properties)).start()
+
+    def _track(self, user_id: str, company_id: str | None,  event: str, properties: dict = {}):
         if company_id:
             properties["company_id"] = company_id
         if self.mp:
@@ -39,7 +43,7 @@ class EventName(str, Enum):
     RECRUITER_IS_INVITED_TO_COMPANY = "recruiter_is_invited_to_company"
     RECRUITER_INVITATION_IS_ACCEPTED = "recruiter_invitation_is_accepted"
     JOB_DESCRIPTION_IS_GENERATED = "job_description_is_generated"
-    RESUME_IS_SCANNED = "resume_is_Scanned"
+    RESUME_IS_SCANNED = "resume_is_scanned"
     JOB_CREATED_FROM_PORTAL = "job_created_from_portal"
     JOB_CREATED_FROM_EMAIL_INGRESS = "job_created_from_email_ingress"
     JOB_CREATED_FROM_API_WEBHOOK_INGRESS = "job_created_from_api_webhook_ingress"
