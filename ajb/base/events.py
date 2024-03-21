@@ -37,10 +37,6 @@ class CompanyEvent(str, Enum):
     """Represents a business action that can be taken on a company"""
 
     COMPANY_IS_CREATED = "company_is_created"
-    COMPANY_VIEWS_APPLICATIONS = "company_views_applications"
-    COMPANY_CLICKS_ON_APPLICATION = "company_clicks_on_application"
-    COMPANY_SHORTLISTS_APPLICATION = "company_shortlists_application"
-    COMPANY_REJECTS_APPLICATION = "company_rejects_application"
     COMPANY_CREATES_JOB = "company_creates_job"
     COMPANY_UPDATES_JOB = "company_updates_job"
     COMPANY_DELETES_JOB = "company_deletes_job"

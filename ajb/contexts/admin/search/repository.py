@@ -66,31 +66,6 @@ class AdminSearchRepository:
         )
         return cast(tuple[list[dict], int], response)
 
-    def get_action_timeseries_data(
-        self,
-        event: UserEvent | CompanyEvent | None = None,
-        start: datetime | None = None,
-        end: datetime | None = None,
-        aggregation: Aggregation | None = None,
-        additional_groupbys: list[str] | None = None,
-    ):
-        if event:
-            filters = [Filter(field="action", value=event.value)]
-        else:
-            filters = []
-        response = build_and_execute_timeseries_query(
-            db=self.db,
-            collection_name=Collection.COMPANY_ACTIONS.value,
-            filters=filters,
-            start=start,
-            end=end,
-            aggregation_datetime_format=(
-                aggregation.get_datetime_format() if aggregation else None
-            ),
-            additional_groupbys=additional_groupbys,  # type: ignore
-        )
-        return cast(tuple[list[dict], int], response)
-
     def admin_global_text_search(self, text: str, page: int = 0, page_size=5):
         """Search multiple collections for a given text search"""
         pagination = Pagination(page=page, page_size=page_size)

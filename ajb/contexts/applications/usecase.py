@@ -10,7 +10,6 @@ from ajb.common.models import ApplicationQuestion
 from ajb.contexts.resumes.models import Resume, UserCreateResume, CreateResume
 from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.companies.jobs.models import Job
-from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.vendor.arango.models import Filter
 
 from .models import CreateApplication, Application, ScanStatus
@@ -249,10 +248,6 @@ class ApplicationUseCase(BaseUseCase):
             1,
             is_adding_to_shortlist,
         )
-
-        CompanyEventProducer(
-            self.request_scope, SourceServices.API
-        ).company_shortlists_application(application_id)
         ApplicationEventProducer(
             self.request_scope, SourceServices.API
         ).application_is_updated(company_id, application_id)
@@ -274,10 +269,6 @@ class ApplicationUseCase(BaseUseCase):
             len(application_ids),
             False,
         )
-        CompanyEventProducer(
-            self.request_scope, SourceServices.API
-        ).company_views_applications(application_ids)
-
         application_event_producer = ApplicationEventProducer(
             self.request_scope, SourceServices.API
         )

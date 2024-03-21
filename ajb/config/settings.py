@@ -39,8 +39,8 @@ class AppSettings:
     KAFKA_BOOTSTRAP_SERVER: str = os.getenv("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")
     KAFKA_USERNAME: str | None = os.getenv("KAFKA_USERNAME")
     KAFKA_PASSWORD: str | None = os.getenv("KAFKA_PASSWORD")
-    KAFKA_SASL_MECHANISM: str = os.getenv("KAFKA_SASL_MECHANISM", "SCRAM-SHA-256")
-    KAFKA_SECURITY_PROTOCOL: str = os.getenv("KAFKA_SECURITY_PROTOCOL", "SASL_SSL")
+    KAFKA_SASL_MECHANISM: str | None = os.getenv("KAFKA_SASL_MECHANISM")
+    KAFKA_SECURITY_PROTOCOL: str | None = os.getenv("KAFKA_SECURITY_PROTOCOL")
     KAFKA_JWT_SECRET: str = os.getenv("KAFKA_JWT_SECRET", "")
 
     # Kafka Topics
@@ -83,6 +83,9 @@ class AppSettings:
     # Deeplink secrets
     DEFAULT_EXPIRY_HOURS: int = int(os.getenv("RECRUITER_INVITATION_SECRET", 100))
     RECRUITER_INVITATION_SECRET: str = os.getenv("RECRUITER_INVITATION_SECRET", "test")
+
+    # Mixpanel for product analytics
+    MIXPANEL_TOKEN: str = os.getenv("MIXPANEL_TOKEN", "")
 
     class Config:
         env_file = ".env"

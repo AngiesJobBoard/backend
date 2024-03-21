@@ -5,20 +5,9 @@ from ajb.base.events import (
     KafkaTopic,
     CompanyEvent,
 )
-
 from ajb.exceptions import RequestScopeWithoutCompanyException
 
 from .models import Company
-
-
-class RecruiterAndApplication(BaseModel):
-    company_id: str
-    application_id: str
-
-
-class RecruiterAndApplications(BaseModel):
-    company_id: str
-    applications_and_positions: list[tuple[str, int]]
 
 
 class CompanyAndJob(BaseModel):
@@ -46,48 +35,6 @@ class CompanyEventProducer(BaseEventProducer):
         self._company_event(
             data=created_company.model_dump(mode="json"),
             event=CompanyEvent.COMPANY_IS_CREATED,
-        )
-
-    def company_views_applications(
-        self, application_ids: list[str], search_page: int = 0
-    ):
-        data = RecruiterAndApplications(
-            company_id=str(self.request_scope.company_id),
-            applications_and_positions=[
-                (application, application_ids.index(application) + search_page)
-                for application in application_ids
-            ],
-        ).model_dump()
-        self._company_event(
-            data=data,
-            event=CompanyEvent.COMPANY_VIEWS_APPLICATIONS,
-        )
-
-    def company_clicks_on_application(self, application_id: str):
-        data = RecruiterAndApplication(
-            company_id=str(self.request_scope.company_id), application_id=application_id
-        ).model_dump()
-        self._company_event(
-            data=data,
-            event=CompanyEvent.COMPANY_CLICKS_ON_APPLICATION,
-        )
-
-    def company_shortlists_application(self, application_id: str):
-        data = RecruiterAndApplication(
-            company_id=str(self.request_scope.company_id), application_id=application_id
-        ).model_dump()
-        self._company_event(
-            data=data,
-            event=CompanyEvent.COMPANY_SHORTLISTS_APPLICATION,
-        )
-
-    def company_rejects_application(self, application_id: str):
-        data = RecruiterAndApplication(
-            company_id=str(self.request_scope.company_id), application_id=application_id
-        ).model_dump()
-        self._company_event(
-            data=data,
-            event=CompanyEvent.COMPANY_REJECTS_APPLICATION,
         )
 
     def company_creates_job(self, job_id: str):

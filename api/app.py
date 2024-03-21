@@ -14,7 +14,6 @@ from ajb.config.settings import SETTINGS
 from api.contexts.admin.search import router as admin_search_router
 from api.contexts.admin.admin_users import router as admin_users_router
 from api.contexts.admin.admin_jobs import router as admin_jobs_router
-from api.contexts.admin.admin_actions import router as admin_actions_router
 
 from api.contexts.users.users import router as users_router
 
@@ -79,7 +78,6 @@ app.include_router(admin_search_router)
 app.include_router(admin_users_router)
 app.include_router(admin_create_users_router)
 app.include_router(admin_jobs_router)
-app.include_router(admin_actions_router)
 
 app.include_router(health_router)
 

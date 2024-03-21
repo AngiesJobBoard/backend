@@ -94,19 +94,12 @@ class CompanyApplicationRepository(ApplicationRepository):
     ) -> Application:
         original_application = self._company_get_application(company_id, application_id)
         original_application.application_status_history.append(new_status)
-        response = self.update_fields(
+        return self.update_fields(
             application_id,
             application_status_history=original_application.model_dump(mode="json")[
                 "application_status_history"
             ],
         )
-
-        if new_status.status == ApplicationStatus.REJECTED_BY_COMPANY:
-            CompanyEventProducer(
-                self.request_scope, SourceServices.API
-            ).company_rejects_application(application_id)
-
-        return response
 
     def get_company_view_list(
         self,
