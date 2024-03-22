@@ -176,18 +176,18 @@ class ApplicationUseCase(BaseUseCase):
         return created_application
 
     def delete_application_for_job(
-        self, company_id: str, job_id: str, application_id: str
-    ):
+        self, company_id: str, application_id: str
+    ) -> Application:
         application_repo = self.get_repository(Collection.APPLICATIONS)
         application: Application = application_repo.get(application_id)
         application_repo.delete(application_id)
         self.update_application_counts(
-            company_id, job_id, ApplicationConstants.TOTAL_APPLICANTS, 1, False
+            company_id, application.job_id, ApplicationConstants.TOTAL_APPLICANTS, 1, False
         )
         if application.application_is_shortlisted:
             self.update_application_counts(
                 company_id,
-                job_id,
+                application.job_id,
                 ApplicationConstants.SHORTLISTED_APPLICANTS,
                 1,
                 False,
@@ -198,19 +198,19 @@ class ApplicationUseCase(BaseUseCase):
         ):
             self.update_application_counts(
                 company_id,
-                job_id,
+                application.job_id,
                 ApplicationConstants.HIGH_MATCHING_APPLICANTS,
                 1,
                 False,
             )
         if not application.viewed_by_company:
             self.update_application_counts(
-                company_id, job_id, ApplicationConstants.NEW_APPLICANTS, 1, False
+                company_id, application.job_id, ApplicationConstants.NEW_APPLICANTS, 1, False
             )
         ApplicationEventProducer(
             self.request_scope, SourceServices.API
-        ).application_is_deleted(company_id, job_id, application_id)
-        return True
+        ).application_is_deleted(company_id, application.job_id, application_id)
+        return application
 
     def delete_all_applications_for_job(self, company_id: str, job_id: str):
         application_repo = self.get_repository(Collection.APPLICATIONS)
@@ -226,7 +226,7 @@ class ApplicationUseCase(BaseUseCase):
         with ThreadPoolExecutor() as executor:
             for application in applications:
                 executor.submit(
-                    self.delete_application_for_job, company_id, job_id, application.id
+                    self.delete_application_for_job, company_id, application.id
                 )
         event_producer = ApplicationEventProducer(
             self.request_scope, SourceServices.API

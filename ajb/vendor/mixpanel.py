@@ -5,8 +5,8 @@ While it does look like it overlaps with other event handling (like through kafk
 so that we don't have to extend the definition of an event related to kafka. This is more for tracking user behavior
 and not for system events.
 """
+import asyncio
 from typing import Literal
-import threading
 from enum import Enum
 from mixpanel import Mixpanel
 from ajb.config.settings import SETTINGS
@@ -18,23 +18,40 @@ class MixpanelService:
         if SETTINGS.MIXPANEL_TOKEN:
             self.mp = Mixpanel(SETTINGS.MIXPANEL_TOKEN)
 
-    def track(self, user_id: str, company_id: str | None,  event: str, properties: dict = {}):
-        threading.Thread(target=self._track, args=(user_id, company_id, event, properties)).start()
+    def _schedule_async_task(self, coro):
+        """
+        Schedules an asynchronous coroutine to be executed as a background task.
+        This method does not wait for the task to complete.
+        """
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:  # No running event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        loop.create_task(coro)
 
-    def _track(self, user_id: str, company_id: str | None,  event: str, properties: dict = {}):
+    async def _track_async(self, user_id: str, company_id: str | None, event: str, properties: dict = {}):
         if company_id:
             properties["company_id"] = company_id
         if self.mp:
             self.mp.track(user_id, event, properties)
 
-    def update_user_profile(self, user_id: str, properties: dict):
+    def track(self, user_id: str, company_id: str | None, event: str, properties: dict = {}):
+        self._schedule_async_task(self._track_async(user_id, company_id, event, properties))
+
+    async def _update_user_profile_async(self, user_id: str, properties: dict):
         if self.mp:
             self.mp.people_set(user_id, properties)
 
-    def update_company_profile(self, company_id: str, properties: dict):
+    def update_user_profile(self, user_id: str, properties: dict):
+        self._schedule_async_task(self._update_user_profile_async(user_id, properties))
+
+    async def _update_company_profile_async(self, company_id: str, properties: dict):
         if self.mp:
             self.mp.group_set(group_key="company_id", group_id=company_id, properties=properties)
 
+    def update_company_profile(self, company_id: str, properties: dict):
+        self._schedule_async_task(self._update_company_profile_async(company_id, properties))
 
 
 class EventName(str, Enum):

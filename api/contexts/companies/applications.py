@@ -133,16 +133,14 @@ def get_company_application(request: Request, company_id: str, application_id: s
 def delete_company_application(request: Request, company_id: str, application_id: str):
     """Deletes an application"""
     # First make sure that the application exists for this company
-    application = ApplicationRepository(request.state.request_scope).get(application_id)
-    assert application.company_id == company_id
     response = ApplicationUseCase(request.state.request_scope).delete_application_for_job(
-        application.company_id, application.job_id, application.id
+        company_id, application_id
     )
     mixpanel.application_is_deleted(
         request.state.request_scope.user_id,
         company_id,
-        application.job_id,
-        application.id
+        response.job_id,
+        response.id
     )
     return response
 
