@@ -75,13 +75,6 @@ class AsynchronousCompanyEvents:
     async def company_creates_job(self) -> None:
         data = CompanyAndJob.model_validate(self.message.data)
 
-        # Create email ingress record
-        CompanyEmailIngressRepository(self.request_scope).create(
-            CreateCompanyEmailIngress.generate(
-                data.company_id, EmailIngressType.CREATE_APPLICATION, data.job_id
-            )
-        )
-
         # Send out job creation webhooks
         CompanyJobWebhookEgress(self.request_scope).send_create_job_webhook(
             data.company_id, data.job_id

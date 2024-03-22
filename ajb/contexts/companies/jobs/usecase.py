@@ -1,8 +1,14 @@
-from ajb.base import BaseUseCase, Collection, RepoFilterParams
+from ajb.base import BaseUseCase, Collection
 from ajb.base.events import SourceServices
 from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.contexts.companies.jobs.models import Job
-from ajb.vendor.arango.models import Filter
+from ajb.contexts.companies.email_ingress_webhooks.repository import (
+    CompanyEmailIngressRepository,
+)
+from ajb.contexts.companies.email_ingress_webhooks.models import (
+    CreateCompanyEmailIngress,
+    EmailIngressType,
+)
 
 from .models import (
     Job,
@@ -19,8 +25,15 @@ class JobsUseCase(BaseUseCase):
         job_to_create.job_score = job.calculate_score()
         created_job: Job = job_repo.create(job_to_create)
 
-        # Update company  job count
+        # Update company job count
         company_repo.increment_field(company_id, "total_jobs", 1)
+
+        # Create email ingress record
+        CompanyEmailIngressRepository(self.request_scope).create(
+            CreateCompanyEmailIngress.generate(
+                company_id, EmailIngressType.CREATE_APPLICATION, created_job.id
+            )
+        )
 
         # Create event
         self.request_scope.company_id = company_id

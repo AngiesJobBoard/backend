@@ -28,6 +28,7 @@ from api.contexts.companies.description_generator import (
     router as description_generator_router,
 )
 from api.contexts.companies.egress_webhooks import router as egress_webhooks_router
+from api.contexts.companies.job_email_ingress import router as job_email_ingress_router
 
 from api.contexts.webhooks.clerk import router as clerk_webhooks_router
 from api.contexts.webhooks.companies import router as companies_webhooks_router
@@ -67,6 +68,7 @@ app.include_router(company_applications_router)
 app.include_router(company_notifications_router)
 app.include_router(description_generator_router)
 app.include_router(egress_webhooks_router)
+app.include_router(job_email_ingress_router)
 
 app.include_router(clerk_webhooks_router)
 app.include_router(companies_webhooks_router)
