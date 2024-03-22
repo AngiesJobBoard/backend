@@ -19,7 +19,7 @@ class BaseWebhookEgress(BaseUseCase):
         egress_repo = self.get_repository(
             Collection.COMPANY_API_EGRESS_WEBHOOKS, self.request_scope, company_id
         )
-        all_egress_records, _ = egress_repo.query(is_active=True)
+        all_egress_records, _ = egress_repo.query(is_active=True, company_id=company_id)
         if not all_egress_records:
             return []
 
