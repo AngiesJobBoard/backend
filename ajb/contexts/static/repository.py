@@ -21,7 +21,7 @@ class StaticDataRepository(ParentRepository[CreateStaticData, StaticData]):
         for data_type in StaticDataTypes:
             default_data = self._get_default_file_data(data_type.value)
             for data in default_data:
-                self.create(
+                self.upsert(
                     CreateStaticData(**data, type=data_type), overridden_id=data["id"]
                 )
 
