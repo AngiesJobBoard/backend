@@ -54,14 +54,6 @@ class JobRepository(MultipleChildrenRepository[CreateJob, Job]):
         formatted_job_results = [
             Job(
                 **job,
-                # applicants=len(job["application"]) if job.get("application") else 0,
-                # shortlisted_applicants=len(
-                #     [
-                #         application
-                #         for application in job["application"]
-                #         if application.get("application_is_shortlisted")
-                #     ]
-                # ),
                 id=job["_key"],
             )
             for job in results

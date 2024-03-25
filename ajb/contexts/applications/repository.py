@@ -30,7 +30,7 @@ class CompanyApplicationRepository(ApplicationRepository):
 
     def get_company_view_list(
         self,
-        company_id: str,
+        company_id: str | None = None,
         query: QueryFilterParams | RepoFilterParams | None = None,
         job_id: str | None = None,
         shortlist_only: bool = False,
@@ -43,7 +43,8 @@ class CompanyApplicationRepository(ApplicationRepository):
             repo_filters = query.convert_to_repo_filters()
         else:
             repo_filters = query or RepoFilterParams()
-        repo_filters.filters.append(Filter(field="company_id", value=company_id))
+        if company_id:
+            repo_filters.filters.append(Filter(field="company_id", value=company_id))
         if job_id:
             repo_filters.filters.append(Filter(field="job_id", value=job_id))
         if match_score:

@@ -1,13 +1,21 @@
 from fastapi import APIRouter, Request, Depends
 
-from ajb.common.models import DataReducedUser
 from ajb.contexts.admin.search.repository import AdminSearchRepository
 from ajb.contexts.admin.search.models import (
-    PaginatedDataReducedUser,
     AdminSearch,
     AdminTimeseriesSearch,
 )
+from ajb.contexts.users.models import PaginatedUsers
 from ajb.contexts.users.repository import UserRepository
+from ajb.contexts.companies.models import CompanyPaginatedResponse
+from ajb.contexts.companies.repository import CompanyRepository
+from ajb.contexts.companies.jobs.repository import JobRepository
+from ajb.contexts.companies.jobs.models import (
+    PaginatedJobsWithCompany,
+    AdminSearchJobsWithCompany,
+)
+from ajb.contexts.applications.repository import CompanyApplicationRepository
+from ajb.contexts.applications.models import PaginatedCompanyApplicationView
 from ajb.base import (
     PaginatedResponse,
     build_pagination_response,
@@ -51,22 +59,6 @@ def global_search(request: Request, text: str, page: int = 0, page_size: int = 5
     )
 
 
-@router.get("/search/users", response_model=PaginatedDataReducedUser)
-def search_users(request: Request, query: QueryFilterParams = Depends()):
-    """A helper route for admins searching for users"""
-    results, count = UserRepository(request.state.request_scope).query(query)
-    formatted_results = [
-        DataReducedUser.from_db_record(result.model_dump()) for result in results
-    ]
-    return build_pagination_response(
-        (formatted_results, count),
-        query.page,
-        query.page_size,
-        request.url._url,
-        PaginatedDataReducedUser,
-    )
-
-
 @router.get("/object/{collection}/{object_id}")
 def get_object(request: Request, collection: Collection, object_id: str):
     res = AdminSearchRepository(request.state.request_scope).get_object(
@@ -75,3 +67,41 @@ def get_object(request: Request, collection: Collection, object_id: str):
     if not res:
         raise GenericHTTPException(status_code=404, detail="Object not found")
     return res
+
+
+@router.get("/search/search-companies", response_model=CompanyPaginatedResponse)
+def admin_search_companies(request: Request, query: QueryFilterParams = Depends()):
+    results = CompanyRepository(request.state.request_scope).query(query)
+    return build_pagination_response(
+        results, query.page, query.page_size, request.url._url, CompanyPaginatedResponse
+    )
+
+
+@router.get("/search/search-users", response_model=PaginatedUsers)
+def admin_search_users(request: Request, query: QueryFilterParams = Depends()):
+    results = UserRepository(request.state.request_scope).query(query)
+    return build_pagination_response(
+        results, query.page, query.page_size, request.url._url, PaginatedUsers
+    )
+
+
+@router.get("/search/search-jobs", response_model=PaginatedJobsWithCompany)
+def admin_search_jobs(request: Request, query: AdminSearchJobsWithCompany = Depends()):
+    results = JobRepository(request.state.request_scope).get_jobs_with_company(
+        query=query
+    )
+    return build_pagination_response(
+        results, query.page, query.page_size, request.url._url, PaginatedJobsWithCompany
+    )
+
+
+@router.get("/search/search-applications", response_model=PaginatedCompanyApplicationView)
+def admin_search_applications(request: Request, query: QueryFilterParams = Depends()):
+    results = CompanyApplicationRepository(request.state.request_scope).get_company_view_list(query=query)
+    return build_pagination_response(
+        results,
+        query.page,
+        query.page_size,
+        request.url._url,
+        PaginatedCompanyApplicationView,
+    )

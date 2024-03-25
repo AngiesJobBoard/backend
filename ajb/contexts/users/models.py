@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 from pydantic import BaseModel
 
-from ajb.base.models import BaseDataModel
+from ajb.base.models import BaseDataModel, PaginatedResponse
 
 
 class UpdateUser(BaseModel):
@@ -23,3 +24,8 @@ class CreateUser(UpdateUser):
 
 
 class User(CreateUser, BaseDataModel): ...
+
+
+@dataclass
+class PaginatedUsers(PaginatedResponse[User]):
+    data: User
