@@ -140,6 +140,32 @@ async def verify_webhook_request(
         company_id=None,
     )
 
+async def verify_open_api_request(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
+):
+    request.state.request_scope = RequestScope(
+        user_id="open_api",
+        db=db,
+        kafka_producer=kafka_producer,
+        company_id=None,
+    )
+
+
+async def determine_middleware_check(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
+):
+    initial_path = request.url.path.split("/")[0]
+    
+    if initial_path == "webhooks":
+        return await verify_webhook_request(request, credentials)
+    
+    if initial_path == "open":
+        return await verify_open_api_request(request, credentials)
+    
+    return await verify_user(request, credentials)
+
 
 async def verify_user(
     request: Request,
@@ -149,10 +175,6 @@ async def verify_user(
     This function verifies the user on every request to the API
     or sets them as anonymous
     """
-
-    if "webhooks" in request.url.path:
-        await verify_webhook_request(request, credentials)
-        return
 
     request.state.user = None
     request.state.companies = []

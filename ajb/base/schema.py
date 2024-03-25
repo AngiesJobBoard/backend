@@ -14,8 +14,6 @@ class Collection(str, Enum):
     A Collection is like a database table, it holds information about a specific entity
     """
 
-    # Users (or candidates )
-
     USERS = "users"
 
     # Companies
@@ -26,6 +24,7 @@ class Collection(str, Enum):
     JOB_TEMPLATES = "job_templates"
     COMPANY_OFFICES = "company_offices"
     APPLICATIONS = "applications"
+    APPLICATION_RECRUITER_NOTES = "application_recruiter_notes"
     RESUMES = "resumes"
     COMPANY_NOTIFICATIONS = "company_notifications"
     COMPANY_EMAIL_INGRESS_WEBHOOKS = "company_email_ingress_webhooks"

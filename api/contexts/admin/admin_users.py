@@ -25,13 +25,6 @@ def get_all_admin_users(request: Request, query: QueryFilterParams = Depends()):
     )
 
 
-@router.get("/autocomplete")
-def get_admin_user_autocomplete(request: Request, prefix: str, field: str = "email"):
-    return AdminUserRepository(request.state.request_scope).get_autocomplete(
-        field, prefix
-    )
-
-
 @router.get("/{id}", response_model=AdminUser)
 def get_admin_user_by_id(id: str, request: Request):
     return AdminUserRepository(request.state.request_scope).get(id)

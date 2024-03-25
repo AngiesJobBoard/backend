@@ -14,6 +14,7 @@ from ajb.config.settings import SETTINGS
 from api.contexts.admin.search import router as admin_search_router
 from api.contexts.admin.admin_users import router as admin_users_router
 from api.contexts.admin.admin_jobs import router as admin_jobs_router
+from api.contexts.admin.general_admin import router as general_admin_router
 
 from api.contexts.users.users import router as users_router
 
@@ -23,6 +24,7 @@ from api.contexts.companies.recruiters import router as recruiters_router
 from api.contexts.companies.jobs import router as jobs_router
 from api.contexts.companies.job_applications import router as job_applications_router
 from api.contexts.companies.applications import router as company_applications_router
+from api.contexts.companies.application_recruiter_updates import router as application_updates_router
 from api.contexts.companies.notifications import router as company_notifications_router
 from api.contexts.companies.description_generator import (
     router as description_generator_router,
@@ -65,6 +67,7 @@ app.include_router(recruiters_router)
 app.include_router(jobs_router)
 app.include_router(job_applications_router)
 app.include_router(company_applications_router)
+app.include_router(application_updates_router)
 app.include_router(company_notifications_router)
 app.include_router(description_generator_router)
 app.include_router(egress_webhooks_router)
@@ -80,6 +83,7 @@ app.include_router(admin_search_router)
 app.include_router(admin_users_router)
 app.include_router(admin_create_users_router)
 app.include_router(admin_jobs_router)
+app.include_router(general_admin_router)
 
 app.include_router(health_router)
 

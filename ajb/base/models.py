@@ -31,6 +31,11 @@ class BaseDataModel(BaseModel):
     def from_arango(cls, data: dict):
         data[BaseConstants.ID] = data.pop(BaseConstants.KEY)
         return cls.model_validate(data)
+    
+    @classmethod
+    def get_list_fields(cls) -> list[str]:
+        # TODO implement later to reduce the fields returned in the list views
+        return ["id", "created_at", "created_by", "updated_at", "updated_by"]
 
 
 CreateDataSchema = t.TypeVar("CreateDataSchema", bound=BaseModel)

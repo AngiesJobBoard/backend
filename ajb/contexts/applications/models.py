@@ -209,23 +209,9 @@ class UpdateApplication(BaseModel):
     external_reference_code: str | None = None
 
 
-class UserCreateRecruiterNote(BaseModel):
-    note: str
-
-
-class CreateRecruiterNote(UserCreateRecruiterNote):
-    user_id: str
-
-
-class RecruiterNote(CreateRecruiterNote):
-    id: str
-    created: datetime = Field(default_factory=datetime.utcnow)
-    updated: datetime | None = None
-
-
 class CreateApplicationStatusUpdate(BaseModel):
     status: ApplicationStatus
-    update_reason: str
+    update_reason: str | None = None
 
 
 class ApplicationStatusRecord(CreateApplicationStatusUpdate):
@@ -235,16 +221,11 @@ class ApplicationStatusRecord(CreateApplicationStatusUpdate):
 
 class CreateApplication(UserCreatedApplication):
     application_status: ApplicationStatus = ApplicationStatus.CREATED_BY_COMPANY
-
-    application_status_history: list[ApplicationStatusRecord] = Field(
-        default_factory=list
-    )
     application_is_shortlisted: bool = False
     application_match_score: int | None = None
     application_match_reason: str = ""
 
     recruiter_tags: list[str] = Field(default_factory=list)
-    recruiter_notes: dict[str, RecruiterNote] = Field(default_factory=dict)
     viewed_by_company: bool = False
 
 

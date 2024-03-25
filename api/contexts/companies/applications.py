@@ -8,15 +8,8 @@ from ajb.base import QueryFilterParams, RepoFilterParams, build_pagination_respo
 from ajb.contexts.applications.models import (
     CompanyApplicationView,
     PaginatedCompanyApplicationView,
-    UserCreateRecruiterNote,
-    CreateRecruiterNote,
-    CreateApplicationStatusUpdate,
-    ApplicationStatusRecord,
 )
-from ajb.contexts.applications.repository import (
-    CompanyApplicationRepository,
-    ApplicationRepository,
-)
+from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.vendor.arango.models import Filter, Operator
 
@@ -141,121 +134,5 @@ def delete_company_application(request: Request, company_id: str, application_id
         company_id,
         response.job_id,
         response.id
-    )
-    return response
-
-
-@router.patch("/{application_id}/add-shortlist")
-def add_application_to_shortlist(
-    request: Request, company_id: str, application_id: str
-):
-    response = ApplicationUseCase(
-        request.state.request_scope
-    ).company_updates_application_shortlist(company_id, application_id, True)
-    mixpanel.application_is_shortlisted(
-        request.state.request_scope.user_id,
-        company_id,
-        response.job_id,
-        application_id
-    )
-    return response
-
-
-@router.patch("/{application_id}/remove-shortlist")
-def remove_application_to_shortlist(
-    request: Request, company_id: str, application_id: str
-):
-    return ApplicationUseCase(
-        request.state.request_scope
-    ).company_updates_application_shortlist(company_id, application_id, False)
-
-
-@router.patch("/{application_id}/view")
-def view_applications(request: Request, company_id: str, application_ids: list[str]):
-    response = ApplicationUseCase(
-        request.state.request_scope
-    ).company_views_applications(company_id, application_ids)
-    for application_id in application_ids:
-        mixpanel.application_is_viewed(
-            request.state.request_scope.user_id,
-            company_id,
-            None,
-            application_id
-        )
-    return response
-
-
-@router.post("/{application_id}/notes")
-def create_recruiter_note(
-    request: Request,
-    company_id: str,
-    application_id: str,
-    new_note: UserCreateRecruiterNote,
-):
-    """Creates a recruiter note"""
-    return CompanyApplicationRepository(
-        request.state.request_scope
-    ).create_recruiter_note(
-        company_id,
-        application_id,
-        CreateRecruiterNote(
-            note=new_note.note, user_id=request.state.request_scope.user_id
-        ),
-    )
-
-
-@router.put("/{application_id}/notes/{note_id}")
-def update_recruiter_note(
-    request: Request,
-    company_id: str,
-    application_id: str,
-    note_id: str,
-    updated_note: UserCreateRecruiterNote,
-):
-    """Updates a recruiter note"""
-    return CompanyApplicationRepository(
-        request.state.request_scope
-    ).update_recruiter_note(
-        company_id,
-        application_id,
-        note_id,
-        CreateRecruiterNote(
-            note=updated_note.note, user_id=request.state.request_scope.user_id
-        ),
-    )
-
-
-@router.delete("/{application_id}/notes/{note_id}")
-def delete_recruiter_note(
-    request: Request, company_id: str, application_id: str, note_id: str
-):
-    """Deletes a recruiter note"""
-    return CompanyApplicationRepository(
-        request.state.request_scope
-    ).delete_recruiter_note(company_id, application_id, note_id)
-
-
-@router.post("/{application_id}/status")
-def update_application_status(
-    request: Request,
-    company_id: str,
-    application_id: str,
-    new_status: CreateApplicationStatusUpdate,
-):
-    """Updates an application status"""
-    new_update = ApplicationStatusRecord(
-        **new_status.model_dump(),
-        updated_by_user_id=request.state.request_scope.user_id,
-        update_made_by_admin=False
-    )
-    response = CompanyApplicationRepository(
-        request.state.request_scope
-    ).update_application_status(company_id, application_id, new_update)
-    mixpanel.application_status_is_updated(
-        request.state.request_scope.user_id,
-        company_id,
-        response.job_id,
-        application_id,
-        new_status.status.value
     )
     return response

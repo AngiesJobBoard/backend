@@ -1,6 +1,4 @@
 import typing as t
-from datetime import datetime
-from arango.cursor import Cursor
 from ajb.base import (
     Collection,
     ParentRepository,
@@ -8,24 +6,14 @@ from ajb.base import (
     QueryFilterParams,
     RepoFilterParams,
 )
-from ajb.base.events import SourceServices
 from ajb.exceptions import EntityNotFound
 from ajb.vendor.arango.models import Filter, Operator, Join
-from ajb.utils import generate_random_short_code
-from ajb.contexts.companies.events import CompanyEventProducer
 
 from .models import (
     CompanyApplicationView,
     CreateApplication,
     Application,
-    CreateRecruiterNote,
-    RecruiterNote,
-    ApplicationStatusRecord,
 )
-from .enumerations import ApplicationStatus
-
-
-NOT_FOUND_TEXT = "Application not found"
 
 
 class ApplicationRepository(ParentRepository[CreateApplication, Application]):
@@ -37,69 +25,8 @@ class CompanyApplicationRepository(ApplicationRepository):
     def _company_get_application(self, company_id: str, application_id: str):
         original_application = self.get(application_id)
         if original_application.company_id != company_id:
-            raise EntityNotFound(NOT_FOUND_TEXT)
+            raise EntityNotFound("Application not found")
         return original_application
-
-    def create_recruiter_note(
-        self, company_id: str, application_id: str, note: CreateRecruiterNote
-    ) -> Application:
-        original_application = self._company_get_application(company_id, application_id)
-        new_note = RecruiterNote(**note.model_dump(), id=generate_random_short_code())
-        original_application.recruiter_notes[new_note.id] = new_note
-        return self.update_fields(
-            application_id,
-            recruiter_notes=original_application.model_dump(mode="json")[
-                "recruiter_notes"
-            ],
-        )
-
-    def update_recruiter_note(
-        self,
-        company_id: str,
-        application_id: str,
-        note_id: str,
-        updated_note: CreateRecruiterNote,
-    ) -> Application:
-        original_application = self._company_get_application(company_id, application_id)
-        note = original_application.recruiter_notes.get(note_id)
-        if not note:
-            raise EntityNotFound("Note not found")
-        note.note = updated_note.note
-        note.updated = datetime.utcnow()
-        original_application.recruiter_notes[note_id] = note
-        return self.update_fields(
-            application_id,
-            recruiter_notes=original_application.model_dump(mode="json")[
-                "recruiter_notes"
-            ],
-        )
-
-    def delete_recruiter_note(
-        self, company_id: str, application_id: str, note_id: str
-    ) -> bool:
-        original_application = self._company_get_application(company_id, application_id)
-        if not original_application.recruiter_notes.get(note_id):
-            raise EntityNotFound("Note not found")
-        del original_application.recruiter_notes[note_id]
-        self.update_fields(
-            application_id,
-            recruiter_notes=original_application.model_dump(mode="json")[
-                "recruiter_notes"
-            ],
-        )
-        return True
-
-    def update_application_status(
-        self, company_id: str, application_id: str, new_status: ApplicationStatusRecord
-    ) -> Application:
-        original_application = self._company_get_application(company_id, application_id)
-        original_application.application_status_history.append(new_status)
-        return self.update_fields(
-            application_id,
-            application_status_history=original_application.model_dump(mode="json")[
-                "application_status_history"
-            ],
-        )
 
     def get_company_view_list(
         self,
