@@ -13,6 +13,7 @@ from .models import (
     CompanyApplicationView,
     CreateApplication,
     Application,
+    AdminApplicationView
 )
 
 
@@ -30,7 +31,7 @@ class CompanyApplicationRepository(ApplicationRepository):
 
     def get_company_view_list(
         self,
-        company_id: str | None = None,
+        company_id: str,
         query: QueryFilterParams | RepoFilterParams | None = None,
         job_id: str | None = None,
         shortlist_only: bool = False,
@@ -106,6 +107,27 @@ class CompanyApplicationRepository(ApplicationRepository):
         )
         casted_result = t.cast(CompanyApplicationView, result)
         return casted_result
+    
+    def get_admin_application_view(
+        self,
+        repo_filters: QueryFilterParams | RepoFilterParams | None = None,
+    ):
+        return self.query_with_joins(
+            joins=[
+                Join(
+                    to_collection_alias="job",
+                    to_collection="jobs",
+                    from_collection_join_attr="job_id",
+                ),
+                Join(
+                    to_collection_alias="company",
+                    to_collection="companies",
+                    from_collection_join_attr="company_id",
+                ),
+            ],
+            repo_filters=repo_filters,
+            return_model=AdminApplicationView,
+        )
 
 
 RepositoryRegistry.register(ApplicationRepository)
