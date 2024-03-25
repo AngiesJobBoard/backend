@@ -28,7 +28,9 @@ from ajb.contexts.applications.application_questions.usecase import (
     ApplicantQuestionsUsecase,
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
-from ajb.contexts.webhooks.egress.applicants.usecase import CompanyApplicantsWebhookEgress
+from ajb.contexts.webhooks.egress.applicants.usecase import (
+    CompanyApplicantsWebhookEgress,
+)
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 
@@ -124,7 +126,7 @@ class AsynchronousApplicationEvents:
                 event_producer.application_is_created(
                     matched_application.company_id,
                     matched_application.job_id,
-                    matched_application.id
+                    matched_application.id,
                 )
 
             # Delete the original application (like a merge operation)
@@ -140,9 +142,7 @@ class AsynchronousApplicationEvents:
             application_repository=application_repository,
         )
         event_producer.application_is_created(
-            data.company_id,
-            data.job_id,
-            data.application_id
+            data.company_id, data.job_id, data.application_id
         )
         original_application_deleted = False
         return original_application_deleted
@@ -236,18 +236,18 @@ class AsynchronousApplicationEvents:
 
         # Send out application webhook
         data = ApplicantAndCompany.model_validate(self.message.data)
-        CompanyApplicantsWebhookEgress(self.request_scope).send_create_applicant_webhook(
-            data.company_id, data.application_id
-        )
-    
+        CompanyApplicantsWebhookEgress(
+            self.request_scope
+        ).send_create_applicant_webhook(data.company_id, data.application_id)
+
     async def application_is_updated(self) -> None:
         data = ApplicantAndCompany.model_validate(self.message.data)
-        CompanyApplicantsWebhookEgress(self.request_scope).send_update_applicant_webhook(
-            data.company_id, data.application_id
-        )
-    
+        CompanyApplicantsWebhookEgress(
+            self.request_scope
+        ).send_update_applicant_webhook(data.company_id, data.application_id)
+
     async def application_is_deleted(self) -> None:
         data = ApplicantAndCompany.model_validate(self.message.data)
-        CompanyApplicantsWebhookEgress(self.request_scope).send_delete_applicant_webhook(
-            data.company_id, data.application_id
-        )
+        CompanyApplicantsWebhookEgress(
+            self.request_scope
+        ).send_delete_applicant_webhook(data.company_id, data.application_id)

@@ -17,7 +17,7 @@ async def company_uploads_resume(message: BaseKafkaMessage):
     mixpanel.resume_is_scanned(
         message.requesting_user_id,
         message.data["company_id"],
-        message.data["application_id"]
+        message.data["application_id"],
     )
 
 
@@ -33,7 +33,7 @@ async def application_is_submitted(message: BaseKafkaMessage):
         message.requesting_user_id,
         message.data["company_id"],
         message.data["job_id"],
-        message.data["application_id"]
+        message.data["application_id"],
     )
 
 

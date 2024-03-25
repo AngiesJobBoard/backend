@@ -66,7 +66,7 @@ class JobsUseCase(BaseUseCase):
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         company_repo = self.get_repository(Collection.COMPANIES)
         job_repo.delete(job_id)
-        company_repo.decrement_field(company_id, "total_jobs", 1)         
+        company_repo.decrement_field(company_id, "total_jobs", 1)
         CompanyEventProducer(
             self.request_scope, SourceServices.API
         ).company_deletes_job(job_id=job_id)

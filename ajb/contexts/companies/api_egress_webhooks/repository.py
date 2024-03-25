@@ -1,4 +1,9 @@
-from ajb.base import Collection, MultipleChildrenRepository, RepositoryRegistry, RequestScope
+from ajb.base import (
+    Collection,
+    MultipleChildrenRepository,
+    RepositoryRegistry,
+    RequestScope,
+)
 from .models import CreateCompanyAPIEgress, CompanyAPIEgress
 
 
@@ -14,5 +19,6 @@ class CompanyAPIEgressRepository(
             parent_collection=Collection.COMPANIES.value,
             parent_id=company_id,
         )
+
 
 RepositoryRegistry.register(CompanyAPIEgressRepository)

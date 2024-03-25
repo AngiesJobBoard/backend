@@ -9,7 +9,9 @@ from ajb.contexts.companies.recruiters.models import (
 )
 
 
-router = APIRouter(tags=["Company Recruiters"], prefix="/companies/{company_id}/recruiters")
+router = APIRouter(
+    tags=["Company Recruiters"], prefix="/companies/{company_id}/recruiters"
+)
 
 
 @router.get("/", response_model=PaginatedRecruiterAndUser)

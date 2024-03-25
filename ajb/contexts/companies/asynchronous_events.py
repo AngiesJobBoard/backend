@@ -85,7 +85,7 @@ class AsynchronousCompanyEvents:
         CompanyJobWebhookEgress(self.request_scope).send_update_job_webhook(
             data.company_id, data.job_id
         )
-    
+
     async def company_deletes_job(self) -> None:
         data = CompanyAndJob.model_validate(self.message.data)
         CompanyJobWebhookEgress(self.request_scope).send_delete_job_webhook(

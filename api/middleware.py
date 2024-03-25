@@ -140,6 +140,7 @@ async def verify_webhook_request(
         company_id=None,
     )
 
+
 async def verify_open_api_request(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
@@ -157,13 +158,13 @@ async def determine_middleware_check(
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
 ):
     initial_path = request.url.path.split("/")[0]
-    
+
     if initial_path == "webhooks":
         return await verify_webhook_request(request, credentials)
-    
+
     if initial_path == "open":
         return await verify_open_api_request(request, credentials)
-    
+
     return await verify_user(request, credentials)
 
 

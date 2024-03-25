@@ -8,6 +8,7 @@ class EgressObjectType(str, Enum):
     APPLICANT = "applicant"
     JOB = "job"
 
+
 class EgressWebhookEvent(str, Enum):
     CREATE_JOB = "create_job"
     UPDATE_JOB = "update_job"

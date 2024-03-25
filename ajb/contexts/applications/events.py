@@ -53,29 +53,23 @@ class ApplicationEventProducer(BaseEventProducer):
     def application_is_created(self, company_id: str, job_id: str, application_id: str):
         self._application_event(
             data=ApplicantAndCompany(
-                company_id=company_id,
-                job_id=job_id,
-                application_id=application_id
+                company_id=company_id, job_id=job_id, application_id=application_id
             ).model_dump(),
             event=ApplicationEvent.APPLICATION_IS_SUBMITTED,
         )
-    
+
     def application_is_updated(self, company_id: str, job_id: str, application_id: str):
         self._application_event(
             data=ApplicantAndCompany(
-                company_id=company_id,
-                job_id=job_id,
-                application_id=application_id
+                company_id=company_id, job_id=job_id, application_id=application_id
             ).model_dump(),
             event=ApplicationEvent.APPLICATION_IS_UPDATED,
         )
-    
+
     def application_is_deleted(self, company_id: str, job_id: str, application_id: str):
         self._application_event(
             data=ApplicantAndCompany(
-                company_id=company_id,
-                job_id=job_id,
-                application_id=application_id
+                company_id=company_id, job_id=job_id, application_id=application_id
             ).model_dump(),
             event=ApplicationEvent.APPLICATION_IS_DELETED,
         )

@@ -182,7 +182,11 @@ class ApplicationUseCase(BaseUseCase):
         application: Application = application_repo.get(application_id)
         application_repo.delete(application_id)
         self.update_application_counts(
-            company_id, application.job_id, ApplicationConstants.TOTAL_APPLICANTS, 1, False
+            company_id,
+            application.job_id,
+            ApplicationConstants.TOTAL_APPLICANTS,
+            1,
+            False,
         )
         if application.application_is_shortlisted:
             self.update_application_counts(
@@ -205,7 +209,11 @@ class ApplicationUseCase(BaseUseCase):
             )
         if not application.viewed_by_company:
             self.update_application_counts(
-                company_id, application.job_id, ApplicationConstants.NEW_APPLICANTS, 1, False
+                company_id,
+                application.job_id,
+                ApplicationConstants.NEW_APPLICANTS,
+                1,
+                False,
             )
         ApplicationEventProducer(
             self.request_scope, SourceServices.API

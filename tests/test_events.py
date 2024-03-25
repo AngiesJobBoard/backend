@@ -9,4 +9,3 @@ def test_user_event_producer(request_scope):
     created_user = UserFixture(request_scope).create_user()
     user_event_producer.user_created_event(created_user)
     assert len(request_scope.kafka_producer.messages[KafkaTopic.USERS.value]) == 1
-

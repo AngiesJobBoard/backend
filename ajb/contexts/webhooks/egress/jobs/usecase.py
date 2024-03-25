@@ -1,5 +1,8 @@
 from ajb.base import Collection
-from ajb.contexts.companies.api_egress_webhooks.models import EgressWebhookEvent, EgressObjectType
+from ajb.contexts.companies.api_egress_webhooks.models import (
+    EgressWebhookEvent,
+    EgressObjectType,
+)
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.webhooks.egress.webhook_egress import BaseWebhookEgress
 from ajb.vendor.mixpanel import MixpanelDomainEvents
@@ -23,11 +26,8 @@ class CompanyJobWebhookEgress(BaseWebhookEgress):
                 event=EVENT,
                 object_type=self.object_type,
             )
-            mixpanel.job_forwarded_from_webhook(
-                company_id,
-                job_id
-            )
-    
+            mixpanel.job_forwarded_from_webhook(company_id, job_id)
+
     def send_update_job_webhook(self, company_id: str, job_id: str):
         EVENT = EgressWebhookEvent.UPDATE_JOB
         all_egress_records = self.get_all_egress_records_with_event(company_id, EVENT)
@@ -42,7 +42,7 @@ class CompanyJobWebhookEgress(BaseWebhookEgress):
                 event=EVENT,
                 object_type=self.object_type,
             )
-    
+
     def send_delete_job_webhook(self, company_id: str, job_id: str):
         EVENT = EgressWebhookEvent.DELETE_JOB
         all_egress_records = self.get_all_egress_records_with_event(company_id, EVENT)

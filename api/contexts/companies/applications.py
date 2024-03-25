@@ -9,6 +9,16 @@ from ajb.contexts.applications.models import (
     CompanyApplicationView,
     PaginatedCompanyApplicationView,
 )
+from ajb.contexts.applications.recruiter_updates.repository import (
+    RecruiterUpdatesRepository,
+)
+from ajb.contexts.applications.recruiter_updates.models import (
+    UserCreateRecruiterComment,
+)
+from ajb.contexts.applications.repository import ApplicationRepository
+from ajb.contexts.applications.models import (
+    CreateApplicationStatusUpdate,
+)
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.vendor.arango.models import Filter, Operator
@@ -126,13 +136,103 @@ def get_company_application(request: Request, company_id: str, application_id: s
 def delete_company_application(request: Request, company_id: str, application_id: str):
     """Deletes an application"""
     # First make sure that the application exists for this company
-    response = ApplicationUseCase(request.state.request_scope).delete_application_for_job(
-        company_id, application_id
-    )
+    response = ApplicationUseCase(
+        request.state.request_scope
+    ).delete_application_for_job(company_id, application_id)
     mixpanel.application_is_deleted(
+        request.state.request_scope.user_id, company_id, response.job_id, response.id
+    )
+    return response
+
+
+@router.patch("/jobs/{job_id}/applications/{application_id}/add-shortlist")
+def add_application_to_shortlist(
+    request: Request,
+    company_id: str,
+    job_id: str,
+    application_id: str,
+    comment: UserCreateRecruiterComment | None = None,
+):
+    response = ApplicationUseCase(
+        request.state.request_scope
+    ).company_updates_application_shortlist(company_id, application_id, True)
+    mixpanel.application_is_shortlisted(
+        request.state.request_scope.user_id, company_id, response.job_id, application_id
+    )
+    RecruiterUpdatesRepository(
+        request.state.request_scope, application_id
+    ).add_to_shortlist(
+        company_id,
+        job_id,
+        application_id,
+        request.state.request_scope.user_id,
+        comment.comment if comment else None,
+    )
+    return response
+
+
+@router.patch("/jobs/{job_id}/applications/{application_id}/remove-shortlist")
+def remove_application_to_shortlist(
+    request: Request,
+    company_id: str,
+    job_id: str,
+    application_id: str,
+    comment: UserCreateRecruiterComment | None = None,
+):
+    response = ApplicationUseCase(
+        request.state.request_scope
+    ).company_updates_application_shortlist(company_id, application_id, False)
+    RecruiterUpdatesRepository(
+        request.state.request_scope, application_id
+    ).remove_from_shortlist(
+        company_id,
+        job_id,
+        application_id,
+        request.state.request_scope.user_id,
+        comment.comment if comment else None,
+    )
+    return response
+
+
+@router.post("/jobs/{job_id}/applications/{application_id}/status")
+def update_application_status(
+    request: Request,
+    company_id: str,
+    job_id: str,
+    application_id: str,
+    new_status: CreateApplicationStatusUpdate,
+):
+    """Updates an application status"""
+    response = ApplicationRepository(request.state.request_scope).update_fields(
+        application_id, application_status=new_status.status.value
+    )
+    mixpanel.application_status_is_updated(
         request.state.request_scope.user_id,
         company_id,
-        response.job_id,
-        response.id
+        job_id,
+        application_id,
+        new_status.status.value,
     )
+    RecruiterUpdatesRepository(
+        request.state.request_scope, application_id
+    ).update_application_status(
+        company_id,
+        job_id,
+        application_id,
+        request.state.request_scope.user_id,
+        new_status.status,
+        new_status.update_reason,
+    )
+    return response
+
+
+@router.patch("/jobs/{job_id}/applications/{application_id}/view")
+def view_applications(request: Request, company_id: str, application_ids: list[str]):
+    response = ApplicationUseCase(
+        request.state.request_scope
+    ).company_views_applications(company_id, application_ids)
+    for application_id in application_ids:
+        mixpanel.application_is_viewed(
+            request.state.request_scope.user_id, company_id, None, application_id
+        )
     return response

@@ -28,19 +28,21 @@ class CreateApplicationUpdate(UserCreateApplicationUpdate):
     recruiter_id: str
 
 
-class ApplicationUpdate(CreateApplicationUpdate, BaseDataModel):
-    ...
+class ApplicationUpdate(CreateApplicationUpdate, BaseDataModel): ...
 
 
-class CompanyApplicationUpdateView(UserCreateApplicationUpdate):
-    email: str
+class ApplicationUpdateRecruiterModel(BaseModel):
     first_name: str
     last_name: str
-    image_url: str | None
+    email: str
+
+
+class CompanyApplicationUpdateView(CreateApplicationUpdate, BaseDataModel):
+    recruiter: ApplicationUpdateRecruiterModel
 
 
 @dataclass
-class PaginatedCompanyUpdateView(PaginatedResponse[CompanyApplicationUpdateView]):  # type: ignore
+class PaginatedCompanyUpdateView(PaginatedResponse[CompanyApplicationUpdateView]):
     data: list[CompanyApplicationUpdateView]
 
 

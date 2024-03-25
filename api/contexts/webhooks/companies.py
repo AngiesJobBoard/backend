@@ -7,7 +7,10 @@ from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.resumes.models import UserCreateResume
 from ajb.contexts.webhooks.ingress.jobs.models import JobsWebhook, JobWebhookEventType
 from ajb.contexts.webhooks.ingress.jobs.usecase import WebhookJobsUseCase
-from ajb.contexts.webhooks.ingress.applicants.models import ApplicantsWebhook, ApplicantWebhookEventType
+from ajb.contexts.webhooks.ingress.applicants.models import (
+    ApplicantsWebhook,
+    ApplicantWebhookEventType,
+)
 from ajb.contexts.webhooks.ingress.applicants.usecase import WebhookApplicantsUseCase
 from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
 from api.vendors import db, storage, mixpanel
@@ -44,9 +47,9 @@ async def jobs_api_webhook_handler(request: Request, payload: JobsWebhook):
 @router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
 async def applicants_api_webhook_handler(request: Request, payload: ApplicantsWebhook):
     ingress_record = WebhookValidator(request).validate_api_ingress_request()
-    applicant_result = WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
-        ingress_record.company_id, payload
-    )
+    applicant_result = WebhookApplicantsUseCase(
+        WEBHOOK_REQUEST_SCOPE
+    ).handle_webhook_event(ingress_record.company_id, payload)
     if payload.type == ApplicantWebhookEventType.CREATE:
         mixpanel.application_created_from_api_webhook_ingress(
             WEBHOOK_REQUEST_SCOPE.user_id,

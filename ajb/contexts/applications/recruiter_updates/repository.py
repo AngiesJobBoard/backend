@@ -55,7 +55,7 @@ class RecruiterUpdatesRepository(
         application_id: str,
         recruiter_id: str,
         new_application_status: ApplicationStatus,
-        comment: str | None = None
+        comment: str | None = None,
     ):
         return self.create(
             CreateApplicationUpdate(
@@ -76,7 +76,7 @@ class RecruiterUpdatesRepository(
         job_id: str,
         application_id: str,
         recruiter_id: str,
-        comment: str | None = None
+        comment: str | None = None,
     ):
         return self.create(
             CreateApplicationUpdate(
@@ -97,7 +97,7 @@ class RecruiterUpdatesRepository(
         job_id: str,
         application_id: str,
         recruiter_id: str,
-        comment: str | None = None
+        comment: str | None = None,
     ):
         return self.create(
             CreateApplicationUpdate(

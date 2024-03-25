@@ -24,7 +24,9 @@ from api.contexts.companies.recruiters import router as recruiters_router
 from api.contexts.companies.jobs import router as jobs_router
 from api.contexts.companies.job_applications import router as job_applications_router
 from api.contexts.companies.applications import router as company_applications_router
-from api.contexts.companies.application_recruiter_updates import router as application_updates_router
+from api.contexts.companies.application_recruiter_updates import (
+    router as application_updates_router,
+)
 from api.contexts.companies.notifications import router as company_notifications_router
 from api.contexts.companies.description_generator import (
     router as description_generator_router,
