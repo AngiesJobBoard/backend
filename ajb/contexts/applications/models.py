@@ -7,7 +7,12 @@ from pydantic import BaseModel, Field
 import pandas as pd
 
 from ajb.base.models import BaseDataModel, PaginatedResponse
-from ajb.common.models import DataReducedJob, Location, ApplicationQuestion, DataReducedCompany
+from ajb.common.models import (
+    DataReducedJob,
+    Location,
+    ApplicationQuestion,
+    DataReducedCompany,
+)
 from ajb.vendor.google_maps import get_state_from_lat_long
 from ajb.utils import get_datetime_from_string, get_miles_between_lat_long_pairs
 

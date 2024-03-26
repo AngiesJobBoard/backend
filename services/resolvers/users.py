@@ -11,10 +11,9 @@ from ajb.contexts.users.repository import UserRepository
 from ajb.vendor.sendgrid.templates.new_user import NewlyCreatedUser
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.vendor.sendgrid.repository import SendgridRepository
-from ajb.vendor.clerk.repository import ClerkAPIRepository
 
 
-class AsynchronousUserEvents:
+class UserEventResolver:
     def __init__(
         self,
         message: BaseKafkaMessage,

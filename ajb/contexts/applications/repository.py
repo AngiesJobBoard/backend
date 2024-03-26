@@ -13,7 +13,7 @@ from .models import (
     CompanyApplicationView,
     CreateApplication,
     Application,
-    AdminApplicationView
+    AdminApplicationView,
 )
 
 
@@ -107,7 +107,7 @@ class CompanyApplicationRepository(ApplicationRepository):
         )
         casted_result = t.cast(CompanyApplicationView, result)
         return casted_result
-    
+
     def get_admin_application_view(
         self,
         repo_filters: QueryFilterParams | RepoFilterParams | None = None,

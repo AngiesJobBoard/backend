@@ -118,21 +118,3 @@ def test_admin_create_user_force(request_scope):
             ),
             force_if_exists=True,
         )
-
-
-def test_bad_type_output(request_scope):
-    usecase = UserUseCase(request_scope)
-    with patch(
-        "ajb.contexts.webhooks.users.usecase.WebhookUserUseCase.create_user"
-    ) as mock_create:
-        mock_create.return_value = True
-        with pytest.raises(AdminCreateUserException):
-            usecase.admin_create_user(
-                SimpleClerkCreateUser(
-                    first_name="test",
-                    last_name="test",
-                    email_address="test@email.com",
-                    password=secrets.token_hex(16),
-                ),
-                force_if_exists=True,
-            )

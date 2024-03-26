@@ -28,4 +28,4 @@ class User(CreateUser, BaseDataModel): ...
 
 @dataclass
 class PaginatedUsers(PaginatedResponse[User]):
-    data: User
+    data: list[User]

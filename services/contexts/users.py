@@ -1,5 +1,5 @@
 from ajb.base.events import UserEvent, BaseKafkaMessage
-from ajb.contexts.users.asynchronous_events import AsynchronousUserEvents
+from services.resolvers.users import UserEventResolver
 
 from services.vendors import (
     openai,
@@ -9,7 +9,7 @@ from services.vendors import (
 
 
 async def user_is_created(message: BaseKafkaMessage):
-    await AsynchronousUserEvents(
+    await UserEventResolver(
         message,
         make_request_scope(message),
         openai,

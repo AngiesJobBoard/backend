@@ -217,6 +217,7 @@ def test_extract_application_distance_and_same_state():
     assert applicant_in_same_state is True
 
 
+# pylint: disable=too-many-statements
 def test_application_counts(request_scope):
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()

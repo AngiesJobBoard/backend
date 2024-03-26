@@ -24,7 +24,7 @@ async def _process_applications_csv_file(
     content = await file.read()
     content = content.decode("utf-8")
     content = StringIO(content)
-    df = pd.read_csv(content)
+    df = pd.read_csv(str(content))
     raw_candidates = df.to_dict(orient="records")
     return application_usecase.create_applications_from_csv(
         company_id, job_id, raw_candidates

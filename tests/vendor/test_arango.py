@@ -186,14 +186,14 @@ def test_in_operator(db: StandardDatabase, collection: str):
 
     query = ArangoDBRepository(db, collection)
     query.add_filter(Filter(field="test", operator=Operator.IN, value="test"))
-    results, count = query.execute()
+    results, _ = query.execute()
 
-    # TODO count is broken for this operator
+    # AJBTODO count is broken for this operator
     assert len(results) == 1
     assert results[0]["test"] == ["Test", "this"]
 
 
-# TODO this operator is broken
+# AJBTODO this operator is broken
 # def test_not_in_operator(db: StandardDatabase, collection: str):
 #     db.collection(collection).insert({"test": ["Test", "this"]})
 #     db.collection(collection).insert({"test": ["Great", "results"]})
@@ -202,7 +202,7 @@ def test_in_operator(db: StandardDatabase, collection: str):
 #     query.add_filter(Filter(field="test", operator=Operator.NOT_IN, value="test"))
 #     results, count = query.execute()
 
-#     # TODO count is broken for this operator
+#     # AJBTODO count is broken for this operator
 #     assert len(results) == 1
 #     assert results[0]["test"] == ["Great", "results"]
 

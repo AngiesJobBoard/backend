@@ -1,14 +1,14 @@
 import aiohttp
 from ajb.base.events import ApplicationEvent, BaseKafkaMessage
-from ajb.contexts.applications.asynchronous_events import AsynchronousApplicationEvents
 from ajb.vendor.openai.repository import AsyncOpenAIRepository
+from services.resolvers.applications import ApplicationEventsResolver
 
 from services.vendors import make_request_scope, mixpanel
 
 
 async def company_uploads_resume(message: BaseKafkaMessage):
     async with aiohttp.ClientSession() as session:
-        repo = AsynchronousApplicationEvents(
+        repo = ApplicationEventsResolver(
             message,
             make_request_scope(message),
             async_openai=AsyncOpenAIRepository(session),
@@ -23,7 +23,7 @@ async def company_uploads_resume(message: BaseKafkaMessage):
 
 async def application_is_submitted(message: BaseKafkaMessage):
     async with aiohttp.ClientSession() as session:
-        repo = AsynchronousApplicationEvents(
+        repo = ApplicationEventsResolver(
             message,
             make_request_scope(message),
             async_openai=AsyncOpenAIRepository(session),
@@ -38,7 +38,7 @@ async def application_is_submitted(message: BaseKafkaMessage):
 
 
 async def application_is_updated(message: BaseKafkaMessage):
-    repo = AsynchronousApplicationEvents(
+    repo = ApplicationEventsResolver(
         message,
         make_request_scope(message),
     )
@@ -46,7 +46,7 @@ async def application_is_updated(message: BaseKafkaMessage):
 
 
 async def application_is_deleted(message: BaseKafkaMessage):
-    repo = AsynchronousApplicationEvents(
+    repo = ApplicationEventsResolver(
         message,
         make_request_scope(message),
     )

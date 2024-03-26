@@ -28,7 +28,7 @@ from ajb.vendor.sendgrid.templates.newly_created_company import NewlyCreatedComp
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 
 
-class AsynchronousCompanyEvents:
+class CompanyEventsResolver:
     def __init__(
         self,
         message: BaseKafkaMessage,

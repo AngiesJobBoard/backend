@@ -1,5 +1,5 @@
 from ajb.base.events import CompanyEvent, BaseKafkaMessage
-from ajb.contexts.companies.asynchronous_events import AsynchronousCompanyEvents
+from services.resolvers.companies import CompanyEventsResolver
 
 from services.vendors import (
     sendgrid,
@@ -8,7 +8,7 @@ from services.vendors import (
 
 
 async def company_is_created(message: BaseKafkaMessage):
-    await AsynchronousCompanyEvents(
+    await CompanyEventsResolver(
         message,
         make_request_scope(message),
         sendgrid,
@@ -16,21 +16,21 @@ async def company_is_created(message: BaseKafkaMessage):
 
 
 async def company_creates_job(message: BaseKafkaMessage):
-    await AsynchronousCompanyEvents(
+    await CompanyEventsResolver(
         message,
         make_request_scope(message),
     ).company_creates_job()
 
 
 async def company_updates_job(message: BaseKafkaMessage):
-    await AsynchronousCompanyEvents(
+    await CompanyEventsResolver(
         message,
         make_request_scope(message),
     ).company_updates_job()
 
 
 async def company_deletes_job(message: BaseKafkaMessage):
-    await AsynchronousCompanyEvents(
+    await CompanyEventsResolver(
         message,
         make_request_scope(message),
     ).company_deletes_job()

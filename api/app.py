@@ -47,10 +47,6 @@ from .middleware import (
     ValidationErrorLoggingMiddleware,
 )
 
-# pylint: disable=unused-import,wildcard-import
-from .vendors import *  # type: ignore
-
-# pylint: enable=unused-import
 
 app = FastAPI(
     title="Angies Job Board API",
@@ -95,6 +91,7 @@ origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "https://matcher.ajbdevelopment.com",
+    "https://*.ajbdevelopment.com",
 ]
 
 app.add_middleware(

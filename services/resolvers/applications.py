@@ -35,7 +35,7 @@ from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 
 
-class AsynchronousApplicationEvents:
+class ApplicationEventsResolver:
     def __init__(
         self,
         message: BaseKafkaMessage,

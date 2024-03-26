@@ -34,7 +34,7 @@ class BaseDataModel(BaseModel):
 
     @classmethod
     def get_list_fields(cls) -> list[str]:
-        # TODO implement later to reduce the fields returned in the list views
+        # AJBTODO implement later to reduce the fields returned in the list views
         return ["id", "created_at", "created_by", "updated_at", "updated_by"]
 
 

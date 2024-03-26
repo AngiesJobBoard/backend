@@ -14,7 +14,6 @@ from ajb.config.settings import SETTINGS
 
 class MixpanelService:
     def __init__(self):
-        self.mp: Mixpanel | None = None
         if SETTINGS.MIXPANEL_TOKEN:
             self.mp = Mixpanel(SETTINGS.MIXPANEL_TOKEN)
 
@@ -147,7 +146,7 @@ class MixpanelDomainEvents(MixpanelService):
         }
         self.track(user_id, company_id, EventName.JOB_CREATED_FROM_PORTAL, properties)
 
-    # TODO we don't have this feature yet... add a description as the body text and generate job from that would be cool
+    # AJBTODO we don't have this feature yet... add a description as the body text and generate job from that would be cool
     # def job_created_from_email_ingress(self, user_id: str, company_id: str):
     #     properties = {}
     #     self.track(user_id, company_id, EventName.JOB_CREATED_FROM_EMAIL_INGRESS, properties)

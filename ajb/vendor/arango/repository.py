@@ -3,7 +3,6 @@ from arango.database import StandardDatabase, TransactionDatabase
 from arango.exceptions import DocumentInsertError
 from arango.cursor import Cursor
 
-from ajb.base.constants import BaseConstants
 from ajb.config.settings import SETTINGS
 from .client_factory import ArangoClientFactory
 from .models import Filter, Sort, Join, Operator

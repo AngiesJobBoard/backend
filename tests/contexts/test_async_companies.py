@@ -1,6 +1,5 @@
 import pytest
 
-from ajb.contexts.companies.asynchronous_events import AsynchronousCompanyEvents
 from ajb.contexts.companies.email_ingress_webhooks.repository import (
     CompanyEmailIngressRepository,
 )
@@ -10,9 +9,9 @@ from ajb.contexts.companies.api_ingress_webhooks.repository import (
 from ajb.base.events import BaseKafkaMessage, KafkaTopic, CompanyEvent
 from ajb.vendor.sendgrid.client_factory import SendgridFactory
 from ajb.vendor.sendgrid.repository import SendgridRepository
-
 from ajb.fixtures.users import UserFixture
 from ajb.fixtures.companies import CompanyFixture
+from services.resolvers.companies import CompanyEventsResolver
 
 
 @pytest.fixture
@@ -35,7 +34,7 @@ async def test_async_company_creation(request_scope, mock_sendgrid):
         event_type=CompanyEvent.COMPANY_IS_CREATED,
         source_service="test",
     )
-    await AsynchronousCompanyEvents(
+    await CompanyEventsResolver(
         message=message, request_scope=request_scope, sendgrid=mock_sendgrid
     ).company_is_created()
 

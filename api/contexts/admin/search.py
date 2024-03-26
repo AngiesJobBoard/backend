@@ -97,7 +97,9 @@ def admin_search_jobs(request: Request, query: AdminSearchJobsWithCompany = Depe
 
 @router.get("/search/search-applications", response_model=PaginatedAdminApplicationView)
 def admin_search_applications(request: Request, query: QueryFilterParams = Depends()):
-    results = CompanyApplicationRepository(request.state.request_scope).get_admin_application_view(repo_filters=query)
+    results = CompanyApplicationRepository(
+        request.state.request_scope
+    ).get_admin_application_view(repo_filters=query)
     return build_pagination_response(
         results,
         query.page,

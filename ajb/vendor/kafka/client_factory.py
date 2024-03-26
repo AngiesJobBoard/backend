@@ -1,7 +1,6 @@
 from kafka import KafkaProducer, KafkaConsumer
 from ajb.config.settings import SETTINGS
 
-from .mock import MockKafkaProducer, MockKafkaConsumer
 from ..vendor_client_factory import VendorClientFactory
 
 

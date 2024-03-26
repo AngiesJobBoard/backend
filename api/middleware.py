@@ -37,9 +37,7 @@ from .vendors import db, kafka_producer
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-USER_COMPANY_CACHE = TTLCache(
-    maxsize=100, ttl=3600
-)  # TO BECOME a redis cache as necessary
+USER_COMPANY_CACHE = TTLCache(maxsize=100, ttl=3600)
 
 
 PUBLIC_ROUTES = [
@@ -264,7 +262,7 @@ class WebhookValidator:
         if not company_ingress_record.is_active:
             raise Forbidden
 
-        # TODO Other checks on allowed ip address or etc...
+        # AJBTODO Other checks on allowed ip address or etc...
         token_data = APIIngressJWTData(
             **decode_jwt(token, company_ingress_record.secret_key)
         )
@@ -276,19 +274,11 @@ class WebhookValidator:
         envelope: str,
     ) -> CompanyEmailIngress:
         json_loaded_envelope = json.loads(envelope)
-        from_email = json_loaded_envelope["from"]
-        to_email = [
-            email
-            for email in json_loaded_envelope["to"]
-            # if SETTINGS.APP_DOMAIN
-            # in email
-        ]
-        to_subdomain = to_email[0].split("@")[0]
+        to_subdomain = json_loaded_envelope["to"][0].split("@")[0]
         company_ingress_record = CompanyEmailIngressRepository(
             self.request.state.request_scope
         ).get_one(subdomain=to_subdomain)
         if not company_ingress_record.is_active:
             raise Forbidden
 
-        # TODO Other checks on allowed domains...
         return company_ingress_record

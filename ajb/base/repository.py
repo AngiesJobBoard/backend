@@ -629,6 +629,7 @@ class MultipleChildrenRepository(BaseRepository[CreateDataSchema, DataSchema]):
         else:
             warn("No parent id provided, parent collection may not exist")
 
+    # pylint: disable=arguments-differ
     def create(
         self, data: CreateDataSchema, overridden_id: str | None = None
     ) -> DataSchema:

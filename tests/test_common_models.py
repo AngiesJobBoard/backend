@@ -24,7 +24,7 @@ def test_pay_with_conversion():
     assert pay.max_pay_as_hourly == 25
 
 
-# TODO write new test cases for the location class
+# AJBTODO write new test cases for the location class
 # def test_general_location_gets_lat_lon():
 #     general_location_without_latlon = Location(
 #         city="New York", state="NY", country="USA"
