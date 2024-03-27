@@ -27,7 +27,7 @@ class ArangoDBRepository:
         self.filters: list[Filter] = []
         self.search_filters: list[Filter] = []
         self.sorts: list[Sort] = []
-        self.limit: int | None = 25
+        self.limit: int | None = None
         self.offset: int = 0
         self.return_fields: list[str] = []
         self.bind_vars: dict[str, t.Any] = {}
@@ -242,7 +242,7 @@ class ArangoDBRepository:
             self.query_parts.append(f"SORT {sort_fields}")
 
     def _append_pagination(self):
-        if self.limit:
+        if self.limit is not None:
             self.query_parts.append(f"LIMIT {self.offset}, {self.limit}")
 
     def _format_query_for_joins_or_not(self):

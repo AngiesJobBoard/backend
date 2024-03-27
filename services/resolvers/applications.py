@@ -227,7 +227,7 @@ class ApplicationEventsResolver:
             data.application_id
         )
 
-    async def application_is_submitted(self) -> None:
+    async def application_is_submitted(self, send_webhooks: bool = True) -> None:
         await asyncio.gather(
             self.calculate_match_score(),
             self.extract_application_filters(),
@@ -235,10 +235,11 @@ class ApplicationEventsResolver:
         )
 
         # Send out application webhook
-        data = ApplicantAndCompany.model_validate(self.message.data)
-        CompanyApplicantsWebhookEgress(
-            self.request_scope
-        ).send_create_applicant_webhook(data.company_id, data.application_id)
+        if send_webhooks:
+            data = ApplicantAndCompany.model_validate(self.message.data)
+            CompanyApplicantsWebhookEgress(
+                self.request_scope
+            ).send_create_applicant_webhook(data.company_id, data.application_id)
 
     async def application_is_updated(self) -> None:
         data = ApplicantAndCompany.model_validate(self.message.data)
