@@ -47,3 +47,7 @@ class RecruiterRole(str, Enum):
     OWNER = "owner"
     ADMIN = "admin"
     MEMBER = "member"
+
+
+class CompanyNameAndID(BaseDataModel):
+    name: str

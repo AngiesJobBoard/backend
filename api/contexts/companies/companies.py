@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 
-from ajb.contexts.companies.models import Company, UserCreateCompany, UpdateCompany
+from ajb.contexts.companies.models import Company, UserCreateCompany, UpdateCompany, CompanyNameAndID
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.usecase import CompaniesUseCase
 from ajb.exceptions import CompanyCreateException
@@ -12,7 +12,7 @@ from api.exceptions import GenericHTTPException
 router = APIRouter(tags=["Companies"], prefix="/companies")
 
 
-@router.get("/", response_model=list[Company])
+@router.get("/", response_model=list[CompanyNameAndID])
 def get_all_companies(request: Request):
     """Gets all companies"""
     # Not paginated for now because a single user isn't likely to have that many companies
