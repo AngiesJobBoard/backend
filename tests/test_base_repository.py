@@ -13,6 +13,7 @@ from ajb.base import (
     Collection,
     RepoFilterParams,
     QueryFilterParams,
+    Pagination
 )
 from ajb.vendor.arango.models import Filter, Sort, Operator
 
@@ -549,3 +550,24 @@ def test_upsert_many(request_scope):
 
     queried_result = parent_repo.get("not_found")
     assert queried_result.name == "test3"
+
+
+def test_query_with_pagination_still_returns_full_count(request_scope):
+    parent_repo = TestRepository(request_scope)
+    # Make sure repo is empty (tech debt :) yay non-idempotent tests)
+    all_items = parent_repo.get_all()
+    parent_repo.delete_many([item.id for item in all_items if item])
+
+    parent_repo.create(CreateTestModel(name="test"))
+    parent_repo.create(CreateTestModel(name="test2"))
+    parent_repo.create(CreateTestModel(name="test3"))
+
+    filter_params = RepoFilterParams(
+        pagination=Pagination(
+            page=0,
+            page_size=2
+        )
+    )
+    results, count = parent_repo.query(repo_filters=filter_params)
+    assert count == 3
+    assert len(results) == 2

@@ -1,7 +1,11 @@
 import re
+from concurrent.futures import ThreadPoolExecutor
 from ajb.base import (
     BaseUseCase,
     Collection,
+    build_and_execute_query,
+    RepoFilterParams,
+    Pagination,
 )
 from ajb.exceptions import CompanyCreateException
 from ajb.contexts.companies.recruiters.models import CreateRecruiter, RecruiterRole
@@ -9,6 +13,7 @@ from ajb.contexts.users.models import User
 from ajb.base.events import (
     SourceServices,
 )
+from ajb.vendor.arango.models import Filter, Operator
 
 from .models import UserCreateCompany, CreateCompany, Company
 from .events import CompanyEventProducer
@@ -82,3 +87,58 @@ class CompaniesUseCase(BaseUseCase):
             user_id=user_id
         )
         return company_repo.get_many_by_id([record.company_id for record in recruiter_records])  # type: ignore
+
+    def get_company_global_search_results(
+        self, company_id: str, text: str, page: int, page_size: int
+    ):
+        """Search for jobs, applicants, or recruiters all at once"""
+        pagination = Pagination(page=page, page_size=page_size)
+        jobs_filters = RepoFilterParams(
+            filters=[
+                Filter(
+                    field="company_id",
+                    value=company_id,
+                ),
+            ],
+            search_filters=[
+                Filter(field="position_title", operator=Operator.CONTAINS, value=text),
+            ],
+            pagination=pagination,
+        )
+        application_filters = RepoFilterParams(
+            filters=[
+                Filter(
+                    field="company_id",
+                    value=company_id,
+                    and_or_operator="AND",
+                ),
+            ],
+            search_filters=[
+                Filter(field="name", operator=Operator.CONTAINS, value=text),
+                Filter(field="email", operator=Operator.CONTAINS, value=text),
+                Filter(field="phone", operator=Operator.CONTAINS, value=text),
+            ],
+            pagination=pagination,
+        )
+
+        results = {}
+        with ThreadPoolExecutor() as executor:
+            results[Collection.JOBS] = executor.submit(
+                build_and_execute_query,
+                db=self.request_scope.db,
+                collection_name=Collection.JOBS.value,
+                repo_filters=jobs_filters,
+                execute_type="execute",
+                return_fields=["position_title", "_key", "created_at", "total_applicants"],
+            )
+            results[Collection.APPLICATIONS] = executor.submit(
+                build_and_execute_query,
+                db=self.request_scope.db,
+                collection_name=Collection.APPLICATIONS.value,
+                repo_filters=application_filters,
+                execute_type="execute",
+                return_fields=["_key", "name", "email", "phone", "created_at"],
+            )
+        return {
+            collection: result.result()[0] for collection, result in results.items()
+        }

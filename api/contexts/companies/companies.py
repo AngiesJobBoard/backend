@@ -1,6 +1,11 @@
 from fastapi import APIRouter, Request
 
-from ajb.contexts.companies.models import Company, UserCreateCompany, UpdateCompany, CompanyNameAndID
+from ajb.contexts.companies.models import (
+    Company,
+    UserCreateCompany,
+    UpdateCompany,
+    CompanyNameAndID,
+)
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.usecase import CompaniesUseCase
 from ajb.exceptions import CompanyCreateException
@@ -35,12 +40,14 @@ def create_company(request: Request, company: UserCreateCompany):
         raise GenericHTTPException(status_code=400, detail=str(exc))
 
 
-@router.get("/autocomplete")
-def get_company_autocomplete(request: Request, prefix: str, field: str = "name"):
-    """Gets a list of companies that match the prefix"""
-    return CompanyRepository(request.state.request_scope).get_autocomplete(
-        field, prefix
-    )
+@router.get("/{company_id}/global-search")
+def get_company_global_search(
+    request: Request, company_id: str, text: str, page: int = 0, page_size: int = 5
+):
+    """Gets a list of jobs, applications, or (soon) recruiters from a company"""
+    return CompaniesUseCase(
+        request.state.request_scope
+    ).get_company_global_search_results(company_id, text, page, page_size)
 
 
 @router.patch("/{company_id}", response_model=Company)

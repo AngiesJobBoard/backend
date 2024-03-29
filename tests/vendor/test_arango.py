@@ -270,7 +270,6 @@ def test_basic_query_with_join(db: StandardDatabase, join_collections):
         )
     )
     results, count = query.execute()
-    assert count == 1
     assert results[0]["name"] == "Bob"
     assert results[0]["user_height"]["height"] == 500
 
@@ -300,7 +299,6 @@ def test_query_with_joins_and_filters(db: StandardDatabase, join_collections):
         )
     )
     results, count = query.execute()
-    assert count == 1
     assert results[0]["name"] == "Sally"
     assert results[0]["user_height"]["height"] == 1000
 

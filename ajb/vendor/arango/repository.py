@@ -273,14 +273,11 @@ class ArangoDBRepository:
         cursor = t.cast(
             Cursor,
             self.db.aql.execute(
-                query, bind_vars=self.bind_vars, count=bool(self.joins)
+                query, bind_vars=self.bind_vars, full_count=True
             ),
         )
-        if self.joins:
-            count = cursor.count() or 0
-        else:
-            stats = cursor.statistics()
-            count = stats["scanned_full"] - stats["filtered"] if stats else 0
+        stats = cursor.statistics()
+        count = stats.get("fullCount", -1) if stats else -1
         return list(cursor), count
 
     def execute_custom_statement(self, statement: str, bind_vars: dict):
