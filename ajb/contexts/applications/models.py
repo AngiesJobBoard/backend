@@ -494,6 +494,8 @@ class DataReducedApplication(BaseDataModel):
     resume_url: str | None = None
     external_reference_code: str | None = None
 
+    job: JobNameOnly | None = None
+
 
 @dataclass
 class PaginatedDataReducedApplication(PaginatedResponse[DataReducedApplication]):
