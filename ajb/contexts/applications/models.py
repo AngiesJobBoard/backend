@@ -440,7 +440,6 @@ class ApplicantAndJob(BaseDataModel):
     name: str | None = None
     email: str | None = None
     phone: str | None = None
-    user_location: Location | None = None
     application_status: ApplicationStatus = ApplicationStatus.CREATED_BY_COMPANY
     application_is_shortlisted: bool = False
     application_match_score: int | None = None
