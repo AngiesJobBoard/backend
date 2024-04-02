@@ -13,15 +13,17 @@ class UserCreateCompany(BaseModel):
     num_employees: NumEmployeesEnum | None = None
 
 
-class UpdateCompany(BaseModel):
-    name: str | None = None
-    num_employees: NumEmployeesEnum | None = None
-
-
 class CompanySettings(BaseModel):
     enable_all_email_ingress: bool = False
     enable_job_api_ingress: bool = False
     enable_applicant_api_ingress: bool = False
+
+
+class UpdateCompany(BaseModel):
+    name: str | None = None
+    num_employees: NumEmployeesEnum | None = None
+    owner_email: str | None = None
+    settings: CompanySettings = CompanySettings()
 
 
 class CreateCompany(UserCreateCompany):
@@ -51,3 +53,20 @@ class RecruiterRole(str, Enum):
 
 class CompanyNameAndID(BaseDataModel):
     name: str
+
+
+class CompanyGlobalSearchJobs(BaseDataModel):
+    position_title: str
+    total_applicants: int
+
+
+class CompanyGlobalSearchApplications(BaseDataModel):
+    name: str
+    email: str
+    phone: str
+    job: CompanyGlobalSearchJobs
+
+
+class CompanyGlobalSearchResults(BaseModel):
+    jobs: list[CompanyGlobalSearchJobs]
+    applications: list[CompanyGlobalSearchApplications]

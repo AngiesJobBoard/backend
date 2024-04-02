@@ -272,9 +272,7 @@ class ArangoDBRepository:
         query = self.build_query()
         cursor = t.cast(
             Cursor,
-            self.db.aql.execute(
-                query, bind_vars=self.bind_vars, full_count=True
-            ),
+            self.db.aql.execute(query, bind_vars=self.bind_vars, full_count=True),
         )
         stats = cursor.statistics()
         count = stats.get("fullCount", -1) if stats else -1

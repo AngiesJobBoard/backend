@@ -5,6 +5,7 @@ from ajb.contexts.companies.models import (
     UserCreateCompany,
     UpdateCompany,
     CompanyNameAndID,
+    CompanyGlobalSearchResults,
 )
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.usecase import CompaniesUseCase
@@ -40,7 +41,7 @@ def create_company(request: Request, company: UserCreateCompany):
         raise GenericHTTPException(status_code=400, detail=str(exc))
 
 
-@router.get("/{company_id}/global-search")
+@router.get("/{company_id}/global-search", response_model=CompanyGlobalSearchResults)
 def get_company_global_search(
     request: Request, company_id: str, text: str, page: int = 0, page_size: int = 5
 ):

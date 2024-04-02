@@ -23,7 +23,11 @@ class CreateCompanyEmailIngress(BaseModel):
 
     @classmethod
     def generate(
-        cls, company_id: str, ingress_type: EmailIngressType, job_id: str | None = None
+        cls,
+        company_id: str,
+        ingress_type: EmailIngressType,
+        job_id: str | None = None,
+        is_active: bool = False,
     ) -> "CreateCompanyEmailIngress":
         random_subdomain = generate_random_short_code(length=16)
         return cls(
@@ -31,6 +35,7 @@ class CreateCompanyEmailIngress(BaseModel):
             subdomain=random_subdomain,
             ingress_type=ingress_type,
             job_id=job_id,
+            is_active=is_active,
         )
 
 

@@ -2,9 +2,14 @@ from concurrent.futures import ThreadPoolExecutor
 from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.contexts.applications.models import Application, ScanStatus
 from ajb.contexts.companies.jobs.models import Job
-from ajb.vendor.openai.repository import AsyncOpenAIRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.applications.constants import ApplicationConstants
+from ajb.contexts.companies.notifications.usecase import CompanyNotificationUsecase
+from ajb.contexts.companies.notifications.models import (
+    NotificationType,
+    SystemCreateCompanyNotification,
+)
+from ajb.vendor.openai.repository import AsyncOpenAIRepository
 
 from .ai_matching import AIApplicationMatcher, ApplicantMatchScore
 
@@ -14,14 +19,43 @@ class ApplicantMatchUsecase(BaseUseCase):
         self.request_scope = request_scope
         self.openai = openai
 
-    async def get_match(
-        self, application: Application, job_data: Job | None = None
-    ) -> ApplicantMatchScore:
+    def _get_job(self, job_id: str, job_data: Job | None = None):
         if job_data:
             job = job_data
         else:
-            job = self.get_object(Collection.JOBS, application.job_id)
-        return await AIApplicationMatcher(self.openai).get_match_score(application, job)
+            job = self.get_object(Collection.JOBS, job_id)
+        return job
+
+    async def get_match(
+        self, application: Application, job_data: Job | None = None
+    ) -> ApplicantMatchScore:
+        return await AIApplicationMatcher(self.openai).get_match_score(
+            application, self._get_job(application.job_id, job_data)
+        )
+
+    def _handle_high_application_match(self, application: Application, job: Job):
+        ApplicationUseCase(self.request_scope).update_application_counts(
+            application.company_id,
+            application.job_id,
+            ApplicationConstants.HIGH_MATCHING_APPLICANTS,
+            1,
+            True,
+        )
+        CompanyNotificationUsecase(self.request_scope).create_company_notification(
+            application.company_id,
+            SystemCreateCompanyNotification(
+                company_id=application.company_id,
+                notification_type=NotificationType.HIGH_MATCHING_CANDIDATE,
+                title=f"High Matching Candidate for {job.position_title}",
+                message=f"{application.name} has a high match score for {job.position_title}. Here's why: {application.application_match_reason}",
+                application_id=application.id,
+                job_id=job.id,
+                metadata={
+                    "email": application.email,
+                    "external_reference_code": application.external_reference_code,
+                },
+            ),
+        )
 
     async def update_application_with_match_score(
         self, application_id: str, job_data: Job | None = None
@@ -31,16 +65,12 @@ class ApplicantMatchUsecase(BaseUseCase):
         application_repo.update_fields(
             application.id, match_score_status=ScanStatus.STARTED
         )
+        job = self._get_job(application.job_id, job_data)
         try:
-            match_results = await self.get_match(application, job_data)
+            match_results = await self.get_match(application, job)
             if match_results.match_score >= 70:
-                ApplicationUseCase(self.request_scope).update_application_counts(
-                    application.company_id,
-                    application.job_id,
-                    ApplicationConstants.HIGH_MATCHING_APPLICANTS,
-                    1,
-                    True,
-                )
+                self._handle_high_application_match(application, job)
+
             return application_repo.update_fields(
                 application_id,
                 application_match_score=match_results.match_score,

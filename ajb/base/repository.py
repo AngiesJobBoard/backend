@@ -392,11 +392,9 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         return [
             format_to_schema(result, self.entity_model) for result in results
         ], count
-    
+
     def get_all(self, **kwargs) -> list[DataSchema]:
-        repo_filters = RepoFilterParams(
-            pagination=None
-        )
+        repo_filters = RepoFilterParams(pagination=None)
         response = build_and_execute_query(
             db=self.request_scope.db,
             collection_name=self.collection.value,
@@ -408,9 +406,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         if isinstance(response, int):
             return []
         results, _ = response
-        return [
-            format_to_schema(result, self.entity_model) for result in results
-        ]
+        return [format_to_schema(result, self.entity_model) for result in results]
 
     def get_count(
         self, repo_filters: RepoFilterParams | QueryFilterParams | None = None, **kwargs

@@ -13,7 +13,7 @@ from ajb.base import (
     Collection,
     RepoFilterParams,
     QueryFilterParams,
-    Pagination
+    Pagination,
 )
 from ajb.vendor.arango.models import Filter, Sort, Operator
 
@@ -562,12 +562,7 @@ def test_query_with_pagination_still_returns_full_count(request_scope):
     parent_repo.create(CreateTestModel(name="test2"))
     parent_repo.create(CreateTestModel(name="test3"))
 
-    filter_params = RepoFilterParams(
-        pagination=Pagination(
-            page=0,
-            page_size=2
-        )
-    )
+    filter_params = RepoFilterParams(pagination=Pagination(page=0, page_size=2))
     results, count = parent_repo.query(repo_filters=filter_params)
     assert count == 3
     assert len(results) == 2

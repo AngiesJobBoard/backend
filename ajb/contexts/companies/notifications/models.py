@@ -1,18 +1,26 @@
+from enum import Enum
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
 
 from ajb.base import BaseDataModel, PaginatedResponse
-from ajb.base.events import CompanyEvent, UserEvent
 
 
-class CreateCompanyNotification(BaseModel):
+class NotificationType(str, Enum):
+    HIGH_MATCHING_CANDIDATE = "high_matching_candidate"
+
+
+class SystemCreateCompanyNotification(BaseModel):
     company_id: str
-    notification_type: CompanyEvent | UserEvent
+    notification_type: NotificationType
     title: str
     message: str
-    candidate_id: str | None = None
+    application_id: str | None = None
     job_id: str | None = None
     metadata: dict = Field(default_factory=dict)
+
+
+class CreateCompanyNotification(SystemCreateCompanyNotification):
+    recruiter_id: str
     is_read: bool = False
 
 

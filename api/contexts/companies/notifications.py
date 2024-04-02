@@ -1,12 +1,10 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request
 
-from ajb.base import QueryFilterParams, build_pagination_response
-from ajb.contexts.companies.notifications.repository import (
-    CompanyNotificationRepository,
-)
+from ajb.base import build_pagination_response
+from ajb.contexts.companies.notifications.usecase import CompanyNotificationUsecase
 from ajb.contexts.companies.notifications.models import (
-    CompanyNotification,
     PaginatedCompanyNotifications,
+    NotificationType,
 )
 
 router = APIRouter(
@@ -16,92 +14,34 @@ router = APIRouter(
 
 @router.get("/", response_model=PaginatedCompanyNotifications)
 def get_notifications(
-    request: Request, company_id: str, query: QueryFilterParams = Depends()
+    request: Request,
+    company_id: str,
+    notification_type: NotificationType | None = None,
+    page: int = 0,
+    page_size: int = 10,
 ):
     """Gets all notifications"""
-    results = CompanyNotificationRepository(
+    results = CompanyNotificationUsecase(
         request.state.request_scope,
-        company_id=company_id,
-    ).query(query)
+    ).get_recruiter_notifications(
+        company_id,
+        request.state.user.id,
+        notification_type=notification_type,
+        page=page,
+        page_size=page_size,
+    )
     return build_pagination_response(
         results,
-        query.page,
-        query.page_size,
+        page,
+        page_size,
         request.url._url,
         PaginatedCompanyNotifications,
     )
 
 
-@router.get("/{notification_id}", response_model=CompanyNotification)
-def get_notification(request: Request, company_id: str, notification_id: str):
-    """Gets a notification by id"""
-    return CompanyNotificationRepository(
+@router.post("/mark_all_read")
+def mark_all_notifications_as_read(request: Request, company_id: str):
+    """Marks all notifications as read"""
+    return CompanyNotificationUsecase(
         request.state.request_scope,
-        company_id=company_id,
-    ).get(notification_id)
-
-
-@router.patch("/{notification_id}/read")
-def mark_notification_as_read(request: Request, company_id: str, notification_id: str):
-    """Marks a notification as read"""
-    return CompanyNotificationRepository(
-        request.state.request_scope,
-        company_id=company_id,
-    ).update_fields(notification_id, is_read=True)
-
-
-@router.patch("/read")
-def mark_notifications_as_read(
-    request: Request, company_id: str, notification_ids: list[str]
-):
-    """Marks multiple notifications as read"""
-    return CompanyNotificationRepository(
-        request.state.request_scope,
-        company_id=company_id,
-    ).update_many(
-        {notification_id: {"is_read": True} for notification_id in notification_ids}
-    )
-
-
-@router.patch("/{notification_id}/unread")
-def mark_notification_as_unread(
-    request: Request, company_id: str, notification_id: str
-):
-    """Marks a notification as unread"""
-    return CompanyNotificationRepository(
-        request.state.request_scope,
-        company_id=company_id,
-    ).update_fields(notification_id, is_read=False)
-
-
-@router.patch("/unread")
-def mark_notifications_as_unread(
-    request: Request, company_id: str, notification_ids: list[str]
-):
-    """Marks multiple notifications as unread"""
-    return CompanyNotificationRepository(
-        request.state.request_scope,
-        company_id=company_id,
-    ).update_many(
-        {notification_id: {"is_read": False} for notification_id in notification_ids}
-    )
-
-
-@router.delete("/{notification_id}")
-def delete_notification(request: Request, company_id: str, notification_id: str):
-    """Deletes a notification"""
-    return CompanyNotificationRepository(
-        request.state.request_scope,
-        company_id=company_id,
-    ).delete(notification_id)
-
-
-@router.delete("/")
-def delete_notifications(
-    request: Request, company_id: str, notification_ids: list[str]
-):
-    """Deletes multiple notifications"""
-    return CompanyNotificationRepository(
-        request.state.request_scope,
-        company_id=company_id,
-    ).delete_many(notification_ids)
+    ).mark_all_recruiter_notifications_as_read(company_id, request.state.user.id)

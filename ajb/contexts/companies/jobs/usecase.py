@@ -1,5 +1,6 @@
 from ajb.base import BaseUseCase, Collection
 from ajb.base.events import SourceServices
+from ajb.contexts.companies.models import Company
 from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.companies.email_ingress_webhooks.repository import (
@@ -28,10 +29,16 @@ class JobsUseCase(BaseUseCase):
         # Update company job count
         company_repo.increment_field(company_id, "total_jobs", 1)
 
+        # Get the company object to check default ingress settings
+        company: Company = self.get_object(Collection.COMPANIES, company_id)
+
         # Create email ingress record
         CompanyEmailIngressRepository(self.request_scope).create(
             CreateCompanyEmailIngress.generate(
-                company_id, EmailIngressType.CREATE_APPLICATION, created_job.id
+                company_id,
+                EmailIngressType.CREATE_APPLICATION,
+                created_job.id,
+                company.settings.enable_all_email_ingress,
             )
         )
 

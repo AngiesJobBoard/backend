@@ -1,5 +1,6 @@
 import typing as t
 import os
+import random
 import importlib
 from uuid import uuid4
 import string
@@ -42,6 +43,10 @@ def generate_random_short_code(length: int = 10):
 
 def generate_random_long_code():
     return str(uuid4())
+
+
+def random_salt():
+    return "".join(random.choice(string.ascii_letters) for _ in range(10))
 
 
 def string_to_bool(string_in: str | None = None) -> bool:

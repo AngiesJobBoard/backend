@@ -1,6 +1,4 @@
 from datetime import datetime
-import random
-from string import ascii_letters
 from concurrent.futures import ThreadPoolExecutor
 
 from ajb.base import BaseUseCase, Collection, RepoFilterParams, RequestScope
@@ -11,13 +9,10 @@ from ajb.contexts.resumes.models import Resume, UserCreateResume, CreateResume
 from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.companies.jobs.models import Job
 from ajb.vendor.arango.models import Filter
+from ajb.utils import random_salt
 
 from .models import CreateApplication, Application, ScanStatus
 from .constants import ApplicationConstants
-
-
-def random_salt():
-    return "".join(random.choice(ascii_letters) for _ in range(10))
 
 
 class ApplicationUseCase(BaseUseCase):

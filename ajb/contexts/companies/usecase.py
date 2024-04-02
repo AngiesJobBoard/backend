@@ -1,3 +1,4 @@
+from typing import cast
 import re
 from concurrent.futures import ThreadPoolExecutor
 from ajb.base import (
@@ -13,9 +14,16 @@ from ajb.contexts.users.models import User
 from ajb.base.events import (
     SourceServices,
 )
-from ajb.vendor.arango.models import Filter, Operator
+from ajb.vendor.arango.models import Filter, Operator, Join
 
-from .models import UserCreateCompany, CreateCompany, Company
+from .models import (
+    UserCreateCompany,
+    CreateCompany,
+    Company,
+    CompanyGlobalSearchJobs,
+    CompanyGlobalSearchApplications,
+    CompanyGlobalSearchResults,
+)
 from .events import CompanyEventProducer
 
 
@@ -88,57 +96,65 @@ class CompaniesUseCase(BaseUseCase):
         )
         return company_repo.get_many_by_id([record.company_id for record in recruiter_records])  # type: ignore
 
+    def _global_search_jobs(
+        self, company_id: str, text: str, page: int, page_size: int
+    ) -> list[CompanyGlobalSearchJobs]:
+        job_repo = self.get_repository(Collection.JOBS)
+        res, _ = job_repo.query(
+            repo_filters=RepoFilterParams(
+                pagination=Pagination(page=page, page_size=page_size),
+                filters=[Filter(field="company_id", value=company_id)],
+                search_filters=[
+                    Filter(
+                        field="position_title", operator=Operator.CONTAINS, value=text
+                    )
+                ],
+            )
+        )
+        return [
+            CompanyGlobalSearchJobs(
+                **job.model_dump(),
+            )
+            for job in res
+        ]
+
+    def _global_search_applicants(
+        self, company_id: str, text: str, page: int, page_size: int
+    ) -> list[CompanyGlobalSearchApplications]:
+        application_repo = self.get_repository(Collection.APPLICATIONS)
+        res, _ = application_repo.query_with_joins(
+            joins=[
+                Join(
+                    to_collection_alias="job",
+                    to_collection=Collection.JOBS.value,
+                    from_collection_join_attr="job_id",
+                )
+            ],
+            repo_filters=RepoFilterParams(
+                pagination=Pagination(page=page, page_size=page_size),
+                filters=[Filter(field="company_id", value=company_id)],
+                search_filters=[
+                    Filter(field="name", operator=Operator.CONTAINS, value=text),
+                    Filter(field="email", operator=Operator.CONTAINS, value=text),
+                    Filter(field="phone", operator=Operator.CONTAINS, value=text),
+                ],
+            ),
+            return_model=CompanyGlobalSearchApplications,
+        )
+        return cast(list[CompanyGlobalSearchApplications], res)
+
     def get_company_global_search_results(
         self, company_id: str, text: str, page: int, page_size: int
-    ):
-        """Search for jobs, applicants, or recruiters all at once"""
-        pagination = Pagination(page=page, page_size=page_size)
-        jobs_filters = RepoFilterParams(
-            filters=[
-                Filter(
-                    field="company_id",
-                    value=company_id,
-                ),
-            ],
-            search_filters=[
-                Filter(field="position_title", operator=Operator.CONTAINS, value=text),
-            ],
-            pagination=pagination,
-        )
-        application_filters = RepoFilterParams(
-            filters=[
-                Filter(
-                    field="company_id",
-                    value=company_id,
-                    and_or_operator="AND",
-                ),
-            ],
-            search_filters=[
-                Filter(field="name", operator=Operator.CONTAINS, value=text),
-                Filter(field="email", operator=Operator.CONTAINS, value=text),
-                Filter(field="phone", operator=Operator.CONTAINS, value=text),
-            ],
-            pagination=pagination,
-        )
-
+    ) -> CompanyGlobalSearchResults:
+        """Search for jobs or applicants all at once"""
         results = {}
         with ThreadPoolExecutor() as executor:
-            results[Collection.JOBS] = executor.submit(
-                build_and_execute_query,
-                db=self.request_scope.db,
-                collection_name=Collection.JOBS.value,
-                repo_filters=jobs_filters,
-                execute_type="execute",
-                return_fields=["position_title", "_key", "created_at", "total_applicants"],
+            results["jobs"] = executor.submit(
+                self._global_search_jobs, company_id, text, page, page_size
             )
-            results[Collection.APPLICATIONS] = executor.submit(
-                build_and_execute_query,
-                db=self.request_scope.db,
-                collection_name=Collection.APPLICATIONS.value,
-                repo_filters=application_filters,
-                execute_type="execute",
-                return_fields=["_key", "name", "email", "phone", "created_at"],
+            results["applications"] = executor.submit(
+                self._global_search_applicants, company_id, text, page, page_size
             )
-        return {
-            collection: result.result()[0] for collection, result in results.items()
-        }
+        return CompanyGlobalSearchResults(
+            jobs=results["jobs"].result(), applications=results["applications"].result()
+        )

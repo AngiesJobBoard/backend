@@ -7,6 +7,7 @@ from ajb.base.models import QueryFilterParams
 from ajb.fixtures.companies import CompanyFixture
 from ajb.fixtures.applications import ApplicationFixture
 
+
 def test_create_job(request_scope):
     company = CompanyFixture(request_scope).create_company()
     request_scope.company_id = company.id
@@ -64,15 +65,11 @@ def test_query_company_jobs(request_scope):
     app_job = company_fixture.create_company_job(company.id)
 
     application_fixture = ApplicationFixture(request_scope)
-    application_fixture.create_application(app_job.company_id, app_job.id, 'resume')
-    application_fixture.create_application(app_job.company_id, app_job.id, 'resume')
-
+    application_fixture.create_application(app_job.company_id, app_job.id, "resume")
+    application_fixture.create_application(app_job.company_id, app_job.id, "resume")
 
     request_scope.company_id = company.id
-    query = QueryFilterParams(
-        page=0,
-        page_size=2
-    )
+    query = QueryFilterParams(page=0, page_size=2)
     response, count = JobRepository(request_scope, company.id).get_company_jobs(
         company.id, query
     )

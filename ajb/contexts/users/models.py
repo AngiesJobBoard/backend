@@ -21,6 +21,7 @@ class CreateUser(UpdateUser):
     auth_id: str
     profile_is_public: bool = False
     candidate_score: float | None = None
+    currentSelectedCompanyId: str | None = None
 
 
 class User(CreateUser, BaseDataModel): ...
@@ -29,3 +30,10 @@ class User(CreateUser, BaseDataModel): ...
 @dataclass
 class PaginatedUsers(PaginatedResponse[User]):
     data: list[User]
+
+
+class UserProfileUpload(BaseModel):
+    file_type: str
+    file_name: str
+    profile_picture_data: bytes
+    user_id: str

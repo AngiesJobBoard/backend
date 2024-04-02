@@ -1,5 +1,5 @@
-from ajb.base import BaseUseCase, Collection
-from ajb.contexts.users.models import User
+from ajb.base import BaseUseCase, Collection, RequestScope
+from ajb.contexts.users.models import User, UserProfileUpload
 from ajb.vendor.clerk.models import SimpleClerkCreateUser, ClerkCreateUser
 from ajb.vendor.clerk.repository import ClerkAPIRepository
 from ajb.contexts.webhooks.ingress.users.usecase import (
@@ -13,12 +13,22 @@ from ajb.contexts.companies.recruiters.models import (
     RecruiterRole,
     Recruiter,
 )
+from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
+from ajb.utils import random_salt
 from ajb.exceptions import AdminCreateUserException
 
 from .models import User
 
 
 class UserUseCase(BaseUseCase):
+    def __init__(
+        self,
+        request_scope: RequestScope,
+        storage: FirebaseStorageRepository | None = None,
+    ):
+        self.request_scope = request_scope
+        self.storage_repo = storage
+
     def admin_create_user(
         self, new_user: SimpleClerkCreateUser, force_if_exists: bool = False
     ) -> User:
@@ -67,3 +77,19 @@ class UserUseCase(BaseUseCase):
                 company_id=company_id,
             )
         )
+
+    def _create_profile_picture_path(self, user_id: str, file_type: str) -> str:
+        return f"users/{user_id}/profile_picture-{random_salt()}.{file_type}"
+
+    def update_profile_picture(self, data: UserProfileUpload):
+        if not self.storage_repo:
+            raise Exception("Storage repository not provided")
+
+        user_repo = self.get_repository(Collection.USERS, self.request_scope)
+        remote_file_path = self._create_profile_picture_path(
+            data.user_id, data.file_type
+        )
+        profile_pic_url = self.storage_repo.upload_bytes(
+            data.profile_picture_data, data.file_type, remote_file_path, True
+        )
+        return user_repo.update_fields(data.user_id, image_url=profile_pic_url)
