@@ -9,6 +9,7 @@ import pandas as pd
 from ajb.base.models import BaseDataModel, PaginatedResponse
 from ajb.common.models import (
     DataReducedJob,
+    JobNameOnly,
     Location,
     ApplicationQuestion,
     DataReducedCompany,
@@ -435,8 +436,21 @@ class PaginatedApplications(PaginatedResponse[Application]):
     data: list[Application]
 
 
+class ApplicantAndJob(BaseDataModel):
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    user_location: Location | None = None
+    application_status: ApplicationStatus = ApplicationStatus.CREATED_BY_COMPANY
+    application_is_shortlisted: bool = False
+    application_match_score: int | None = None
+    application_match_reason: str = ""
+    job: JobNameOnly | None = None
+
+
 class CompanyApplicationView(Application):
     job: DataReducedJob
+    other_applications: list[ApplicantAndJob] = Field(default_factory=list)
 
 
 class AdminApplicationView(CompanyApplicationView):
@@ -451,3 +465,36 @@ class PaginatedCompanyApplicationView(PaginatedResponse[CompanyApplicationView])
 @dataclass
 class PaginatedAdminApplicationView(PaginatedResponse[AdminApplicationView]):
     data: list[AdminApplicationView]
+
+
+class DataReducedQualifications(BaseModel):
+    most_recent_job: WorkHistory | None = None
+
+
+class DataReducedApplication(BaseDataModel):
+    application_status: ApplicationStatus = ApplicationStatus.CREATED_BY_COMPANY
+    application_is_shortlisted: bool = False
+    application_match_score: int | None = None
+    application_match_reason: str = ""
+
+    recruiter_tags: list[str] = Field(default_factory=list)
+
+    resume_id: str | None = None
+    resume_scan_status: ScanStatus | None = None
+    resume_scan_error_test: str | None = None
+    match_score_status: ScanStatus | None = None
+    match_score_error_text: str | None = None
+
+    viewed_by_company: bool | None = None
+    qualifications: DataReducedQualifications | None = None
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    user_location: Location | None = None
+    resume_url: str | None = None
+    external_reference_code: str | None = None
+
+
+@dataclass
+class PaginatedDataReducedApplication(PaginatedResponse[DataReducedApplication]):
+    data: list[DataReducedApplication]

@@ -4,10 +4,16 @@ from fastapi import (
     Depends,
 )
 
-from ajb.base import QueryFilterParams, RepoFilterParams, build_pagination_response
+from ajb.base import (
+    QueryFilterParams,
+    RepoFilterParams,
+    build_pagination_response,
+    Pagination,
+)
 from ajb.contexts.applications.models import (
     CompanyApplicationView,
-    PaginatedCompanyApplicationView,
+    PaginatedDataReducedApplication,
+    ApplicantAndJob
 )
 from ajb.contexts.applications.recruiter_updates.repository import (
     RecruiterUpdatesRepository,
@@ -31,7 +37,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=PaginatedCompanyApplicationView)
+@router.get("/", response_model=PaginatedDataReducedApplication)
 def get_all_company_applications(
     request: Request,
     company_id: str,
@@ -61,11 +67,11 @@ def get_all_company_applications(
         query.page,
         query.page_size,
         request.url._url,
-        PaginatedCompanyApplicationView,
+        PaginatedDataReducedApplication,
     )
 
 
-@router.post("/many", response_model=PaginatedCompanyApplicationView)
+@router.post("/many", response_model=PaginatedDataReducedApplication)
 def get_many_company_applications(
     request: Request,
     company_id: str,
@@ -87,7 +93,7 @@ def get_many_company_applications(
         page,
         page_size,
         request.url._url,
-        PaginatedCompanyApplicationView,
+        PaginatedDataReducedApplication,
     )
 
 

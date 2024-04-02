@@ -5,6 +5,7 @@ from ajb.base import (
     RepositoryRegistry,
     QueryFilterParams,
     RepoFilterParams,
+    Pagination,
 )
 from ajb.exceptions import EntityNotFound
 from ajb.vendor.arango.models import Filter, Operator, Join
@@ -14,6 +15,7 @@ from .models import (
     CreateApplication,
     Application,
     AdminApplicationView,
+    ApplicantAndJob,
 )
 
 
@@ -93,6 +95,30 @@ class CompanyApplicationRepository(ApplicationRepository):
             return_model=CompanyApplicationView,
         )
 
+    def get_all_company_applications_from_email(
+        self, company_id: str, email: str
+    ) -> list[ApplicantAndJob]:
+        repo_query = RepoFilterParams(
+            pagination=Pagination(page=0, page_size=50),
+            filters=[
+                Filter(field="company_id", value=company_id),
+                Filter(field="email", value=email),
+            ],
+        )
+        res, _ = self.query_with_joins(
+            joins=[
+                Join(
+                    to_collection_alias="job",
+                    to_collection="jobs",
+                    from_collection_join_attr="job_id",
+                ),
+            ],
+            repo_filters=repo_query,
+            return_model=ApplicantAndJob,
+        )
+        casted_result = t.cast(list[ApplicantAndJob], res)
+        return casted_result
+
     def get_company_view_single(self, application_id: str):
         result = self.get_with_joins(
             id=application_id,
@@ -106,7 +132,16 @@ class CompanyApplicationRepository(ApplicationRepository):
             return_model=CompanyApplicationView,
         )
         casted_result = t.cast(CompanyApplicationView, result)
-        return casted_result
+        if casted_result.email:
+            other_applications = self.get_all_company_applications_from_email(
+                casted_result.company_id, casted_result.email
+            )
+        else:
+            other_applications = []
+        return CompanyApplicationView(
+            **casted_result.model_dump(exclude={"other_applications"}),
+            other_applications=other_applications
+        )
 
     def get_admin_application_view(
         self,
