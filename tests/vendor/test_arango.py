@@ -363,3 +363,22 @@ def test_search(db: StandardDatabase, collection: str):
     results, count = query.execute()
     assert count == 1
     assert results[0]["test"] == "test"
+
+
+def test_filter_for_null_or_not_value(db: StandardDatabase, collection: str):
+    db.collection(collection).insert({"test": "one", "text_two": "monkey", "is_cool": True})
+    db.collection(collection).insert({"test": "two", "text_two": "monkey", "is_cool": None})
+    db.collection(collection).insert({"test": "three", "text_two": "monkey"})
+
+    query = ArangoDBRepository(db, collection)
+    query.add_filter(Filter(field="is_cool", operator=Operator.IS_NULL, value=None))
+    results, count = query.execute()
+    assert count == 2
+    assert results[0]["test"] == "two"
+    assert results[1]["test"] == "three"
+
+    query = ArangoDBRepository(db, collection)
+    query.add_filter(Filter(field="is_cool", operator=Operator.IS_NOT_NULL, value=None))
+    results, count = query.execute()
+    assert count == 1
+    assert results[0]["test"] == "one"

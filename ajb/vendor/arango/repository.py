@@ -180,6 +180,17 @@ class ArangoDBRepository:
             """
         )
 
+    def _append_is_null_filter(self, filter_index: int, filter_obj: Filter):
+        NULL_NOT_NULL_CONDITIONAL = (
+            "==" if filter_obj.operator == Operator.IS_NULL else "!="
+        )
+        self.query_parts.append(
+            f"""
+            {'FILTER' if filter_index == 0 else filter_obj.and_or_operator}
+            {filter_obj.collection_alias}.{filter_obj.field} {NULL_NOT_NULL_CONDITIONAL} null
+            """
+        )
+
     def _append_array_in_filter(self, filter_index: int, filter_obj: Filter):
         self.query_parts.append(
             f"""
@@ -214,11 +225,15 @@ class ArangoDBRepository:
                 self._append_text_search_filter(i, filter_obj)
             elif filter_obj.operator.is_in_search():
                 self._append_in_search_filter(i, filter_obj)
+            elif filter_obj.operator.is_null_filter():
+                self._append_is_null_filter(i, filter_obj)
             elif filter_obj.operator == Operator.ARRAY_IN:
                 self._append_array_in_filter(i, filter_obj)
             else:
                 self._append_default_filter(i, filter_obj)
-            self.bind_vars[self.get_next_bind_var_key()] = filter_obj.search_value
+            
+            if not filter_obj.operator.is_null_filter():
+                self.bind_vars[self.get_next_bind_var_key()] = filter_obj.search_value
 
     def _append_all_search_filters(self):
         if self.search_filters:

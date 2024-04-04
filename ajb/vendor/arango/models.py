@@ -11,6 +11,8 @@ class Operator(str, Enum):
     LESS_THAN = "<"
     GREATER_THAN_EQUAL = ">="
     LESS_THAN_EQUAL = "<="
+    IS_NULL = "IS NULL"
+    IS_NOT_NULL = "IS NOT NULL"
 
     # IN and ARRAY_IN behave differently
 
@@ -36,6 +38,9 @@ class Operator(str, Enum):
 
     def is_in_search(self) -> bool:
         return self in [Operator.IN, Operator.NOT_IN]
+    
+    def is_null_filter(self) -> bool:
+        return self in [Operator.IS_NULL, Operator.IS_NOT_NULL]
 
     def format_text_search(self, query: str) -> str:
         if self == Operator.STARTS_WITH:

@@ -1,7 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
-import typing as t
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel, Field
 import pandas as pd
@@ -17,7 +16,7 @@ from ajb.common.models import (
 from ajb.vendor.google_maps import get_state_from_lat_long
 from ajb.utils import get_datetime_from_string, get_miles_between_lat_long_pairs
 
-from .enumerations import ApplicationStatus
+from .enumerations import ApplicationStatus, ApplicationQuickStatus
 
 
 class ScanStatus(str, Enum):
@@ -227,6 +226,7 @@ class ApplicationStatusRecord(CreateApplicationStatusUpdate):
 
 class CreateApplication(UserCreatedApplication):
     application_status: ApplicationStatus = ApplicationStatus.CREATED_BY_COMPANY
+    application_quick_status: ApplicationQuickStatus | None = None
     application_is_shortlisted: bool = False
     application_match_score: int | None = None
     application_match_reason: str = ""
@@ -440,11 +440,12 @@ class ApplicantAndJob(BaseDataModel):
     name: str | None = None
     email: str | None = None
     phone: str | None = None
-    application_status: ApplicationStatus = ApplicationStatus.CREATED_BY_COMPANY
-    application_is_shortlisted: bool = False
-    application_match_score: int | None = None
-    application_match_reason: str = ""
-    job: JobNameOnly | None = None
+    application_status: ApplicationStatus
+    application_quick_status: ApplicationQuickStatus | None = None
+    application_is_shortlisted: bool
+    application_match_score: int | None
+    application_match_reason: str
+    job: JobNameOnly | None
 
 
 class CompanyApplicationView(Application):
@@ -468,13 +469,15 @@ class PaginatedAdminApplicationView(PaginatedResponse[AdminApplicationView]):
 
 class DataReducedQualifications(BaseModel):
     most_recent_job: WorkHistory | None = None
+    skills: list[str] | None = None
 
 
 class DataReducedApplication(BaseDataModel):
-    application_status: ApplicationStatus = ApplicationStatus.CREATED_BY_COMPANY
-    application_is_shortlisted: bool = False
-    application_match_score: int | None = None
-    application_match_reason: str = ""
+    application_status: ApplicationStatus
+    application_quick_status: ApplicationQuickStatus | None = None
+    application_is_shortlisted: bool
+    application_match_score: int | None
+    application_match_reason: str
 
     recruiter_tags: list[str] = Field(default_factory=list)
 
@@ -493,6 +496,8 @@ class DataReducedApplication(BaseDataModel):
     resume_url: str | None = None
     external_reference_code: str | None = None
 
+    job_id: str
+    company_id: str
     job: JobNameOnly | None = None
 
 

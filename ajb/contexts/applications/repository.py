@@ -66,7 +66,13 @@ class CompanyApplicationRepository(ApplicationRepository):
                 )
             )
         if new_only:
-            repo_filters.filters.append(Filter(field="viewed_by_company", value=False))
+            repo_filters.filters.append(
+                Filter(
+                    field="application_quick_status",
+                    operator=Operator.IS_NULL,
+                    value=None,
+                )
+            )
         if resume_text_contains:
             repo_filters.filters.append(
                 Filter(

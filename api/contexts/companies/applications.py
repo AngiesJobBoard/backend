@@ -8,13 +8,13 @@ from ajb.base import (
     QueryFilterParams,
     RepoFilterParams,
     build_pagination_response,
-    Pagination,
 )
 from ajb.contexts.applications.models import (
     CompanyApplicationView,
     PaginatedDataReducedApplication,
-    ApplicantAndJob
+    DataReducedApplication,
 )
+from ajb.contexts.applications.enumerations import ApplicationQuickStatus
 from ajb.contexts.applications.recruiter_updates.repository import (
     RecruiterUpdatesRepository,
 )
@@ -200,7 +200,47 @@ def remove_application_to_shortlist(
     return response
 
 
-@router.post("/jobs/{job_id}/applications/{application_id}/status")
+@router.post(
+    "/jobs/{job_id}/applications/{application_id}/quick-status",
+    response_model=DataReducedApplication,
+)
+def update_application_quick_status(
+    request: Request,
+    company_id: str,
+    job_id: str,
+    application_id: str,
+    new_quick_status: ApplicationQuickStatus,
+):
+    """Updates an application quick status"""
+    # AJBTODO Move this to unit of work and make recruiter update async??
+    ApplicationRepository(request.state.request_scope).update_fields(
+        application_id, application_quick_status=new_quick_status.value
+    )
+    mixpanel.application_quick_status_is_updated(
+        request.state.request_scope.user_id,
+        company_id,
+        job_id,
+        application_id,
+        new_quick_status.value,
+    )
+    RecruiterUpdatesRepository(
+        request.state.request_scope, application_id
+    ).update_application_quick_status(
+        company_id,
+        job_id,
+        application_id,
+        request.state.request_scope.user_id,
+        new_quick_status,
+    )
+    return CompanyApplicationRepository(
+        request.state.request_scope
+    ).get_company_view_single(application_id)
+
+
+@router.post(
+    "/jobs/{job_id}/applications/{application_id}/status",
+    response_model=DataReducedApplication,
+)
 def update_application_status(
     request: Request,
     company_id: str,
@@ -209,7 +249,8 @@ def update_application_status(
     new_status: CreateApplicationStatusUpdate,
 ):
     """Updates an application status"""
-    response = ApplicationRepository(request.state.request_scope).update_fields(
+    # AJBTODO Move this to unit of work and make recruiter update async??
+    ApplicationRepository(request.state.request_scope).update_fields(
         application_id, application_status=new_status.status.value
     )
     mixpanel.application_status_is_updated(
@@ -229,7 +270,9 @@ def update_application_status(
         new_status.status,
         new_status.update_reason,
     )
-    return response
+    return CompanyApplicationRepository(
+        request.state.request_scope
+    ).get_company_view_single(application_id)
 
 
 @router.patch("/jobs/{job_id}/applications/{application_id}/view")

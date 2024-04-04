@@ -7,7 +7,10 @@ from ajb.base import (
     Pagination,
 )
 from ajb.vendor.arango.models import Join, Filter, Operator
-from ajb.contexts.applications.enumerations import ApplicationStatus
+from ajb.contexts.applications.enumerations import (
+    ApplicationStatus,
+    ApplicationQuickStatus,
+)
 
 from .models import (
     CreateApplicationUpdate,
@@ -60,9 +63,30 @@ class RecruiterUpdatesRepository(
         return self.create(
             CreateApplicationUpdate(
                 comment=comment,
-                new_application_status=new_application_status,
+                new_application_status=new_application_status.value,
                 added_by_ajb_admin=False,
                 type=UpdateType.STATUS_CHANGE,
+                company_id=company_id,
+                job_id=job_id,
+                application_id=application_id,
+                recruiter_id=recruiter_id,
+            )
+        )
+
+    def update_application_quick_status(
+        self,
+        company_id: str,
+        job_id: str,
+        application_id: str,
+        recruiter_id: str,
+        new_application_status: ApplicationQuickStatus,
+    ):
+        return self.create(
+            CreateApplicationUpdate(
+                comment=None,
+                new_application_status=new_application_status.value,
+                added_by_ajb_admin=False,
+                type=UpdateType.QUICK_STATUS_CHANGE,
                 company_id=company_id,
                 job_id=job_id,
                 application_id=application_id,

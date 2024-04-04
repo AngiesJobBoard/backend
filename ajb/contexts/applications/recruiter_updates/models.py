@@ -3,12 +3,12 @@ from enum import Enum
 from dataclasses import dataclass
 from pydantic import BaseModel
 from ajb.base import BaseDataModel, PaginatedResponse
-from ajb.contexts.applications.enumerations import ApplicationStatus
 
 
 class UpdateType(str, Enum):
     NOTE = "note"
     STATUS_CHANGE = "status_change"
+    QUICK_STATUS_CHANGE = "quick_status_change"
     ADD_TO_SHORTLIST = "add_to_shortlist"
     REMOVE_FROM_SHORTLIST = "remove_from_shortlist"
     APPLICATION_VIEWED = "application_viewed"
@@ -16,7 +16,7 @@ class UpdateType(str, Enum):
 
 class UserCreateApplicationUpdate(BaseModel):
     comment: str | None
-    new_application_status: ApplicationStatus | None
+    new_application_status: str | None
     added_by_ajb_admin: bool = False
 
 

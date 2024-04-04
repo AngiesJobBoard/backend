@@ -62,7 +62,11 @@ def convert_filter_type_based_on_datamodel(
         else:
             # It's a tuple type, so use the first type in the tuple
             if not issubclass(possible_field_type[0], datetime):
-                filter.value = possible_field_type[0](filter.value)
+                try:
+                    filter.value = possible_field_type[0](filter.value)
+                except ValueError:
+                    # If the value can't be converted to the type, just pass it through
+                    pass
         updated_filters.append(filter)
     return updated_filters
 

@@ -55,6 +55,7 @@ class EventName(str, Enum):
     APPLICATION_IS_SHORTLISTED = "application_is_shortlisted"
     APPLICATION_IS_DELETED = "application_is_deleted"
     APPLICATION_STATUS_IS_UPDATED = "application_status_is_updated"
+    APPLICATION_QUICK_STATUS_IS_UPDATED = "application_quick_status_is_updated"
     APPLICATION_IS_VIEWED = "application_is_viewed"
     JOB_FORWARDED_FROM_WEBHOOK = "job_forwarded_from_webhook"
     APPLICATION_FORWARDED_FROM_WEBHOOK = "application_forwarded_from_webhook"
@@ -257,6 +258,23 @@ class MixpanelDomainEvents(MixpanelService):
         }
         self.track(
             user_id, company_id, EventName.APPLICATION_STATUS_IS_UPDATED, properties
+        )
+    
+    def application_quick_status_is_updated(
+        self,
+        user_id: str,
+        company_id: str,
+        job_id: str,
+        application_id: str,
+        new_quick_status: str,
+    ):
+        properties = {
+            "job_id": job_id,
+            "application_id": application_id,
+            "new_quick_status": new_quick_status,
+        }
+        self.track(
+            user_id, company_id, EventName.APPLICATION_QUICK_STATUS_IS_UPDATED, properties
         )
 
     def job_forwarded_from_webhook(self, company_id: str, job_id: str):
