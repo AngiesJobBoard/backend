@@ -38,7 +38,7 @@ class Operator(str, Enum):
 
     def is_in_search(self) -> bool:
         return self in [Operator.IN, Operator.NOT_IN]
-    
+
     def is_null_filter(self) -> bool:
         return self in [Operator.IS_NULL, Operator.IS_NOT_NULL]
 

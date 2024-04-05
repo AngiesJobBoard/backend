@@ -3,7 +3,7 @@ from unittest.mock import patch
 from aiohttp import ClientSession
 import pytest
 
-from ajb.fixtures.applications import ApplicationFixture
+from ajb.base.models import RepoFilterParams
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.applications.models import (
@@ -13,15 +13,22 @@ from ajb.contexts.applications.models import (
     WorkHistory,
     Education,
     CreateApplication,
+    CreateApplicationStatusUpdate,
 )
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
 from ajb.contexts.applications.matching.ai_matching import ApplicantMatchScore
-from ajb.fixtures.companies import CompanyFixture
+from ajb.contexts.applications.recruiter_updates.repository import (
+    RecruiterUpdatesRepository,
+)
+from ajb.contexts.companies.notifications.repository import (
+    CompanyNotificationRepository,
+)
 from ajb.vendor.arango.models import Filter, Operator
 from ajb.vendor.openai.repository import AsyncOpenAIRepository
-from ajb.base.models import RepoFilterParams
+from ajb.fixtures.companies import CompanyFixture
+from ajb.fixtures.applications import ApplicationFixture
 
 
 def test_company_view_list_basic(request_scope):
@@ -379,3 +386,28 @@ async def test_high_matching_applicants(request_scope):
     assert retrieved_job.shortlisted_applicants == 0
     assert retrieved_job.high_matching_applicants == 0
     assert retrieved_job.new_applicants == 0
+
+
+def test_application_status_update(request_scope):
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
+    usecase = ApplicationUseCase(request_scope)
+    recruiter_update_repo = RecruiterUpdatesRepository(request_scope)
+    company_notifications_repo = CompanyNotificationRepository(request_scope)
+
+    assert len(recruiter_update_repo.get_all()) == 0
+    assert len(company_notifications_repo.get_all()) == 0
+
+    updated_application = usecase.recruiter_updates_application_status(
+        app_data.company.id,
+        app_data.job.id,
+        app_data.application.id,
+        CreateApplicationStatusUpdate(
+            application_status="Hired", update_reason="This is a test"
+        ),
+    )
+
+    # Check status updated occurred
+    assert updated_application.application_status == "Hired"
+
+    assert len(recruiter_update_repo.get_all()) == 1
+    assert len(company_notifications_repo.get_all()) == 1

@@ -259,7 +259,7 @@ class MixpanelDomainEvents(MixpanelService):
         self.track(
             user_id, company_id, EventName.APPLICATION_STATUS_IS_UPDATED, properties
         )
-    
+
     def application_quick_status_is_updated(
         self,
         user_id: str,
@@ -274,7 +274,10 @@ class MixpanelDomainEvents(MixpanelService):
             "new_quick_status": new_quick_status,
         }
         self.track(
-            user_id, company_id, EventName.APPLICATION_QUICK_STATUS_IS_UPDATED, properties
+            user_id,
+            company_id,
+            EventName.APPLICATION_QUICK_STATUS_IS_UPDATED,
+            properties,
         )
 
     def job_forwarded_from_webhook(self, company_id: str, job_id: str):

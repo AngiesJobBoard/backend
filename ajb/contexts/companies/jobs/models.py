@@ -173,6 +173,7 @@ class UserCreateJob(BaseModel):
 class CreateJob(UserCreateJob):
     company_id: str
     job_score: float | None = None
+    job_score_reason: str | None = None
     total_applicants: int = 0
     high_matching_applicants: int = 0
     shortlisted_applicants: int = 0
@@ -291,6 +292,7 @@ class JobWithCompany(BaseDataModel):
     is_live: bool = False
     is_boosted: bool = False
     job_score: float | None = None
+    job_score_reason: str | None = None
     location_type: JobLocationType | None = None
 
     company: DataReducedCompany

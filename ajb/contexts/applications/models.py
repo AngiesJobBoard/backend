@@ -16,8 +16,6 @@ from ajb.common.models import (
 from ajb.vendor.google_maps import get_state_from_lat_long
 from ajb.utils import get_datetime_from_string, get_miles_between_lat_long_pairs
 
-from .enumerations import ApplicationStatus, ApplicationQuickStatus
-
 
 class ScanStatus(str, Enum):
     NO_SCAN = "No Scan"
@@ -215,7 +213,7 @@ class UpdateApplication(BaseModel):
 
 
 class CreateApplicationStatusUpdate(BaseModel):
-    status: ApplicationStatus
+    application_status: str
     update_reason: str | None = None
 
 
@@ -225,8 +223,7 @@ class ApplicationStatusRecord(CreateApplicationStatusUpdate):
 
 
 class CreateApplication(UserCreatedApplication):
-    application_status: ApplicationStatus = ApplicationStatus.CREATED_BY_COMPANY
-    application_quick_status: ApplicationQuickStatus | None = None
+    application_status: str | None = None
     application_is_shortlisted: bool = False
     application_match_score: int | None = None
     application_match_reason: str = ""
@@ -440,8 +437,7 @@ class ApplicantAndJob(BaseDataModel):
     name: str | None = None
     email: str | None = None
     phone: str | None = None
-    application_status: ApplicationStatus
-    application_quick_status: ApplicationQuickStatus | None = None
+    application_status: str | None = None
     application_is_shortlisted: bool
     application_match_score: int | None
     application_match_reason: str
@@ -473,8 +469,7 @@ class DataReducedQualifications(BaseModel):
 
 
 class DataReducedApplication(BaseDataModel):
-    application_status: ApplicationStatus
-    application_quick_status: ApplicationQuickStatus | None = None
+    application_status: str | None = None
     application_is_shortlisted: bool
     application_match_score: int | None
     application_match_reason: str

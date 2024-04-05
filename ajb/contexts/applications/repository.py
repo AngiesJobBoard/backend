@@ -68,7 +68,7 @@ class CompanyApplicationRepository(ApplicationRepository):
         if new_only:
             repo_filters.filters.append(
                 Filter(
-                    field="application_quick_status",
+                    field="application_status",
                     operator=Operator.IS_NULL,
                     value=None,
                 )

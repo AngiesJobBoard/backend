@@ -2,9 +2,6 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from ajb.common.models import ExperienceLevel, JobLocationType
-from ajb.contexts.applications.enumerations import (
-    ApplicationStatus,
-)
 from ajb.contexts.companies.enumerations import (
     NumEmployeesEnum,
     ScheduleType,
@@ -26,15 +23,6 @@ from ajb.static.enumerations import (
 )
 
 router = APIRouter(prefix="/static/enumerations", tags=["Enumerations"])
-
-
-@router.get("/applicant-tracking")
-def get_application_enums():
-    return JSONResponse(
-        content={
-            "application_status": [status.value for status in ApplicationStatus],
-        }
-    )
 
 
 @router.get("/company")

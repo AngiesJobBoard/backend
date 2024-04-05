@@ -7,6 +7,7 @@ from ajb.base import BaseDataModel, PaginatedResponse
 
 class NotificationType(str, Enum):
     HIGH_MATCHING_CANDIDATE = "high_matching_candidate"
+    APPLICATION_STATUS_CHANGE = "application_status_change"
 
 
 class SystemCreateCompanyNotification(BaseModel):

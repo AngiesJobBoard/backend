@@ -366,8 +366,12 @@ def test_search(db: StandardDatabase, collection: str):
 
 
 def test_filter_for_null_or_not_value(db: StandardDatabase, collection: str):
-    db.collection(collection).insert({"test": "one", "text_two": "monkey", "is_cool": True})
-    db.collection(collection).insert({"test": "two", "text_two": "monkey", "is_cool": None})
+    db.collection(collection).insert(
+        {"test": "one", "text_two": "monkey", "is_cool": True}
+    )
+    db.collection(collection).insert(
+        {"test": "two", "text_two": "monkey", "is_cool": None}
+    )
     db.collection(collection).insert({"test": "three", "text_two": "monkey"})
 
     query = ArangoDBRepository(db, collection)

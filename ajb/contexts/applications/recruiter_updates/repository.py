@@ -7,10 +7,6 @@ from ajb.base import (
     Pagination,
 )
 from ajb.vendor.arango.models import Join, Filter, Operator
-from ajb.contexts.applications.enumerations import (
-    ApplicationStatus,
-    ApplicationQuickStatus,
-)
 
 from .models import (
     CreateApplicationUpdate,
@@ -23,7 +19,7 @@ from .models import (
 class RecruiterUpdatesRepository(
     MultipleChildrenRepository[CreateApplicationUpdate, ApplicationUpdate]
 ):
-    collection = Collection.APPLICATION_RECRUITER_NOTES
+    collection = Collection.APPLICATION_RECRUITER_UPDATES
     entity_model = ApplicationUpdate
 
     def __init__(self, request_scope: RequestScope, application_id: str | None = None):
@@ -57,36 +53,15 @@ class RecruiterUpdatesRepository(
         job_id: str,
         application_id: str,
         recruiter_id: str,
-        new_application_status: ApplicationStatus,
+        new_application_status: str,
         comment: str | None = None,
     ):
         return self.create(
             CreateApplicationUpdate(
                 comment=comment,
-                new_application_status=new_application_status.value,
+                new_application_status=new_application_status,
                 added_by_ajb_admin=False,
                 type=UpdateType.STATUS_CHANGE,
-                company_id=company_id,
-                job_id=job_id,
-                application_id=application_id,
-                recruiter_id=recruiter_id,
-            )
-        )
-
-    def update_application_quick_status(
-        self,
-        company_id: str,
-        job_id: str,
-        application_id: str,
-        recruiter_id: str,
-        new_application_status: ApplicationQuickStatus,
-    ):
-        return self.create(
-            CreateApplicationUpdate(
-                comment=None,
-                new_application_status=new_application_status.value,
-                added_by_ajb_admin=False,
-                type=UpdateType.QUICK_STATUS_CHANGE,
                 company_id=company_id,
                 job_id=job_id,
                 application_id=application_id,

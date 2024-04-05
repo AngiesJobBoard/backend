@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ajb.base.models import BaseDataModel, PaginatedResponse
 
@@ -13,10 +13,36 @@ class UserCreateCompany(BaseModel):
     num_employees: NumEmployeesEnum | None = None
 
 
+class ApplicationStatusRepresents(str, Enum):
+    NEW = "New"
+    IN_REVIEW = "In Review"
+    INTERESTED = "Interested"
+    HIRED = "Hired"
+    REJECTED = "Rejected"
+
+
+class ApplicationStatuses(BaseModel):
+    label: str
+    represents: ApplicationStatusRepresents
+
+
+def default_statuses():
+    return [
+        ApplicationStatuses(label="New", represents=ApplicationStatusRepresents.NEW),
+        ApplicationStatuses(label="Left Voicemail", represents=ApplicationStatusRepresents.IN_REVIEW),
+        ApplicationStatuses(label="Emailed", represents=ApplicationStatusRepresents.IN_REVIEW),
+        ApplicationStatuses(label="Phone Interview", represents=ApplicationStatusRepresents.INTERESTED),
+        ApplicationStatuses(label="In Person Interview", represents=ApplicationStatusRepresents.INTERESTED),
+        ApplicationStatuses(label="Declined", represents=ApplicationStatusRepresents.REJECTED),
+        ApplicationStatuses(label="Hired", represents=ApplicationStatusRepresents.HIRED),
+    ]
+
+
 class CompanySettings(BaseModel):
     enable_all_email_ingress: bool = False
     enable_job_api_ingress: bool = False
     enable_applicant_api_ingress: bool = False
+    application_statuses: list[ApplicationStatuses] = Field(default_factory=default_statuses)
 
 
 class UpdateCompany(BaseModel):

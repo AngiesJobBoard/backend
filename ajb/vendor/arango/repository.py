@@ -231,7 +231,7 @@ class ArangoDBRepository:
                 self._append_array_in_filter(i, filter_obj)
             else:
                 self._append_default_filter(i, filter_obj)
-            
+
             if not filter_obj.operator.is_null_filter():
                 self.bind_vars[self.get_next_bind_var_key()] = filter_obj.search_value
 

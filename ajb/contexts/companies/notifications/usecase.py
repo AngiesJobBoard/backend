@@ -15,11 +15,21 @@ class CompanyNotificationUsecase(BaseUseCase):
         return recruiter.id
 
     def create_company_notification(
-        self, company_id: str, data: SystemCreateCompanyNotification
+        self,
+        company_id: str,
+        data: SystemCreateCompanyNotification,
+        all_but_current_recruiter: bool = False,
     ) -> None:
         notification_repo = self.get_repository(Collection.COMPANY_NOTIFICATIONS)
         recruiter_repo = self.get_repository(Collection.COMPANY_RECRUITERS)
         company_recruiters = recruiter_repo.get_all(company_id=company_id)
+
+        if all_but_current_recruiter:
+            company_recruiters = [
+                recruiter
+                for recruiter in company_recruiters
+                if recruiter.user_id != self.request_scope.user_id
+            ]
 
         documents = [
             CreateCompanyNotification(recruiter_id=recruiter.id, **data.model_dump())
@@ -60,33 +70,5 @@ class CompanyNotificationUsecase(BaseUseCase):
             is_read=False,
         )
         for notification in all_recruiter_notifications:
-            notification_repo.update_fields(
-                notification.id,
-                is_read=True
-            )
+            notification_repo.update_fields(notification.id, is_read=True)
         return True
-
-
-
-# from ajb.base import RequestScope
-# from ajb.vendor.arango.repository import get_arango_db
-
-# scope = RequestScope(
-#     user_id="me",
-#     db=get_arango_db(),
-#     company_id=None
-# )
-# repo = CompanyNotificationUsecase(scope)
-
-
-# repo.create_company_notification(
-#     company_id="full-test",
-#     data=SystemCreateCompanyNotification(
-#         company_id="full-test",
-#         notification_type=NotificationType.HIGH_MATCHING_CANDIDATE,
-#         title="Great news!",
-#         message="You just a notification yaa bishsss",
-#         application_id="123",
-#         job_id="abc",
-#     )
-# )

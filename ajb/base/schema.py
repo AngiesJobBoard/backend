@@ -24,7 +24,7 @@ class Collection(str, Enum):
     JOB_TEMPLATES = "job_templates"
     COMPANY_OFFICES = "company_offices"
     APPLICATIONS = "applications"
-    APPLICATION_RECRUITER_NOTES = "application_recruiter_notes"
+    APPLICATION_RECRUITER_UPDATES = "application_recruiter_updates"
     RESUMES = "resumes"
     COMPANY_NOTIFICATIONS = "company_notifications"
     COMPANY_EMAIL_INGRESS_WEBHOOKS = "company_email_ingress_webhooks"
