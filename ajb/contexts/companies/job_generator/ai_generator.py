@@ -8,28 +8,7 @@ class AIJobGenerator:
     def __init__(self, openai: OpenAIRepository | None = None):
         self.openai = openai or OpenAIRepository()
 
-    def generate_job_from_description(
-        self,
-        description: str,
-    ) -> UserCreateJob:
-        job_keys = [
-            "position_title",
-            "industry_category",
-            "industry_subcategories",
-            "required_job_skills",
-            "description",
-            "license_requirements",
-            "certification_requirements",
-        ]
-        response = self.openai.json_prompt(
-            prompt=f"""
-            You are an expert at defining jobs. Given the following job description, create a job with the following keys.
-            Do your best to provide some answer for each key. Respond only in JSON format.
-            Keys: {job_keys}.
-            Job Description: {description}.
-            """,
-            max_tokens=4096,
-        )
+    def _convert_ai_response_to_job(self, response: dict) -> UserCreateJob:
         skills = []
         if response.get("required_job_skills"):
             skills = (
@@ -65,6 +44,30 @@ class AIJobGenerator:
         )
         return created_job
 
+    def generate_job_from_description(
+        self,
+        description: str,
+    ) -> UserCreateJob:
+        job_keys = [
+            "position_title",
+            "industry_category",
+            "industry_subcategories",
+            "required_job_skills",
+            "description",
+            "license_requirements",
+            "certification_requirements",
+        ]
+        response = self.openai.json_prompt(
+            prompt=f"""
+            You are an expert at defining jobs. Given the following job description, create a job with the following keys.
+            Do your best to provide some answer for each key. Respond only in JSON format.
+            Keys: {job_keys}.
+            Job Description: {description}.
+            """,
+            max_tokens=4096,
+        )
+        return self._convert_ai_response_to_job(response)
+
     def generate_description_from_job_details(
         self, job: UserCreateJob, tone: PreferredTone
     ) -> str:
@@ -98,3 +101,26 @@ class AIJobGenerator:
                 Description: {draft}",
             max_tokens=4096,
         )
+    
+    def generate_job_from_url(
+        self, url: str
+    ) -> UserCreateJob:
+        job_keys = [
+            "position_title",
+            "industry_category",
+            "industry_subcategories",
+            "required_job_skills",
+            "description",
+            "license_requirements",
+            "certification_requirements",
+        ]
+        response = self.openai.json_prompt(
+            prompt=f"""
+            Given the following URL which represents a job post, create a job with the following keys.
+            Do your best to provide some answer for each key. Respond only in JSON format.
+            Keys: {job_keys}.
+            URL: {url}.
+            """,
+            max_tokens=4096,
+        )
+        return self._convert_ai_response_to_job(response)
