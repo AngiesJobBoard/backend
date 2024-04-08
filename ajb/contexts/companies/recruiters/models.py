@@ -12,11 +12,18 @@ class UserCreateRecruiter(BaseModel):
     company_id: str
 
 
-class CreateRecruiter(UserCreateRecruiter):
-    send_daily_updates: bool = True
-    send_weekly_updates: bool = True
-    send_new_application_updates: bool = True
-    send_email_message_updates: bool = True
+class RecruiterNotificationSettings(BaseModel):
+    send_daily_updates: bool | None = None
+    send_weekly_updates: bool | None = None
+    send_high_match_application_updates: bool | None = None
+    send_interesting_application_updates: bool | None = None
+
+
+class UserUpdateRecruiter(BaseModel):
+    settings: RecruiterNotificationSettings = RecruiterNotificationSettings()
+
+
+class CreateRecruiter(UserCreateRecruiter, UserUpdateRecruiter): ...
 
 
 class Recruiter(CreateRecruiter, BaseDataModel): ...

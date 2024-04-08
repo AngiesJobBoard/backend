@@ -33,14 +33,23 @@ class CompanyInvitationUseCase(BaseUseCase):
                 Collection.RECRUITER_INVITATIONS, transaction_scope, company_id
             )
 
-            created_invitation = invitation_repo.create(
-                CreateInvitation(
-                    inviting_user_id=inviting_user_id,
-                    email_address=data.email_address,
-                    company_id=company_id,
-                    role=data.role,
-                )
+            # If there are any matches of same companyID and email then update the invitation
+            potential_application = invitation_repo.get_all(
+                company_id=company_id, email=data.email
             )
+            if not potential_application:
+                created_invitation = invitation_repo.create(
+                    CreateInvitation(
+                        inviting_user_id=inviting_user_id,
+                        email=data.email,
+                        company_id=company_id,
+                        role=data.role,
+                    )
+                )
+            else:
+                created_invitation = invitation_repo.update_fields(
+                    potential_application[0].id, role=data.role
+                )
 
             company_name = (
                 self.get_repository(Collection.COMPANIES, transaction_scope)
@@ -50,7 +59,7 @@ class CompanyInvitationUseCase(BaseUseCase):
 
             # Send email notification with encoded invitation
             invitation_data = InvitationData(
-                email_address=data.email_address,
+                email=data.email,
                 invitation_id=created_invitation.id,
                 company_id=company_id,
             )
@@ -61,7 +70,7 @@ class CompanyInvitationUseCase(BaseUseCase):
                 f"{SETTINGS.APP_URL}/confirm-invite?invite={deeplink_param}"
             )
             SendgridRepository().send_email_template(
-                to_emails=data.email_address,
+                to_emails=data.email,
                 subject="You've been invited to Angie's Job Board!",
                 template_data=RecruiterInvitationData(
                     companyName=company_name,
@@ -93,7 +102,7 @@ class CompanyInvitationUseCase(BaseUseCase):
             except EntityNotFound:
                 raise RecruiterCreateException("Accepting user does not exist")
 
-            # if accepting_user.email != decoded_invitation.email_address:
+            # if accepting_user.email != decoded_invitation.email:
             #     raise RecruiterCreateException(
             #         "Invitation email does not match accepting user email"
             #     )
@@ -133,7 +142,7 @@ class CompanyInvitationUseCase(BaseUseCase):
             # Clean up all other invitations for this user and company
             all_other_invitations: list[Invitation] = invitation_repo.query(
                 company_id=decoded_invitation.company_id,
-                email_address=decoded_invitation.email_address,
+                email=decoded_invitation.email,
             )[0]
             invitation_repo.delete_many(
                 [invitation.id for invitation in all_other_invitations]
@@ -144,13 +153,13 @@ class CompanyInvitationUseCase(BaseUseCase):
     def user_cancels_invitation(
         self, company_id: str, invitation_id: str, cancelling_user_id: str
     ) -> bool:
-        # Check user is admin or owner on company
-        recruiter_repo = self.get_repository(
-            Collection.COMPANY_RECRUITERS, self.request_scope, company_id
-        )
-        user: Recruiter = recruiter_repo.get_one(user_id=cancelling_user_id)
-        if user.role not in [RecruiterRole.ADMIN, RecruiterRole.OWNER]:
-            raise GenericPermissionError
+        # AJBTODO add more permission checks
+        # recruiter_repo = self.get_repository(
+        #     Collection.COMPANY_RECRUITERS, self.request_scope, company_id
+        # )
+        # user: Recruiter = recruiter_repo.get_one(user_id=cancelling_user_id, company_id=company_id)
+        # if user.role not in [RecruiterRole.ADMIN, RecruiterRole.OWNER]:
+        #     raise GenericPermissionError
 
         invitation_repo = self.get_repository(
             Collection.RECRUITER_INVITATIONS, self.request_scope, company_id

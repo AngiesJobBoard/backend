@@ -101,10 +101,8 @@ class AIJobGenerator:
                 Description: {draft}",
             max_tokens=4096,
         )
-    
-    def generate_job_from_url(
-        self, url: str
-    ) -> UserCreateJob:
+
+    def generate_job_from_url(self, url: str) -> UserCreateJob:
         job_keys = [
             "position_title",
             "industry_category",

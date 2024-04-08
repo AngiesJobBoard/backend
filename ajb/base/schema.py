@@ -30,6 +30,13 @@ class Collection(str, Enum):
     COMPANY_EMAIL_INGRESS_WEBHOOKS = "company_email_ingress_webhooks"
     COMPANY_API_INGRESS_WEBHOOKS = "company_api_ingress_webhooks"
     COMPANY_API_EGRESS_WEBHOOKS = "company_api_egress_webhooks"
+    COMPANY_API_INGRESS_TRANSFORMERS = "company_api_ingress_transformers"
+    COMPANY_API_EGRESS_TRANSFORMERS = "company_api_egress_transformers"
+
+    # Billing
+    COMPANY_SUBSCRIPTIONS = "company_subscriptions"
+    COMPANY_SUBSCRIPTION_USAGE_AND_BILLING = "company_subscription_usage_and_billing"
+    # COMPANY_PAYMENT_HISTORY = "company_payment_history"  # to be added later...
 
     # System
     SCHEDULED_EVENTS = "scheduled_events"

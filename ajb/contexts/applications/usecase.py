@@ -347,6 +347,6 @@ class ApplicationUseCase(BaseUseCase):
                         "update_reason": new_status.update_reason,
                     },
                 ),
-                # all_but_current_recruiter=True,
+                all_but_current_recruiter=True,
             )
             return response

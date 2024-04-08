@@ -5,7 +5,10 @@ from fastapi.responses import JSONResponse
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.users.usecase import UserUseCase
 from ajb.contexts.users.models import UpdateUser, User, UserProfileUpload
-from ajb.contexts.companies.recruiters.repository import RecruiterRepository, Recruiter
+from ajb.contexts.companies.recruiters.repository import RecruiterRepository
+from ajb.contexts.companies.recruiters.models import UserUpdateRecruiter, Recruiter
+
+from api.exceptions import NotFound
 
 from api.vendors import storage
 
@@ -46,6 +49,22 @@ def update_current_user(request: Request, user: UpdateUser):
 def get_me_as_a_recruiter(request: Request, company_id: str):
     return RecruiterRepository(request.state.request_scope, company_id).get_one(
         user_id=request.state.request_scope.user_id, company_id=company_id
+    )
+
+
+@router.patch("/companies/{company_id}/recruiter", response_model=Recruiter)
+def update_me_as_a_recruiter(
+    request: Request, company_id: str, updates: UserUpdateRecruiter
+):
+    recruiter_repo = RecruiterRepository(request.state.request_scope, company_id)
+    recruiter = recruiter_repo.get_one(
+        user_id=request.state.request_scope.user_id, company_id=company_id
+    )
+    if not recruiter:
+        raise NotFound("Recruiter not found")
+
+    return RecruiterRepository(request.state.request_scope, company_id).update(
+        recruiter.id, updates
     )
 
 

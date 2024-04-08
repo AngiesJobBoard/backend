@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from ajb.base.models import RequestScope
 from ajb.contexts.users.models import User
 from ajb.contexts.companies.repository import (
@@ -23,6 +25,16 @@ from ajb.contexts.companies.jobs.models import (
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.recruiters.models import RecruiterRole
+from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
+from ajb.contexts.billing.subscriptions.models import (
+    CreateCompanySubscription,
+    SubscriptionPlan,
+)
+from ajb.contexts.billing.billing_models import (
+    SUBSCRIPTION_FREE_TIERS,
+    SUBSCRIPTION_RATES,
+)
+
 from ajb.fixtures.users import UserFixture
 
 
@@ -98,5 +110,21 @@ class CompanyFixture:
             CreateJob(
                 company_id=company_id,
                 position_title="Software Engineer",
+            )
+        )
+
+    def create_company_subscription(self, company_id: str, plan: SubscriptionPlan):
+        subscription_repo = CompanySubscriptionRepository(
+            self.request_scope, company_id
+        )
+        return subscription_repo.create(
+            CreateCompanySubscription(
+                company_id=company_id,
+                plan=plan,
+                start_date=datetime(2021, 1, 1),
+                active=True,
+                stripe_subscription_id="sub_123",
+                rates=SUBSCRIPTION_RATES[plan],
+                free_tier=SUBSCRIPTION_FREE_TIERS[plan],
             )
         )

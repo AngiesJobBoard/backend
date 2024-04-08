@@ -7,7 +7,7 @@ from ..models import RecruiterRole
 
 
 class UserCreateInvitation(BaseModel):
-    email_address: str
+    email: str
     role: RecruiterRole
 
 
@@ -25,6 +25,6 @@ class InvitationPaginatedResponse(PaginatedResponse[Invitation]):
 
 
 class InvitationData(BaseDeepLinkData):
-    email_address: str
+    email: str
     invitation_id: str
     company_id: str

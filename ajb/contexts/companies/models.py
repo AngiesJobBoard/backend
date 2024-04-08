@@ -29,12 +29,25 @@ class ApplicationStatuses(BaseModel):
 def default_statuses():
     return [
         ApplicationStatuses(label="New", represents=ApplicationStatusRepresents.NEW),
-        ApplicationStatuses(label="Left Voicemail", represents=ApplicationStatusRepresents.IN_REVIEW),
-        ApplicationStatuses(label="Emailed", represents=ApplicationStatusRepresents.IN_REVIEW),
-        ApplicationStatuses(label="Phone Interview", represents=ApplicationStatusRepresents.INTERESTED),
-        ApplicationStatuses(label="In Person Interview", represents=ApplicationStatusRepresents.INTERESTED),
-        ApplicationStatuses(label="Declined", represents=ApplicationStatusRepresents.REJECTED),
-        ApplicationStatuses(label="Hired", represents=ApplicationStatusRepresents.HIRED),
+        ApplicationStatuses(
+            label="Left Voicemail", represents=ApplicationStatusRepresents.IN_REVIEW
+        ),
+        ApplicationStatuses(
+            label="Emailed", represents=ApplicationStatusRepresents.IN_REVIEW
+        ),
+        ApplicationStatuses(
+            label="Phone Interview", represents=ApplicationStatusRepresents.INTERESTED
+        ),
+        ApplicationStatuses(
+            label="In Person Interview",
+            represents=ApplicationStatusRepresents.INTERESTED,
+        ),
+        ApplicationStatuses(
+            label="Declined", represents=ApplicationStatusRepresents.REJECTED
+        ),
+        ApplicationStatuses(
+            label="Hired", represents=ApplicationStatusRepresents.HIRED
+        ),
     ]
 
 
@@ -42,7 +55,10 @@ class CompanySettings(BaseModel):
     enable_all_email_ingress: bool = False
     enable_job_api_ingress: bool = False
     enable_applicant_api_ingress: bool = False
-    application_statuses: list[ApplicationStatuses] = Field(default_factory=default_statuses)
+    application_statuses: list[ApplicationStatuses] = Field(
+        default_factory=default_statuses
+    )
+    default_zip_code: str | None = None
 
 
 class UpdateCompany(BaseModel):

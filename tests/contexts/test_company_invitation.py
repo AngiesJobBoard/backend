@@ -23,7 +23,7 @@ def test_create_invitation(request_scope):
 
     usecase.user_creates_invite(
         UserCreateInvitation(
-            email_address=TEST_EMAIL,
+            email=TEST_EMAIL,
             role=RecruiterRole.ADMIN,
         ),
         inviting_user_id=user.id,
@@ -37,7 +37,7 @@ def test_cancel_invitation(request_scope):
 
     invitation = usecase.user_creates_invite(
         UserCreateInvitation(
-            email_address=TEST_EMAIL,
+            email=TEST_EMAIL,
             role=RecruiterRole.ADMIN,
         ),
         inviting_user_id=user.id,
@@ -72,7 +72,7 @@ def test_accept_invitation(request_scope):
 
     invitation = usecase.user_creates_invite(
         UserCreateInvitation(
-            email_address=TEST_EMAIL,
+            email=TEST_EMAIL,
             role=RecruiterRole.ADMIN,
         ),
         inviting_user_id=user.id,
@@ -81,7 +81,7 @@ def test_accept_invitation(request_scope):
 
     # Recreate the invitation data to test acceptance
     invitation_data = InvitationData(
-        email_address=invitation.email_address,
+        email=invitation.email,
         invitation_id=invitation.id,
         company_id=invitation.company_id,
     )
@@ -112,7 +112,7 @@ def test_accept_invitation_failures(request_scope):
 
     invitation = usecase.user_creates_invite(
         UserCreateInvitation(
-            email_address=TEST_EMAIL,
+            email=TEST_EMAIL,
             role=RecruiterRole.ADMIN,
         ),
         inviting_user_id=user.id,
@@ -121,7 +121,7 @@ def test_accept_invitation_failures(request_scope):
 
     # Recreate the invitation data to test acceptance
     invitation_data = InvitationData(
-        email_address=invitation.email_address,
+        email=invitation.email,
         invitation_id=invitation.id,
         company_id=invitation.company_id,
     )
@@ -137,7 +137,7 @@ def test_accept_invitation_failures(request_scope):
     # AJBTODO this is thrown every time in the actual application so the check is currently muted
     # with pytest.raises(RecruiterCreateException) as excinfo:
     #     wrong_email_data = invitation_data.model_copy(deep=True)
-    #     wrong_email_data.email_address = "wrong"
+    #     wrong_email_data.email = "wrong"
     #     usecase.user_confirms_invitations(
     #         new_user.id, wrong_email_data.convert_to_deeplink_param("test")
     #     )

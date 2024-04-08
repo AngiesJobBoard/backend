@@ -24,11 +24,8 @@ def generate_job_from_description(
     return results
 
 
-
 @router.post("/job-from-url")
-def create_job_from_url(
-    request: Request, company_id: str, url: str = Body(...)
-):
+def create_job_from_url(request: Request, company_id: str, url: str = Body(...)):
     results = AIJobGenerator(openai).generate_job_from_url(url)
     mixpanel.job_description_is_generated(
         request.state.request_scope.user_id, company_id, "job_from_url"

@@ -20,7 +20,6 @@ from ajb.contexts.applications.recruiter_updates.repository import (
 from ajb.contexts.applications.recruiter_updates.models import (
     UserCreateRecruiterComment,
 )
-from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
 )
@@ -46,6 +45,7 @@ def get_all_company_applications(
     new_only: bool = False,
     resume_text_contains: str | None = None,
     has_required_skill: str | None = None,
+    status_filter: str | None = None,
     query: QueryFilterParams = Depends(),
 ):
     """Gets all applications"""
@@ -60,6 +60,7 @@ def get_all_company_applications(
         new_only,
         resume_text_contains,
         has_required_skill,
+        status_filter,
     )
     return build_pagination_response(
         results,
@@ -150,55 +151,6 @@ def delete_company_application(request: Request, company_id: str, application_id
     return response
 
 
-@router.patch("/jobs/{job_id}/applications/{application_id}/add-shortlist")
-def add_application_to_shortlist(
-    request: Request,
-    company_id: str,
-    job_id: str,
-    application_id: str,
-    comment: UserCreateRecruiterComment | None = None,
-):
-    response = ApplicationUseCase(
-        request.state.request_scope
-    ).company_updates_application_shortlist(company_id, application_id, True)
-    mixpanel.application_is_shortlisted(
-        request.state.request_scope.user_id, company_id, response.job_id, application_id
-    )
-    RecruiterUpdatesRepository(
-        request.state.request_scope, application_id
-    ).add_to_shortlist(
-        company_id,
-        job_id,
-        application_id,
-        request.state.request_scope.user_id,
-        comment.comment if comment else None,
-    )
-    return response
-
-
-@router.patch("/jobs/{job_id}/applications/{application_id}/remove-shortlist")
-def remove_application_to_shortlist(
-    request: Request,
-    company_id: str,
-    job_id: str,
-    application_id: str,
-    comment: UserCreateRecruiterComment | None = None,
-):
-    response = ApplicationUseCase(
-        request.state.request_scope
-    ).company_updates_application_shortlist(company_id, application_id, False)
-    RecruiterUpdatesRepository(
-        request.state.request_scope, application_id
-    ).remove_from_shortlist(
-        company_id,
-        job_id,
-        application_id,
-        request.state.request_scope.user_id,
-        comment.comment if comment else None,
-    )
-    return response
-
-
 @router.post(
     "/jobs/{job_id}/applications/{application_id}/status",
     response_model=DataReducedApplication,
@@ -213,7 +165,9 @@ def update_application_status(
     """Updates an application status"""
     response = ApplicationUseCase(
         request.state.request_scope
-    ).recruiter_updates_application_status(company_id, job_id, application_id, new_status)
+    ).recruiter_updates_application_status(
+        company_id, job_id, application_id, new_status
+    )
     mixpanel.application_status_is_updated(
         request.state.request_scope.user_id,
         company_id,
