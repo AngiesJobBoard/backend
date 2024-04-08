@@ -19,7 +19,7 @@ def test_create_subscription(request_scope):
     company = CompanyFixture(request_scope).create_company()
 
     subscription_repo = CompanySubscriptionRepository(request_scope, company.id)
-    created_subscription = subscription_repo.create(
+    subscription_repo.create(
         CreateCompanySubscription(
             company_id=company.id,
             plan=SubscriptionPlan.STARTER,

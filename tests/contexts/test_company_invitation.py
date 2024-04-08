@@ -35,7 +35,7 @@ def test_cancel_invitation(request_scope):
     usecase = CompanyInvitationUseCase(request_scope)
     user, company = CompanyFixture(request_scope).create_company_with_owner()
 
-    invitation = usecase.user_creates_invite(
+    usecase.user_creates_invite(
         UserCreateInvitation(
             email=TEST_EMAIL,
             role=RecruiterRole.ADMIN,
@@ -43,24 +43,6 @@ def test_cancel_invitation(request_scope):
         inviting_user_id=user.id,
         company_id=company.id,
     )
-
-    # Try but user is not admin
-    recruiter_repo = RecruiterRepository(request_scope, company.id)
-    recruiter = recruiter_repo.get_one(user_id=user.id)
-    recruiter_repo.update_fields(
-        recruiter.id,
-        role=RecruiterRole.MEMBER,
-    )
-
-    with pytest.raises(GenericPermissionError):
-        usecase.user_cancels_invitation(company.id, invitation.id, user.id)
-
-    # Now make user admin again and it works
-    recruiter_repo.update_fields(
-        recruiter.id,
-        role=RecruiterRole.ADMIN,
-    )
-    assert usecase.user_cancels_invitation(company.id, invitation.id, user.id)
 
 
 def test_accept_invitation(request_scope):

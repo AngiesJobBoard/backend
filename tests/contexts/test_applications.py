@@ -67,7 +67,7 @@ def test_company_view_new_only(request_scope):
     assert len(res) == 1
     assert count == 1
 
-    repo.update_fields(app_data.application.id, viewed_by_company=True)
+    repo.update_fields(app_data.application.id, application_status="Some Status")
 
     res, count = repo.get_company_view_list(app_data.company.id, new_only=True)
     assert len(res) == 0

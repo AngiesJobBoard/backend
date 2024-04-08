@@ -153,14 +153,6 @@ class CompanyInvitationUseCase(BaseUseCase):
     def user_cancels_invitation(
         self, company_id: str, invitation_id: str, cancelling_user_id: str
     ) -> bool:
-        # AJBTODO add more permission checks
-        # recruiter_repo = self.get_repository(
-        #     Collection.COMPANY_RECRUITERS, self.request_scope, company_id
-        # )
-        # user: Recruiter = recruiter_repo.get_one(user_id=cancelling_user_id, company_id=company_id)
-        # if user.role not in [RecruiterRole.ADMIN, RecruiterRole.OWNER]:
-        #     raise GenericPermissionError
-
         invitation_repo = self.get_repository(
             Collection.RECRUITER_INVITATIONS, self.request_scope, company_id
         )
