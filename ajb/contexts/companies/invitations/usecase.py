@@ -6,7 +6,7 @@ from ajb.contexts.companies.recruiters.repository import (
     RecruiterRepository,
     RecruiterAndUser,
 )
-from ajb.contexts.billing.usage.usecase import CompanySubscriptionUsageUsecase, UsageType
+from ajb.contexts.billing.usecase import CompanyBillingUsecase, UsageType
 from ajb.config.settings import SETTINGS
 from ajb.exceptions import (
     RecruiterCreateException,
@@ -141,7 +141,7 @@ class CompanyInvitationUseCase(BaseUseCase):
                 [invitation.id for invitation in all_other_invitations]
             )
 
-        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+        CompanyBillingUsecase(self.request_scope).increment_company_usage(
             company_id=decoded_invitation.company_id,
             incremental_usages={
                 UsageType.TOTAL_RECRUITERS: 1,

@@ -9,7 +9,7 @@ from ajb.contexts.billing.billing_models import (
     SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS,
     UsageType
 )
-from ajb.contexts.billing.usage.usecase import CompanySubscriptionUsageUsecase
+from ajb.contexts.billing.usecase import CompanyBillingUsecase
 from ajb.contexts.billing.usage.models import CreateMonthlyUsage
 
 from ajb.fixtures.companies import CompanyFixture
@@ -41,7 +41,7 @@ def test_monthly_usage(request_scope):
     company_fixture.create_company_subscription(
         company.id, plan=SubscriptionPlan.STARTER
     )
-    usecase = CompanySubscriptionUsageUsecase(request_scope)
+    usecase = CompanyBillingUsecase(request_scope)
 
     usage = CreateMonthlyUsage(
         company_id=company.id,
@@ -83,7 +83,7 @@ def test_increment_monthly_usage(request_scope):
     company_fixture.create_company_subscription(
         company.id, plan=SubscriptionPlan.STARTER
     )
-    usecase = CompanySubscriptionUsageUsecase(request_scope)
+    usecase = CompanyBillingUsecase(request_scope)
 
     usage = CreateMonthlyUsage(
         company_id=company.id,
@@ -125,7 +125,7 @@ def test_decrement_monthly_usage(request_scope):
     company_fixture.create_company_subscription(
         company.id, plan=SubscriptionPlan.STARTER
     )
-    usecase = CompanySubscriptionUsageUsecase(request_scope)
+    usecase = CompanyBillingUsecase(request_scope)
     usage = CreateMonthlyUsage(
         company_id=company.id,
         transaction_counts={
@@ -150,7 +150,7 @@ def test_increment_company_usage_no_plan_no_usage(request_scope):
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
 
-    usecase = CompanySubscriptionUsageUsecase(request_scope)
+    usecase = CompanyBillingUsecase(request_scope)
     usecase.increment_company_usage(
         company_id=company.id,
         incremental_usages={

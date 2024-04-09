@@ -40,6 +40,21 @@ class CreateMonthlyUsage(BaseModel):
                 ) * usage_detail.cost_usd_per_transaction
 
         self.total_usage_usd = total_cost
+    
+    @classmethod
+    def get_default_usage(cls, company_id: str, num_recruiters: int) -> "CreateMonthlyUsage":
+        return cls(
+            company_id=company_id,
+            transaction_counts={
+                UsageType.RESUME_SCANS: 0,
+                UsageType.MATCH_SCORES: 0,
+                UsageType.APPLICATION_QUESTIONS_ANSWERED: 0,
+                UsageType.EMAIL_INGRESS: 0,
+                UsageType.API_INGRESS: 0,
+                UsageType.API_EGRESS: 0,
+                UsageType.TOTAL_RECRUITERS: num_recruiters,
+            }
+        )
 
 
 class MonthlyUsage(BaseDataModel, CreateMonthlyUsage):

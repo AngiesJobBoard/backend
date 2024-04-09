@@ -1,7 +1,7 @@
 from ajb.base import BaseUseCase, Collection
 from ajb.contexts.companies.jobs.usecase import JobsUseCase
 from ajb.contexts.companies.jobs.models import UserCreateJob, Job
-from ajb.contexts.billing.usage.usecase import CompanySubscriptionUsageUsecase, UsageType
+from ajb.contexts.billing.usecase import CompanyBillingUsecase, UsageType
 from .models import (
     JobsWebhook,
     JobWebhookEventType,
@@ -15,7 +15,7 @@ from .models import (
 class WebhookJobsUseCase(BaseUseCase):
 
     def handle_webhook_event(self, company_id: str, event: JobsWebhook):
-        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+        CompanyBillingUsecase(self.request_scope).increment_company_usage(
             company_id=company_id,
             incremental_usages={UsageType.API_INGRESS: 1}
         )

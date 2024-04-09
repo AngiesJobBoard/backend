@@ -7,8 +7,8 @@ from ajb.contexts.companies.recruiters.models import (
     PaginatedRecruiterAndUser,
     RecruiterAndUser,
 )
-from ajb.contexts.billing.usage.usecase import (
-    CompanySubscriptionUsageUsecase,
+from ajb.contexts.billing.usecase import (
+    CompanyBillingUsecase,
     UsageType,
 )
 
@@ -55,7 +55,7 @@ def update_recruiter_role(request: Request, recruiter_id: str, new_role: Recruit
 def delete_recruiter(request: Request, company_id: str, recruiter_id: str):
     """Deletes a recruiter"""
     res = RecruiterRepository(request.state.request_scope).delete(recruiter_id)
-    CompanySubscriptionUsageUsecase(
+    CompanyBillingUsecase(
         request.state.request_scope
     ).increment_company_usage(
         company_id=company_id,

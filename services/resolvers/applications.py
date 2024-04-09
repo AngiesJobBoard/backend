@@ -32,8 +32,8 @@ from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.webhooks.egress.applicants.usecase import (
     CompanyApplicantsWebhookEgress,
 )
-from ajb.contexts.billing.usage.usecase import (
-    CompanySubscriptionUsageUsecase,
+from ajb.contexts.billing.usecase import (
+    CompanyBillingUsecase,
     UsageType,
 )
 from ajb.vendor.sendgrid.repository import SendgridRepository
@@ -138,7 +138,7 @@ class ApplicationEventsResolver:
         raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
         resume_information = await extractor.extract_resume_information(raw_text)
 
-        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+        CompanyBillingUsecase(self.request_scope).increment_company_usage(
             company_id=data.company_id, incremental_usages={UsageType.RESUME_SCANS: 1}
         )
 
@@ -229,7 +229,7 @@ class ApplicationEventsResolver:
         await ApplicantMatchUsecase(
             self.request_scope, self.async_openai
         ).update_application_with_match_score(data.application_id)
-        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+        CompanyBillingUsecase(self.request_scope).increment_company_usage(
             company_id=data.company_id, incremental_usages={UsageType.MATCH_SCORES: 1}
         )
 
@@ -261,7 +261,7 @@ class ApplicationEventsResolver:
                 data.application_id
             )
         )
-        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+        CompanyBillingUsecase(self.request_scope).increment_company_usage(
             company_id=data.company_id,
             incremental_usages={
                 UsageType.APPLICATION_QUESTIONS_ANSWERED: answered_questions

@@ -16,7 +16,6 @@ class CreateCompanySubscription(BaseModel):
     plan: SubscriptionPlan
     start_date: datetime
     end_date: datetime | None = None
-    active: bool
     stripe_subscription_id: str | None = None
     usage_cost_details: dict[UsageType, UsageDetail]
 
@@ -26,11 +25,14 @@ class CreateCompanySubscription(BaseModel):
             company_id=company_id,
             plan=SubscriptionPlan.STARTER,
             start_date=datetime.now(),
-            active=True,
             usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[
                 SubscriptionPlan.STARTER
             ],
         )
+
+
+class UserUpdateCompanySubscription(BaseModel):
+    plan: SubscriptionPlan
 
 
 class CompanySubscription(CreateCompanySubscription, BaseDataModel): ...

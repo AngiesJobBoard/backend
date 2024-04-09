@@ -23,8 +23,8 @@ from ajb.contexts.companies.notifications.models import (
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
-from ajb.contexts.billing.usage.usecase import (
-    CompanySubscriptionUsageUsecase,
+from ajb.contexts.billing.usecase import (
+    CompanyBillingUsecase,
     UsageType,
 )
 from ajb.vendor.arango.models import Filter
@@ -323,7 +323,7 @@ class ApplicationUseCase(BaseUseCase):
             )
             created_applications.append(created_application)
 
-        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+        CompanyBillingUsecase(self.request_scope).increment_company_usage(
             company_id=ingress_record.company_id,
             incremental_usages={
                 UsageType.EMAIL_INGRESS: len(created_applications),
