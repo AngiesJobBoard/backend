@@ -8,6 +8,7 @@ from ajb.contexts.companies.api_egress_webhooks.models import (
     EgressObjectType,
     WebhookEgressMessage,
 )
+from ajb.contexts.billing.usage.usecase import CompanySubscriptionUsageUsecase, UsageType
 
 
 class BaseWebhookEgress(BaseUseCase):
@@ -42,4 +43,8 @@ class BaseWebhookEgress(BaseUseCase):
             json=WebhookEgressMessage(
                 event=event, object=object_type, data=data
             ).model_dump(mode="json"),
+        )
+        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+            company_id=egress_record.company_id,
+            incremental_usages={UsageType.API_EGRESS: 1},
         )

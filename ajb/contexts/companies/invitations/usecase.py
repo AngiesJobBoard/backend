@@ -1,15 +1,14 @@
 from typing import cast
 
 from ajb.base import BaseUseCase, Collection
-from ajb.contexts.companies.recruiters.models import Recruiter, CreateRecruiter
-from ajb.contexts.users.models import User
+from ajb.contexts.companies.recruiters.models import CreateRecruiter
 from ajb.contexts.companies.recruiters.repository import (
     RecruiterRepository,
     RecruiterAndUser,
 )
+from ajb.contexts.billing.usage.usecase import CompanySubscriptionUsageUsecase, UsageType
 from ajb.config.settings import SETTINGS
 from ajb.exceptions import (
-    GenericPermissionError,
     RecruiterCreateException,
     EntityNotFound,
 )
@@ -18,7 +17,6 @@ from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.sendgrid.templates.recruiter_invitation import RecruiterInvitationData
 
 from .models import UserCreateInvitation, CreateInvitation, Invitation, InvitationData
-from ..models import RecruiterRole
 
 
 class CompanyInvitationUseCase(BaseUseCase):
@@ -98,14 +96,9 @@ class CompanyInvitationUseCase(BaseUseCase):
             # Check that the accepting user exists and is the same as the invited user
             user_repo = self.get_repository(Collection.USERS, transaction_scope)
             try:
-                accepting_user: User = user_repo.get(accepting_user_id)
+                user_repo.get(accepting_user_id)
             except EntityNotFound:
                 raise RecruiterCreateException("Accepting user does not exist")
-
-            # if accepting_user.email != decoded_invitation.email:
-            #     raise RecruiterCreateException(
-            #         "Invitation email does not match accepting user email"
-            #     )
 
             # Check invitation exists and company id matches
             try:
@@ -148,6 +141,12 @@ class CompanyInvitationUseCase(BaseUseCase):
                 [invitation.id for invitation in all_other_invitations]
             )
 
+        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+            company_id=decoded_invitation.company_id,
+            incremental_usages={
+                UsageType.TOTAL_RECRUITERS: 1,
+            }
+        )
         return recruiter_and_user
 
     def user_cancels_invitation(

@@ -14,12 +14,14 @@ class ApplicantQuestionsUsecase(BaseUseCase):
 
     async def update_application_with_questions_answered(
         self, application_id: str
-    ) -> None:
+    ) -> int:
+        """Returns the number of questions answered"""
         application_repo = self.get_repository(Collection.APPLICATIONS)
         application: Application = application_repo.get(application_id)
         if not application.application_questions or not application.qualifications:
-            return None
+            return 0
 
+        questions_answered = 0
         stored_exception = None
         question_answerer = AIApplicantionQuestionAnswer(self.openai)
         for idx, question in enumerate(application.application_questions):
@@ -33,6 +35,7 @@ class ApplicantQuestionsUsecase(BaseUseCase):
                     application.application_questions[idx] = (
                         updated_application_question
                     )
+                    questions_answered  += 1  # Only increment if question was answered
                 except Exception as e:
                     stored_exception = e
                     application.application_questions[idx].question_status = (
@@ -46,6 +49,8 @@ class ApplicantQuestionsUsecase(BaseUseCase):
         )
         if stored_exception:
             raise stored_exception
+        return questions_answered
+    
 
     def update_many_application_questions(self, application_id_list: list[str]):
         with ThreadPoolExecutor(max_workers=5) as executor:

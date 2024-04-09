@@ -646,7 +646,7 @@ class MultipleChildrenRepository(BaseRepository[CreateDataSchema, DataSchema]):
         if parent_id is not None:
             check_if_parent_exists(self.request_scope.db, parent_collection, parent_id)
         else:
-            warn("No parent id provided, parent collection may not exist")
+            warn("No parent id provided for %s, parent document may not exist" % parent_collection)
 
     # pylint: disable=arguments-differ
     def create(

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from ajb.base import BaseDataModel
 
-from ..billing_models import CompanyRates, CompanyFreeTier
+from ..billing_models import UsageType, UsageDetail
 
 
 def generate_billing_period_string():
@@ -11,83 +11,46 @@ def generate_billing_period_string():
     return f"{now.year}-{now.month}"
 
 
-class SystemCreateMonthlyUsage(BaseModel):
+class CreateMonthlyUsage(BaseModel):
     company_id: str
+    billing_period: str = generate_billing_period_string()
 
-    resume_scans: int = 0
-    match_scores: int = 0
-    application_questions_answered: int = 0
-    email_ingress: int = 0
-    api_ingress: int = 0
-    api_egress: int = 0
-    resume_storage: int = 0
-    total_recruiters: int = 0
+    transaction_counts: dict[UsageType, int] = {
+        UsageType.RESUME_SCANS: 0,
+        UsageType.MATCH_SCORES: 0,
+        UsageType.APPLICATION_QUESTIONS_ANSWERED: 0,
+        UsageType.EMAIL_INGRESS: 0,
+        UsageType.API_INGRESS: 0,
+        UsageType.API_EGRESS: 0,
+        UsageType.TOTAL_RECRUITERS: 0,
+    }
 
     outstanding_balance_usd: float = 0.0
     total_usage_usd: float = 0.0
 
     def calculate_total_usage_cost(
-        self, free_tier: CompanyFreeTier, rates: CompanyRates
+        self, usage_cost_details: dict[UsageType, UsageDetail]
     ):
         total_cost = 0
-        total_cost += (
-            max([0, self.resume_scans - free_tier.no_cost_resume_scans_per_month])
-            * rates.resume_scan_cost_usd_per_transaction
-        )
-        total_cost += (
-            max([0, self.match_scores - free_tier.no_cost_match_scores_per_month])
-            * rates.match_score_cost_usd_per_transaction
-        )
-        total_cost += (
-            max(
-                [
-                    0,
-                    self.application_questions_answered
-                    - free_tier.no_cost_application_questions_answered_per_month,
-                ]
-            )
-            * rates.application_questions_answered_cost_usd_per_transaction
-        )
-        total_cost += (
-            max([0, self.email_ingress - free_tier.no_cost_email_ingress_per_month])
-            * rates.email_ingress_cost_usd_per_transaction
-        )
-        total_cost += (
-            max([0, self.api_ingress - free_tier.no_cost_api_ingress_per_month])
-            * rates.api_ingress_cost_usd_per_transaction
-        )
-        total_cost += (
-            max([0, self.api_egress - free_tier.no_cost_api_egress_per_month])
-            * rates.api_egress_cost_usd_per_transaction
-        )
-        total_cost += (
-            max(
-                [
-                    0,
-                    self.total_recruiters
-                    - free_tier.no_cost_total_recruiters_per_month,
-                ]
-            )
-            * rates.total_recruiters_cost_usd_per_transaction
-        )
+        for usage_type, usage_count in self.transaction_counts.items():
+            usage_detail = usage_cost_details[usage_type]
+            if usage_count > usage_detail.free_tier_limit_per_month:
+                total_cost += (
+                    usage_count - usage_detail.free_tier_limit_per_month
+                ) * usage_detail.cost_usd_per_transaction
 
-        return total_cost
-
-
-class CreateMonthlyUsage(SystemCreateMonthlyUsage):
-    billing_period: str = generate_billing_period_string()
+        self.total_usage_usd = total_cost
 
 
 class MonthlyUsage(BaseDataModel, CreateMonthlyUsage):
 
-    def add_usage(self, new_usage: CreateMonthlyUsage):
-        self.resume_scans += new_usage.resume_scans
-        self.match_scores += new_usage.match_scores
-        self.application_questions_answered += new_usage.application_questions_answered
-        self.email_ingress += new_usage.email_ingress
-        self.api_ingress += new_usage.api_ingress
-        self.api_egress += new_usage.api_egress
-        self.resume_storage += new_usage.resume_storage
-        self.total_recruiters += new_usage.total_recruiters
-        self.total_usage_usd += new_usage.total_usage_usd
-        return self
+    def add_usage(
+        self,
+        usage: CreateMonthlyUsage
+        ,
+        usage_cost_details: dict[UsageType, UsageDetail],
+    ):
+        for usage_type, usage_count in usage.transaction_counts.items():
+            self.transaction_counts[usage_type] += usage_count
+
+        self.calculate_total_usage_cost(usage_cost_details)

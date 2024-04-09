@@ -2,11 +2,11 @@ import pytest
 from ajb.contexts.companies.invitations.usecase import (
     CompanyInvitationUseCase,
     UserCreateInvitation,
-    RecruiterRole,
     InvitationData,
 )
+from ajb.contexts.companies.recruiters.models import RecruiterRole
 from ajb.contexts.companies.recruiters.repository import RecruiterRepository
-from ajb.exceptions import GenericPermissionError, RecruiterCreateException
+from ajb.exceptions import RecruiterCreateException
 
 
 from ajb.fixtures.companies import CompanyFixture
@@ -114,16 +114,6 @@ def test_accept_invitation_failures(request_scope):
             "not_a_user", invitation_data.convert_to_deeplink_param("test")
         )
     assert "Accepting user does not exist" in str(excinfo.value)
-
-    # Make accepting user have different email
-    # AJBTODO this is thrown every time in the actual application so the check is currently muted
-    # with pytest.raises(RecruiterCreateException) as excinfo:
-    #     wrong_email_data = invitation_data.model_copy(deep=True)
-    #     wrong_email_data.email = "wrong"
-    #     usecase.user_confirms_invitations(
-    #         new_user.id, wrong_email_data.convert_to_deeplink_param("test")
-    #     )
-    # assert "Invitation email does not match accepting user email" in str(excinfo.value)
 
     # Invitation doesn't exist
     with pytest.raises(RecruiterCreateException) as excinfo:

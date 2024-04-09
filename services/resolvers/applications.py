@@ -18,6 +18,7 @@ from ajb.contexts.applications.models import (
     Qualifications,
     WorkHistory,
     UpdateApplication,
+    Application,
 )
 from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
 from ajb.contexts.applications.repository import ApplicationRepository
@@ -30,6 +31,10 @@ from ajb.contexts.applications.application_questions.usecase import (
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.webhooks.egress.applicants.usecase import (
     CompanyApplicantsWebhookEgress,
+)
+from ajb.contexts.billing.usage.usecase import (
+    CompanySubscriptionUsageUsecase,
+    UsageType,
 )
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
@@ -94,6 +99,35 @@ class ApplicationEventsResolver:
             ),
         )
 
+    def _handle_if_existing_applicant_matches_email(
+        self,
+        existing_applicants_that_match_email: list[Application],
+        resume_url: str,
+        raw_text: str,
+        resume_information: ExtractedResume,
+        application_repository: ApplicationRepository,
+        event_producer: ApplicationEventProducer,
+        data: ResumeAndApplication,
+    ):
+        for matched_application in existing_applicants_that_match_email:
+            self._update_application_with_parsed_information(
+                application_id=matched_application.id,
+                resume_url=resume_url,
+                raw_resume_text=raw_text,
+                resume_information=resume_information,
+                application_repository=application_repository,
+            )
+            event_producer.application_is_created(
+                matched_application.company_id,
+                matched_application.job_id,
+                matched_application.id,
+            )
+
+        # Delete the original application (like a merge operation)
+        application_repository.delete(data.application_id)
+        original_application_deleted = True
+        return original_application_deleted
+
     async def _extract_and_update_application(
         self, data: ResumeAndApplication, application_repository: ApplicationRepository
     ) -> bool:
@@ -103,6 +137,11 @@ class ApplicationEventsResolver:
         extractor = ResumeExtractorUseCase(self.request_scope, self.async_openai)
         raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
         resume_information = await extractor.extract_resume_information(raw_text)
+
+        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+            company_id=data.company_id, incremental_usages={UsageType.RESUME_SCANS: 1}
+        )
+
         original_application_deleted = False
 
         existing_applicants_that_match_email = application_repository.query(
@@ -115,24 +154,15 @@ class ApplicationEventsResolver:
             self.request_scope, SourceServices.API
         )
         if existing_applicants_that_match_email:
-            for matched_application in existing_applicants_that_match_email:
-                self._update_application_with_parsed_information(
-                    application_id=matched_application.id,
-                    resume_url=resume_url,
-                    raw_resume_text=raw_text,
-                    resume_information=resume_information,
-                    application_repository=application_repository,
-                )
-                event_producer.application_is_created(
-                    matched_application.company_id,
-                    matched_application.job_id,
-                    matched_application.id,
-                )
-
-            # Delete the original application (like a merge operation)
-            application_repository.delete(data.application_id)
-            original_application_deleted = True
-            return original_application_deleted
+            self._handle_if_existing_applicant_matches_email(
+                existing_applicants_that_match_email,
+                resume_url,
+                raw_text,
+                resume_information,
+                application_repository,
+                event_producer,
+                data,
+            )
 
         self._update_application_with_parsed_information(
             application_id=data.application_id,
@@ -184,7 +214,6 @@ class ApplicationEventsResolver:
                     resume_scan_attempts=application.resume_scan_attempts + 1,
                 )
                 # Async wait 3 seconds then create a new event to try again
-                await asyncio.sleep(3)
                 self.request_scope.company_id = data.company_id
                 ApplicationEventProducer(
                     self.request_scope, SourceServices.SERVICES
@@ -197,8 +226,12 @@ class ApplicationEventsResolver:
         if not self.async_openai:
             raise RuntimeError("Async OpenAI Repository is not provided")
         data = ApplicantAndCompany.model_validate(self.message.data)
-        matcher_usecase = ApplicantMatchUsecase(self.request_scope, self.async_openai)
-        await matcher_usecase.update_application_with_match_score(data.application_id)
+        await ApplicantMatchUsecase(
+            self.request_scope, self.async_openai
+        ).update_application_with_match_score(data.application_id)
+        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+            company_id=data.company_id, incremental_usages={UsageType.MATCH_SCORES: 1}
+        )
 
     async def extract_application_filters(self) -> None:
         application_repo = ApplicationRepository(self.request_scope)
@@ -223,8 +256,16 @@ class ApplicationEventsResolver:
         question_usecase = ApplicantQuestionsUsecase(
             self.request_scope, self.async_openai
         )
-        await question_usecase.update_application_with_questions_answered(
-            data.application_id
+        answered_questions = (
+            await question_usecase.update_application_with_questions_answered(
+                data.application_id
+            )
+        )
+        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+            company_id=data.company_id,
+            incremental_usages={
+                UsageType.APPLICATION_QUESTIONS_ANSWERED: answered_questions
+            },
         )
 
     async def application_is_submitted(self, send_webhooks: bool = True) -> None:

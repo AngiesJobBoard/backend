@@ -14,100 +14,112 @@ class SubscriptionPlan(str, Enum):
     ENTERPRISE = "Enterprise"
 
 
-class CompanyFreeTier(BaseModel):
-    no_cost_resume_scans_per_month: int
-    no_cost_match_scores_per_month: int
-    no_cost_application_questions_answered_per_month: int
-    no_cost_email_ingress_per_month: int
-    no_cost_api_ingress_per_month: int
-    no_cost_api_egress_per_month: int
-    no_cost_total_recruiters_per_month: int
+class UsageType(str, Enum):
+    RESUME_SCANS = "resume_scans"
+    MATCH_SCORES = "match_scores"
+    APPLICATION_QUESTIONS_ANSWERED = "application_questions_answered"
+    EMAIL_INGRESS = "email_ingress"
+    API_INGRESS = "api_ingress"
+    API_EGRESS = "api_egress"
+    TOTAL_RECRUITERS = "total_recruiters"
 
 
-class CompanyRates(BaseModel):
-    resume_scan_cost_usd_per_transaction: float
-    match_score_cost_usd_per_transaction: float
-    application_questions_answered_cost_usd_per_transaction: float
-    email_ingress_cost_usd_per_transaction: float
-    api_ingress_cost_usd_per_transaction: float
-    api_egress_cost_usd_per_transaction: float
-    total_recruiters_cost_usd_per_transaction: float
+class UsageDetail(BaseModel):
+    free_tier_limit_per_month: int = 0
+    cost_usd_per_transaction: float
 
 
-SUBSCRIPTION_FREE_TIERS: dict[SubscriptionPlan, CompanyFreeTier] = {
-    SubscriptionPlan.STARTER: CompanyFreeTier(
-        no_cost_resume_scans_per_month=50,
-        no_cost_match_scores_per_month=50,
-        no_cost_application_questions_answered_per_month=250,
-        no_cost_email_ingress_per_month=50,
-        no_cost_api_ingress_per_month=100,
-        no_cost_api_egress_per_month=250,
-        no_cost_total_recruiters_per_month=10,
-    ),
-    SubscriptionPlan.SMALL_BUSINESS: CompanyFreeTier(
-        no_cost_resume_scans_per_month=1000,
-        no_cost_match_scores_per_month=1000,
-        no_cost_application_questions_answered_per_month=5000,
-        no_cost_email_ingress_per_month=1000,
-        no_cost_api_ingress_per_month=2000,
-        no_cost_api_egress_per_month=5000,
-        no_cost_total_recruiters_per_month=20,
-    ),
-    SubscriptionPlan.MEDIUM_BUSINESS: CompanyFreeTier(
-        no_cost_resume_scans_per_month=5000,
-        no_cost_match_scores_per_month=5000,
-        no_cost_application_questions_answered_per_month=25000,
-        no_cost_email_ingress_per_month=5000,
-        no_cost_api_ingress_per_month=10000,
-        no_cost_api_egress_per_month=25000,
-        no_cost_total_recruiters_per_month=50,
-    ),
-    SubscriptionPlan.ENTERPRISE: CompanyFreeTier(
-        no_cost_resume_scans_per_month=10000,
-        no_cost_match_scores_per_month=10000,
-        no_cost_application_questions_answered_per_month=50000,
-        no_cost_email_ingress_per_month=10000,
-        no_cost_api_ingress_per_month=20000,
-        no_cost_api_egress_per_month=50000,
-        no_cost_total_recruiters_per_month=100,
-    ),
-}
-
-SUBSCRIPTION_RATES: dict[SubscriptionPlan, CompanyRates] = {
-    SubscriptionPlan.STARTER: CompanyRates(
-        resume_scan_cost_usd_per_transaction=1.0,
-        match_score_cost_usd_per_transaction=1.0,
-        application_questions_answered_cost_usd_per_transaction=1.0,
-        email_ingress_cost_usd_per_transaction=1.0,
-        api_ingress_cost_usd_per_transaction=1.0,
-        api_egress_cost_usd_per_transaction=1.0,
-        total_recruiters_cost_usd_per_transaction=1.0,
-    ),
-    SubscriptionPlan.SMALL_BUSINESS: CompanyRates(
-        resume_scan_cost_usd_per_transaction=0.1,
-        match_score_cost_usd_per_transaction=0.1,
-        application_questions_answered_cost_usd_per_transaction=0.1,
-        email_ingress_cost_usd_per_transaction=0.1,
-        api_ingress_cost_usd_per_transaction=0.1,
-        api_egress_cost_usd_per_transaction=0.1,
-        total_recruiters_cost_usd_per_transaction=0.1,
-    ),
-    SubscriptionPlan.MEDIUM_BUSINESS: CompanyRates(
-        resume_scan_cost_usd_per_transaction=0.05,
-        match_score_cost_usd_per_transaction=0.05,
-        application_questions_answered_cost_usd_per_transaction=0.05,
-        email_ingress_cost_usd_per_transaction=0.05,
-        api_ingress_cost_usd_per_transaction=0.05,
-        api_egress_cost_usd_per_transaction=0.05,
-        total_recruiters_cost_usd_per_transaction=0.05,
-    ),
-    SubscriptionPlan.ENTERPRISE: CompanyRates(
-        resume_scan_cost_usd_per_transaction=0.01,
-        match_score_cost_usd_per_transaction=0.01,
-        application_questions_answered_cost_usd_per_transaction=0.01,
-        email_ingress_cost_usd_per_transaction=0.01,
-        api_ingress_cost_usd_per_transaction=0.01,
-        api_egress_cost_usd_per_transaction=0.01,
-        total_recruiters_cost_usd_per_transaction=0.01,
-    ),
+SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS: dict[SubscriptionPlan, dict[UsageType, UsageDetail]] = {
+    SubscriptionPlan.STARTER: {
+        UsageType.RESUME_SCANS: UsageDetail(
+            free_tier_limit_per_month=50, cost_usd_per_transaction=1.0
+        ),
+        UsageType.MATCH_SCORES: UsageDetail(
+            free_tier_limit_per_month=50, cost_usd_per_transaction=1.0
+        ),
+        UsageType.APPLICATION_QUESTIONS_ANSWERED: UsageDetail(
+            free_tier_limit_per_month=250, cost_usd_per_transaction=1.0
+        ),
+        UsageType.EMAIL_INGRESS: UsageDetail(
+            free_tier_limit_per_month=50, cost_usd_per_transaction=1.0
+        ),
+        UsageType.API_INGRESS: UsageDetail(
+            free_tier_limit_per_month=100, cost_usd_per_transaction=1.0
+        ),
+        UsageType.API_EGRESS: UsageDetail(
+            free_tier_limit_per_month=250, cost_usd_per_transaction=1.0
+        ),
+        UsageType.TOTAL_RECRUITERS: UsageDetail(
+            free_tier_limit_per_month=10, cost_usd_per_transaction=1.0
+        ),
+    },
+    SubscriptionPlan.SMALL_BUSINESS: {
+        UsageType.RESUME_SCANS: UsageDetail(
+            free_tier_limit_per_month=1000, cost_usd_per_transaction=0.1
+        ),
+        UsageType.MATCH_SCORES: UsageDetail(
+            free_tier_limit_per_month=1000, cost_usd_per_transaction=0.1
+        ),
+        UsageType.APPLICATION_QUESTIONS_ANSWERED: UsageDetail(
+            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.1
+        ),
+        UsageType.EMAIL_INGRESS: UsageDetail(
+            free_tier_limit_per_month=1000, cost_usd_per_transaction=0.1
+        ),
+        UsageType.API_INGRESS: UsageDetail(
+            free_tier_limit_per_month=2000, cost_usd_per_transaction=0.1
+        ),
+        UsageType.API_EGRESS: UsageDetail(
+            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.1
+        ),
+        UsageType.TOTAL_RECRUITERS: UsageDetail(
+            free_tier_limit_per_month=20, cost_usd_per_transaction=0.1
+        ),
+    },
+    SubscriptionPlan.MEDIUM_BUSINESS: {
+        UsageType.RESUME_SCANS: UsageDetail(
+            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.05
+        ),
+        UsageType.MATCH_SCORES: UsageDetail(
+            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.05
+        ),
+        UsageType.APPLICATION_QUESTIONS_ANSWERED: UsageDetail(
+            free_tier_limit_per_month=25000, cost_usd_per_transaction=0.05
+        ),
+        UsageType.EMAIL_INGRESS: UsageDetail(
+            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.05
+        ),
+        UsageType.API_INGRESS: UsageDetail(
+            free_tier_limit_per_month=10000, cost_usd_per_transaction=0.05
+        ),
+        UsageType.API_EGRESS: UsageDetail(
+            free_tier_limit_per_month=25000, cost_usd_per_transaction=0.05
+        ),
+        UsageType.TOTAL_RECRUITERS: UsageDetail(
+            free_tier_limit_per_month=50, cost_usd_per_transaction=0.05
+        ),
+    },
+    SubscriptionPlan.ENTERPRISE: {
+        UsageType.RESUME_SCANS: UsageDetail(
+            free_tier_limit_per_month=10000, cost_usd_per_transaction=0.01
+        ),
+        UsageType.MATCH_SCORES: UsageDetail(
+            free_tier_limit_per_month=10000, cost_usd_per_transaction=0.01
+        ),
+        UsageType.APPLICATION_QUESTIONS_ANSWERED: UsageDetail(
+            free_tier_limit_per_month=50000, cost_usd_per_transaction=0.01
+        ),
+        UsageType.EMAIL_INGRESS: UsageDetail(
+            free_tier_limit_per_month=10000, cost_usd_per_transaction=0.01
+        ),
+        UsageType.API_INGRESS: UsageDetail(
+            free_tier_limit_per_month=20000, cost_usd_per_transaction=0.01
+        ),
+        UsageType.API_EGRESS: UsageDetail(
+            free_tier_limit_per_month=50000, cost_usd_per_transaction=0.01
+        ),
+        UsageType.TOTAL_RECRUITERS: UsageDetail(
+            free_tier_limit_per_month=100, cost_usd_per_transaction=0.01
+        ),
+    },
 }

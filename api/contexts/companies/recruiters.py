@@ -7,6 +7,10 @@ from ajb.contexts.companies.recruiters.models import (
     PaginatedRecruiterAndUser,
     RecruiterAndUser,
 )
+from ajb.contexts.billing.usage.usecase import (
+    CompanySubscriptionUsageUsecase,
+    UsageType,
+)
 
 
 router = APIRouter(
@@ -48,6 +52,15 @@ def update_recruiter_role(request: Request, recruiter_id: str, new_role: Recruit
 
 
 @router.delete("/{recruiter_id}")
-def delete_recruiter(request: Request, recruiter_id: str):
+def delete_recruiter(request: Request, company_id: str, recruiter_id: str):
     """Deletes a recruiter"""
-    return RecruiterRepository(request.state.request_scope).delete(recruiter_id)
+    res = RecruiterRepository(request.state.request_scope).delete(recruiter_id)
+    CompanySubscriptionUsageUsecase(
+        request.state.request_scope
+    ).increment_company_usage(
+        company_id=company_id,
+        incremental_usages={
+            UsageType.TOTAL_RECRUITERS: -1,
+        },
+    )
+    return res

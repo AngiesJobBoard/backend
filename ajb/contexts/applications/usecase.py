@@ -1,5 +1,6 @@
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
+from email.message import Message
 
 from ajb.base import BaseUseCase, Collection, RepoFilterParams, RequestScope
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
@@ -21,6 +22,11 @@ from ajb.contexts.companies.notifications.models import (
 )
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.companies.jobs.models import Job
+from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
+from ajb.contexts.billing.usage.usecase import (
+    CompanySubscriptionUsageUsecase,
+    UsageType,
+)
 from ajb.vendor.arango.models import Filter
 from ajb.utils import random_salt
 
@@ -290,3 +296,37 @@ class ApplicationUseCase(BaseUseCase):
                 all_but_current_recruiter=True,
             )
             return response
+
+    def process_email_application_ingress(
+        self,
+        ingress_email: Message,
+        ingress_record: CompanyEmailIngress,
+    ) -> list[Application]:
+        self.request_scope.company_id = ingress_record.company_id
+        created_applications = []
+        if not ingress_email.is_multipart():
+            raise ValueError("Email is not multipart")
+        for part in ingress_email.walk():
+            content_disposition = part.get("Content-Disposition")
+            if not content_disposition or "attachment" not in content_disposition:
+                continue
+            if not ingress_record.job_id:
+                continue
+            created_application = self.create_application_from_resume(
+                UserCreateResume(
+                    file_type=part.get_content_type(),
+                    file_name=str(part.get_filename()),
+                    resume_data=part.get_payload(decode=True),  # type: ignore
+                    company_id=ingress_record.company_id,
+                    job_id=ingress_record.job_id,
+                )
+            )
+            created_applications.append(created_application)
+
+        CompanySubscriptionUsageUsecase(self.request_scope).increment_company_usage(
+            company_id=ingress_record.company_id,
+            incremental_usages={
+                UsageType.EMAIL_INGRESS: len(created_applications),
+            },
+        )
+        return created_applications

@@ -30,10 +30,7 @@ from ajb.contexts.billing.subscriptions.models import (
     CreateCompanySubscription,
     SubscriptionPlan,
 )
-from ajb.contexts.billing.billing_models import (
-    SUBSCRIPTION_FREE_TIERS,
-    SUBSCRIPTION_RATES,
-)
+from ajb.contexts.billing.billing_models import SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS
 
 from ajb.fixtures.users import UserFixture
 
@@ -124,7 +121,6 @@ class CompanyFixture:
                 start_date=datetime(2021, 1, 1),
                 active=True,
                 stripe_subscription_id="sub_123",
-                rates=SUBSCRIPTION_RATES[plan],
-                free_tier=SUBSCRIPTION_FREE_TIERS[plan],
+                usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[plan],
             )
         )
