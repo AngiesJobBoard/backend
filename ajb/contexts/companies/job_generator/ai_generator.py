@@ -1,6 +1,5 @@
 from ajb.common.models import PreferredTone
 from ajb.vendor.openai.repository import OpenAIRepository
-from ajb.common.models import ExperienceLevel, JobLocationType
 from ajb.contexts.companies.jobs.models import UserCreateJob
 
 
@@ -118,6 +117,27 @@ class AIJobGenerator:
             Do your best to provide some answer for each key. Respond only in JSON format.
             Keys: {job_keys}.
             URL: {url}.
+            """,
+            max_tokens=4096,
+        )
+        return self._convert_ai_response_to_job(response)
+
+    def generate_job_from_extracted_text(self, text: str) -> UserCreateJob:
+        job_keys = [
+            "position_title",
+            "industry_category",
+            "industry_subcategories",
+            "required_job_skills",
+            "description",
+            "license_requirements",
+            "certification_requirements",
+        ]
+        response = self.openai.json_prompt(
+            prompt=f"""
+            Given the following text which represents a job post, create a job with the following keys.
+            Do your best to provide some answer for each key. Respond only in JSON format.
+            Keys: {job_keys}.
+            Text: {text}.
             """,
             max_tokens=4096,
         )
