@@ -200,7 +200,6 @@ class UpdateApplication(BaseModel):
     resume_scan_error_test: str | None = None
     match_score_status: ScanStatus | None = None
     match_score_error_text: str | None = None
-    viewed_by_company: bool | None = None
     qualifications: Qualifications | None = None
     additional_filters: AdditionalFilterInformation | None = None
     application_questions: list[ApplicationQuestion] | None = None
@@ -224,12 +223,10 @@ class ApplicationStatusRecord(CreateApplicationStatusUpdate):
 
 class CreateApplication(UserCreatedApplication):
     application_status: str | None = None
-    application_is_shortlisted: bool = False
     application_match_score: int | None = None
     application_match_reason: str = ""
 
     recruiter_tags: list[str] = Field(default_factory=list)
-    viewed_by_company: bool = False
 
 
 class Application(CreateApplication, BaseDataModel):
@@ -438,7 +435,6 @@ class ApplicantAndJob(BaseDataModel):
     email: str | None = None
     phone: str | None = None
     application_status: str | None = None
-    application_is_shortlisted: bool
     application_match_score: int | None
     application_match_reason: str
     job: JobNameOnly | None
@@ -470,7 +466,6 @@ class DataReducedQualifications(BaseModel):
 
 class DataReducedApplication(BaseDataModel):
     application_status: str | None = None
-    application_is_shortlisted: bool
     application_match_score: int | None
     application_match_reason: str
 
@@ -482,7 +477,6 @@ class DataReducedApplication(BaseDataModel):
     match_score_status: ScanStatus | None = None
     match_score_error_text: str | None = None
 
-    viewed_by_company: bool | None = None
     qualifications: DataReducedQualifications | None = None
     name: str | None = None
     email: str | None = None

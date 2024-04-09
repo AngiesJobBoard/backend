@@ -36,7 +36,6 @@ class CompanyApplicationRepository(ApplicationRepository):
         company_id: str,
         query: QueryFilterParams | RepoFilterParams | None = None,
         job_id: str | None = None,
-        shortlist_only: bool = False,
         match_score: int | None = None,
         new_only: bool = False,
         resume_text_contains: str | None = None,
@@ -57,13 +56,6 @@ class CompanyApplicationRepository(ApplicationRepository):
                     field="application_match_score",
                     operator=Operator.GREATER_THAN_EQUAL,
                     value=match_score,
-                )
-            )
-        if shortlist_only:
-            repo_filters.filters.append(
-                Filter(
-                    field="appplication_is_shortlisted",
-                    value=True,
                 )
             )
         if new_only:

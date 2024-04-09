@@ -44,36 +44,6 @@ def test_company_view_list_basic(request_scope):
     assert count == 1
 
 
-def test_company_view_shortlist(request_scope):
-    app_data = ApplicationFixture(request_scope).create_all_application_data()
-    repo = CompanyApplicationRepository(request_scope)
-
-    res, count = repo.get_company_view_list(app_data.company.id, shortlist_only=True)
-    assert len(res) == 0
-    assert count == 0
-
-    repo.update_fields(app_data.application.id, appplication_is_shortlisted=True)
-
-    res, count = repo.get_company_view_list(app_data.company.id, shortlist_only=True)
-    assert len(res) == 1
-    assert count == 1
-
-
-def test_company_view_new_only(request_scope):
-    app_data = ApplicationFixture(request_scope).create_all_application_data()
-    repo = CompanyApplicationRepository(request_scope)
-
-    res, count = repo.get_company_view_list(app_data.company.id, new_only=True)
-    assert len(res) == 1
-    assert count == 1
-
-    repo.update_fields(app_data.application.id, application_status="Some Status")
-
-    res, count = repo.get_company_view_list(app_data.company.id, new_only=True)
-    assert len(res) == 0
-    assert count == 0
-
-
 def test_match_score_minimum(request_scope):
     app_data = ApplicationFixture(request_scope).create_all_application_data()
     repo = CompanyApplicationRepository(request_scope)
@@ -239,12 +209,10 @@ def test_application_counts(request_scope):
     retrieved_job = job_repo.get(job.id)
 
     assert retrieved_company.total_applicants == 0
-    assert retrieved_company.shortlisted_applicants == 0
     assert retrieved_company.high_matching_applicants == 0
     assert retrieved_company.new_applicants == 0
 
     assert retrieved_job.total_applicants == 0
-    assert retrieved_job.shortlisted_applicants == 0
     assert retrieved_job.high_matching_applicants == 0
     assert retrieved_job.new_applicants == 0
 
@@ -265,46 +233,23 @@ def test_application_counts(request_scope):
     retrieved_job = job_repo.get(job.id)
 
     assert retrieved_company.total_applicants == 1
-    assert retrieved_company.shortlisted_applicants == 0
     assert retrieved_company.high_matching_applicants == 0
     assert retrieved_company.new_applicants == 1
 
     assert retrieved_job.total_applicants == 1
-    assert retrieved_job.shortlisted_applicants == 0
     assert retrieved_job.high_matching_applicants == 0
     assert retrieved_job.new_applicants == 1
-
-    usecase.company_updates_application_shortlist(
-        company.id, created_application.id, True
-    )
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
 
     assert retrieved_company.total_applicants == 1
-    assert retrieved_company.shortlisted_applicants == 1
     assert retrieved_company.high_matching_applicants == 0
     assert retrieved_company.new_applicants == 1
 
     assert retrieved_job.total_applicants == 1
-    assert retrieved_job.shortlisted_applicants == 1
     assert retrieved_job.high_matching_applicants == 0
     assert retrieved_job.new_applicants == 1
-
-    usecase.company_views_applications(company.id, [created_application.id])
-
-    retrieved_company = company_repo.get(company.id)
-    retrieved_job = job_repo.get(job.id)
-
-    assert retrieved_company.total_applicants == 1
-    assert retrieved_company.shortlisted_applicants == 1
-    assert retrieved_company.high_matching_applicants == 0
-    assert retrieved_company.new_applicants == 0
-
-    assert retrieved_job.total_applicants == 1
-    assert retrieved_job.shortlisted_applicants == 1
-    assert retrieved_job.high_matching_applicants == 0
-    assert retrieved_job.new_applicants == 0
 
     usecase.delete_all_applications_for_job(company.id, job.id)
 
@@ -312,12 +257,10 @@ def test_application_counts(request_scope):
     retrieved_job = job_repo.get(job.id)
 
     assert retrieved_company.total_applicants == 0
-    assert retrieved_company.shortlisted_applicants == 0
     assert retrieved_company.high_matching_applicants == 0
     assert retrieved_company.new_applicants == 0
 
     assert retrieved_job.total_applicants == 0
-    assert retrieved_job.shortlisted_applicants == 0
     assert retrieved_job.high_matching_applicants == 0
     assert retrieved_job.new_applicants == 0
 
@@ -363,12 +306,10 @@ async def test_high_matching_applicants(request_scope):
     retrieved_job = job_repo.get(job.id)
 
     assert retrieved_company.total_applicants == 1
-    assert retrieved_company.shortlisted_applicants == 0
     assert retrieved_company.high_matching_applicants == 1
     assert retrieved_company.new_applicants == 1
 
     assert retrieved_job.total_applicants == 1
-    assert retrieved_job.shortlisted_applicants == 0
     assert retrieved_job.high_matching_applicants == 1
     assert retrieved_job.new_applicants == 1
 
@@ -378,12 +319,10 @@ async def test_high_matching_applicants(request_scope):
     retrieved_job = job_repo.get(job.id)
 
     assert retrieved_company.total_applicants == 0
-    assert retrieved_company.shortlisted_applicants == 0
     assert retrieved_company.high_matching_applicants == 0
     assert retrieved_company.new_applicants == 0
 
     assert retrieved_job.total_applicants == 0
-    assert retrieved_job.shortlisted_applicants == 0
     assert retrieved_job.high_matching_applicants == 0
     assert retrieved_job.new_applicants == 0
 

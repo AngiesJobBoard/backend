@@ -176,13 +176,11 @@ class CreateJob(UserCreateJob):
     job_score_reason: str | None = None
     total_applicants: int = 0
     high_matching_applicants: int = 0
-    shortlisted_applicants: int = 0
     new_applicants: int = 0
 
 
 class Job(CreateJob, BaseDataModel):
     applicants: int = 0
-    shortlisted_applicants: int = 0
 
     @property
     def required_fields(self):

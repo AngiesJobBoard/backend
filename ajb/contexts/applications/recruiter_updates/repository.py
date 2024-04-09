@@ -69,48 +69,6 @@ class RecruiterUpdatesRepository(
             )
         )
 
-    def add_to_shortlist(
-        self,
-        company_id: str,
-        job_id: str,
-        application_id: str,
-        recruiter_id: str,
-        comment: str | None = None,
-    ):
-        return self.create(
-            CreateApplicationUpdate(
-                comment=comment,
-                new_application_status=None,
-                added_by_ajb_admin=False,
-                type=UpdateType.ADD_TO_SHORTLIST,
-                company_id=company_id,
-                job_id=job_id,
-                application_id=application_id,
-                recruiter_id=recruiter_id,
-            )
-        )
-
-    def remove_from_shortlist(
-        self,
-        company_id: str,
-        job_id: str,
-        application_id: str,
-        recruiter_id: str,
-        comment: str | None = None,
-    ):
-        return self.create(
-            CreateApplicationUpdate(
-                comment=comment,
-                new_application_status=None,
-                added_by_ajb_admin=False,
-                type=UpdateType.REMOVE_FROM_SHORTLIST,
-                company_id=company_id,
-                job_id=job_id,
-                application_id=application_id,
-                recruiter_id=recruiter_id,
-            )
-        )
-
     def get_application_update_timeline(
         self,
         company_id: str,

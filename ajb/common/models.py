@@ -199,12 +199,12 @@ class TimesSeriesAverage(str, Enum):
 
 
 class PreferredTone(Enum):
-    professional = "professional"
-    casual = "casual"
-    friendly = "friendly"
-    formal = "formal"
-    excited = "excited"
-    funny = "funny"
+    professional = "Professional"
+    concise = "Concise"
+    friendly = "Friendly"
+    formal = "Formal"
+    excited = "Excited"
+    funny = "Funny"
 
 
 def get_actions_as_daily_timeseries(

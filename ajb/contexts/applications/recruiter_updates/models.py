@@ -8,9 +8,6 @@ from ajb.base import BaseDataModel, PaginatedResponse
 class UpdateType(str, Enum):
     NOTE = "note"
     STATUS_CHANGE = "status_change"
-    ADD_TO_SHORTLIST = "add_to_shortlist"
-    REMOVE_FROM_SHORTLIST = "remove_from_shortlist"
-    APPLICATION_VIEWED = "application_viewed"
 
 
 class UserCreateApplicationUpdate(BaseModel):

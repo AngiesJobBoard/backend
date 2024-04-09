@@ -40,7 +40,6 @@ def get_all_company_applications(
     request: Request,
     company_id: str,
     job_id: str | None = None,
-    shortlist_only: bool = False,
     match_score: int | None = None,
     new_only: bool = False,
     resume_text_contains: str | None = None,
@@ -55,7 +54,6 @@ def get_all_company_applications(
         company_id,
         query,
         job_id,
-        shortlist_only,
         match_score,
         new_only,
         resume_text_contains,
@@ -103,8 +101,7 @@ def get_application_counts(
     company_id: str,
     job_id: str | None = None,
     minimum_match_score: int | None = None,
-    shortlist_only: bool = False,
-    unviewed_only: bool = False,
+    new_only: bool = False,
 ):
     filter_params = RepoFilterParams(
         filters=[Filter(field="company_id", value=company_id)]
@@ -119,12 +116,10 @@ def get_application_counts(
                 value=minimum_match_score,
             )
         )
-    if shortlist_only:
+    if new_only:
         filter_params.filters.append(
-            Filter(field="application_is_shortlisted", value=True)
+            Filter(field="application_status", operator=Operator.IS_NULL, value=None)
         )
-    if unviewed_only:
-        filter_params.filters.append(Filter(field="viewed_by_company", value=False))
     return CompanyApplicationRepository(request.state.request_scope).get_count(
         filter_params
     )
@@ -175,16 +170,4 @@ def update_application_status(
         application_id,
         new_status.application_status,
     )
-    return response
-
-
-@router.patch("/jobs/{job_id}/applications/{application_id}/view")
-def view_applications(request: Request, company_id: str, application_ids: list[str]):
-    response = ApplicationUseCase(
-        request.state.request_scope
-    ).company_views_applications(company_id, application_ids)
-    for application_id in application_ids:
-        mixpanel.application_is_viewed(
-            request.state.request_scope.user_id, company_id, None, application_id
-        )
     return response

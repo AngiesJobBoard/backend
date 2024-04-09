@@ -74,7 +74,6 @@ class CreateCompany(UserCreateCompany):
     settings: CompanySettings = CompanySettings()
     total_jobs: int = 0
     total_applicants: int = 0
-    shortlisted_applicants: int = 0
     high_matching_applicants: int = 0
     new_applicants: int = 0
 

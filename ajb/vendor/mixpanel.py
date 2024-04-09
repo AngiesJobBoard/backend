@@ -52,11 +52,9 @@ class EventName(str, Enum):
     APPLICATION_CREATED_FROM_API_WEBHOOK_INGRESS = (
         "application_created_from_api_webhook_ingress"
     )
-    APPLICATION_IS_SHORTLISTED = "application_is_shortlisted"
     APPLICATION_IS_DELETED = "application_is_deleted"
     APPLICATION_STATUS_IS_UPDATED = "application_status_is_updated"
     APPLICATION_QUICK_STATUS_IS_UPDATED = "application_quick_status_is_updated"
-    APPLICATION_IS_VIEWED = "application_is_viewed"
     JOB_FORWARDED_FROM_WEBHOOK = "job_forwarded_from_webhook"
     APPLICATION_FORWARDED_FROM_WEBHOOK = "application_forwarded_from_webhook"
 
@@ -213,26 +211,6 @@ class MixpanelDomainEvents(MixpanelService):
             EventName.APPLICATION_CREATED_FROM_EMAIL_INGRESS,
             properties,
         )
-
-    def application_is_shortlisted(
-        self, user_id: str, company_id: str, job_id: str, application_id: str
-    ):
-        properties = {
-            "job_id": job_id,
-            "application_id": application_id,
-        }
-        self.track(
-            user_id, company_id, EventName.APPLICATION_IS_SHORTLISTED, properties
-        )
-
-    def application_is_viewed(
-        self, user_id: str, company_id: str, job_id: str | None, application_id: str
-    ):
-        properties = {
-            "job_id": job_id,
-            "application_id": application_id,
-        }
-        self.track(user_id, company_id, EventName.APPLICATION_IS_VIEWED, properties)
 
     def application_is_deleted(
         self, user_id: str, company_id: str, job_id: str, application_id: str

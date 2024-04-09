@@ -196,14 +196,6 @@ class ApplicationUseCase(BaseUseCase):
             1,
             False,
         )
-        if application.application_is_shortlisted:
-            self.update_application_counts(
-                company_id,
-                application.job_id,
-                ApplicationConstants.SHORTLISTED_APPLICANTS,
-                1,
-                False,
-            )
         if (
             application.application_match_score
             and application.application_match_score > 70
@@ -212,14 +204,6 @@ class ApplicationUseCase(BaseUseCase):
                 company_id,
                 application.job_id,
                 ApplicationConstants.HIGH_MATCHING_APPLICANTS,
-                1,
-                False,
-            )
-        if not application.viewed_by_company:
-            self.update_application_counts(
-                company_id,
-                application.job_id,
-                ApplicationConstants.NEW_APPLICANTS,
                 1,
                 False,
             )
@@ -252,50 +236,6 @@ class ApplicationUseCase(BaseUseCase):
                 application.company_id, application.job_id, application.id
             )
         return True
-
-    def company_updates_application_shortlist(
-        self, company_id: str, application_id: str, is_adding_to_shortlist: bool
-    ):
-        application_repo = self.get_repository(Collection.APPLICATIONS)
-        response: Application = application_repo.update_fields(
-            application_id, application_is_shortlisted=is_adding_to_shortlist
-        )
-        self.update_application_counts(
-            company_id,
-            response.job_id,
-            ApplicationConstants.SHORTLISTED_APPLICANTS,
-            1,
-            is_adding_to_shortlist,
-        )
-        ApplicationEventProducer(
-            self.request_scope, SourceServices.API
-        ).application_is_updated(company_id, response.job_id, application_id)
-        return response
-
-    def company_views_applications(self, company_id: str, application_ids: list[str]):
-        application_repo = self.get_repository(Collection.APPLICATIONS)
-        first_application: Application = application_repo.get(application_ids[0])
-        response = application_repo.update_many(
-            {
-                application_id: {ApplicationConstants.VIEWED_BY_COMPANY: True}
-                for application_id in application_ids
-            }
-        )
-        self.update_application_counts(
-            company_id,
-            first_application.job_id,
-            ApplicationConstants.NEW_APPLICANTS,
-            len(application_ids),
-            False,
-        )
-        application_event_producer = ApplicationEventProducer(
-            self.request_scope, SourceServices.API
-        )
-        for application_id in application_ids:
-            application_event_producer.application_is_updated(
-                company_id, first_application.job_id, application_id
-            )
-        return response
 
     def recruiter_updates_application_status(
         self,

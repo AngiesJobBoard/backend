@@ -28,7 +28,6 @@ class CompanyCountsMigrationUseCase(BaseUseCase):
         jobs = self.get_company_jobs(company.id)
 
         total_applicants = 0
-        shortlisted_applicants = 0
         high_matching_applicants = 0
         new_applicants = 0
 
@@ -36,30 +35,25 @@ class CompanyCountsMigrationUseCase(BaseUseCase):
             applications = self.get_company_job_applications(job.id)
             total_applicants += len(applications)
             for application in applications:
-                if application.application_is_shortlisted:
-                    shortlisted_applicants += 1
                 if (
                     application.application_match_score
                     and application.application_match_score >= 70
                 ):
                     high_matching_applicants += 1
-                if not application.viewed_by_company:
-                    new_applicants += 1
 
         updated_company: Company = company_repo.update_fields(
             company.id,
             total_jobs=len(jobs),
             total_applicants=total_applicants,
-            shortlisted_applicants=shortlisted_applicants,
             high_matching_applicants=high_matching_applicants,
             new_applicants=new_applicants,
         )
         print(f"Company: {company.id}, {company.name}")
         print(
-            f"Original Counts: {company.total_jobs}, {company.total_applicants}, {company.shortlisted_applicants}, {company.high_matching_applicants}, {company.new_applicants}"
+            f"Original Counts: {company.total_jobs}, {company.total_applicants}, {company.high_matching_applicants}, {company.new_applicants}"
         )
         print(
-            f"Updated Counts: {updated_company.total_jobs}, {updated_company.total_applicants}, {updated_company.shortlisted_applicants}, {updated_company.high_matching_applicants}, {updated_company.new_applicants}\n"
+            f"Updated Counts: {updated_company.total_jobs}, {updated_company.total_applicants}, {updated_company.high_matching_applicants}, {updated_company.new_applicants}\n"
         )
 
     def run(self):
@@ -81,34 +75,28 @@ class JobCountsMigrationUseCase(BaseUseCase):
         job_repo = self.get_repository(Collection.JOBS)
         applications = self.get_job_applications(job.id)
 
-        shortlisted_applicants = 0
         high_matching_applicants = 0
         new_applicants = 0
 
         for application in applications:
-            if application.application_is_shortlisted:
-                shortlisted_applicants += 1
             if (
                 application.application_match_score
                 and application.application_match_score >= 70
             ):
                 high_matching_applicants += 1
-            if not application.viewed_by_company:
-                new_applicants += 1
 
         updated_job: Job = job_repo.update_fields(
             job.id,
             total_applicants=len(applications),
-            shortlisted_applicants=shortlisted_applicants,
             high_matching_applicants=high_matching_applicants,
             new_applicants=new_applicants,
         )
         print(f"Job: {job.id}, {job.position_title}")
         print(
-            f"Original Counts: {job.total_applicants}, {job.shortlisted_applicants}, {job.high_matching_applicants}, {job.new_applicants}"
+            f"Original Counts: {job.total_applicants}, {job.high_matching_applicants}, {job.new_applicants}"
         )
         print(
-            f"Updated Counts: {updated_job.total_applicants}, {updated_job.shortlisted_applicants}, {updated_job.high_matching_applicants}, {updated_job.new_applicants}\n"
+            f"Updated Counts: {updated_job.total_applicants}, {updated_job.high_matching_applicants}, {updated_job.new_applicants}\n"
         )
 
     def run(self):
