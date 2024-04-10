@@ -119,7 +119,6 @@ class CompanyFixture:
                 company_id=company_id,
                 plan=plan,
                 start_date=datetime(2021, 1, 1),
-                active=True,
                 stripe_subscription_id="sub_123",
                 usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[plan],
             )

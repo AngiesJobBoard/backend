@@ -9,8 +9,7 @@ class SubscriptionPlan(str, Enum):
     """
 
     STARTER = "Starter"
-    SMALL_BUSINESS = "Small Business"
-    MEDIUM_BUSINESS = "Medium Business"
+    PRO = "Pro"
     ENTERPRISE = "Enterprise"
 
 
@@ -53,30 +52,7 @@ SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS: dict[SubscriptionPlan, dict[UsageType, 
             free_tier_limit_per_month=10, cost_usd_per_transaction=1.0
         ),
     },
-    SubscriptionPlan.SMALL_BUSINESS: {
-        UsageType.RESUME_SCANS: UsageDetail(
-            free_tier_limit_per_month=1000, cost_usd_per_transaction=0.1
-        ),
-        UsageType.MATCH_SCORES: UsageDetail(
-            free_tier_limit_per_month=1000, cost_usd_per_transaction=0.1
-        ),
-        UsageType.APPLICATION_QUESTIONS_ANSWERED: UsageDetail(
-            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.1
-        ),
-        UsageType.EMAIL_INGRESS: UsageDetail(
-            free_tier_limit_per_month=1000, cost_usd_per_transaction=0.1
-        ),
-        UsageType.API_INGRESS: UsageDetail(
-            free_tier_limit_per_month=2000, cost_usd_per_transaction=0.1
-        ),
-        UsageType.API_EGRESS: UsageDetail(
-            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.1
-        ),
-        UsageType.TOTAL_RECRUITERS: UsageDetail(
-            free_tier_limit_per_month=20, cost_usd_per_transaction=0.1
-        ),
-    },
-    SubscriptionPlan.MEDIUM_BUSINESS: {
+    SubscriptionPlan.PRO: {
         UsageType.RESUME_SCANS: UsageDetail(
             free_tier_limit_per_month=5000, cost_usd_per_transaction=0.05
         ),

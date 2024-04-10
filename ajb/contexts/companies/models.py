@@ -10,6 +10,7 @@ from .enumerations import NumEmployeesEnum
 class UserCreateCompany(BaseModel):
     name: str
     slug: str | None = None
+    website: str | None = None
     num_employees: NumEmployeesEnum | None = None
 
 

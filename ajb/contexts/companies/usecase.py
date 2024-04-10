@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 from ajb.base import (
     BaseUseCase,
     Collection,
-    build_and_execute_query,
     RepoFilterParams,
     Pagination,
 )

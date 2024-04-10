@@ -24,7 +24,6 @@ def test_create_subscription(request_scope):
             company_id=company.id,
             plan=SubscriptionPlan.STARTER,
             start_date=datetime(2021, 1, 1),
-            active=True,
             stripe_subscription_id="sub_123",
             usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[
                 SubscriptionPlan.STARTER
