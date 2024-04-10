@@ -66,7 +66,9 @@ class UpdateCompany(BaseModel):
     name: str | None = None
     num_employees: NumEmployeesEnum | None = None
     owner_email: str | None = None
-    settings: CompanySettings = CompanySettings()
+    settings: CompanySettings | None = None
+    company_has_created_first_job: bool | None = None
+    company_has_imported_first_application: bool | None = None
 
 
 class CreateCompany(UserCreateCompany):
@@ -77,6 +79,8 @@ class CreateCompany(UserCreateCompany):
     total_applicants: int = 0
     high_matching_applicants: int = 0
     new_applicants: int = 0
+    company_has_created_first_job: bool = False
+    company_has_imported_first_application: bool = False
 
 
 class Company(BaseDataModel, CreateCompany): ...

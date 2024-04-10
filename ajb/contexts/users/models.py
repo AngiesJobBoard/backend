@@ -1,3 +1,4 @@
+from datetime import datetime
 from dataclasses import dataclass
 from pydantic import BaseModel
 
@@ -10,6 +11,9 @@ class UpdateUser(BaseModel):
     image_url: str | None = None
     phone_number: str | None = None
     show_first_time_experience: bool = True
+    date_accepted_terms_of_service: datetime | None = (
+        None  # IF none they have not yet accepted...
+    )
 
 
 class CreateUser(UpdateUser):
