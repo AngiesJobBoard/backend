@@ -29,7 +29,7 @@ class ApplicationStatuses(BaseModel):
 
 def default_statuses():
     return [
-        ApplicationStatuses(label="New", represents=ApplicationStatusRepresents.NEW),
+        ApplicationStatuses(label="To Review", represents=ApplicationStatusRepresents.NEW),
         ApplicationStatuses(
             label="Left Voicemail", represents=ApplicationStatusRepresents.IN_REVIEW
         ),
