@@ -93,3 +93,22 @@ class UserUseCase(BaseUseCase):
             data.profile_picture_data, data.file_type, remote_file_path, True
         )
         return user_repo.update_fields(data.user_id, image_url=profile_pic_url)
+
+    def verify_password(self, user_id: str, password: str) -> bool:
+        clerk_repo = ClerkAPIRepository()
+        try:
+            return clerk_repo.verify_user_password(user_id, password)
+        except Exception:
+            return False
+
+    def change_password(self, user_id: str, new_password: str):
+        clerk_repo = ClerkAPIRepository()
+        return clerk_repo.update_user_password(user_id, new_password)
+
+    def change_email(self, user_id: str, new_email: str) -> bool:
+        clerk_repo = ClerkAPIRepository()
+        clerk_success = clerk_repo.set_and_verify_new_email_address(user_id, new_email)
+        if clerk_success:
+            user_repo = self.get_repository(Collection.USERS)
+            user_repo.update_fields(user_id, email=new_email)
+        return True

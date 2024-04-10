@@ -61,3 +61,15 @@ class ClerkAPIRepository:
     def revoke_signing_token(self, token_id: str) -> bool:
         resp = self.client.revoke_signin_token(token_id)
         return resp.status_code == 200
+
+    def verify_user_password(self, user_id: str, password_to_verify: str) -> bool:
+        resp = self.client.verify_user_password(user_id, password_to_verify)
+        return resp.status_code == 200
+
+    def update_user_password(self, user_id: str, new_password: str) -> bool:
+        resp = self.client.update_user_password(user_id, new_password)
+        return resp.status_code == 200
+
+    def set_and_verify_new_email_address(self, user_id: str, new_email: str) -> bool:
+        resp = self.client.set_and_verify_new_email_address(user_id, new_email)
+        return resp.status_code == 200

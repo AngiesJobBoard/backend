@@ -56,6 +56,10 @@ class ClerkClient:
         endpoint = "/v1/users"
         return self._make_request("POST", endpoint, payload=user_data.model_dump())
 
+    def update_user(self, user_id: str, user_data: dict):
+        endpoint = f"/v1/users/{user_id}"
+        return self._make_request("PATCH", endpoint, payload=user_data)
+
     def delete_user(self, user_id: str):
         endpoint = f"/v1/users/{user_id}"
         return self._make_request("DELETE", endpoint)
@@ -71,3 +75,18 @@ class ClerkClient:
     def revoke_signin_token(self, sign_in_token_id: str):
         endpoint = f"/v1/sign_in_tokens/{sign_in_token_id}/revoke"
         return self._make_request("POST", endpoint)
+
+    def verify_user_password(self, user_id: str, password: str):
+        endpoint = f"/v1/users/{user_id}/verify_password"
+        return self._make_request("POST", endpoint, payload={"password": password})
+
+    def update_user_password(self, user_id: str, new_password: str):
+        return self.update_user(user_id, {"password": new_password})
+
+    def set_and_verify_new_email_address(self, user_id: str, new_email: str):
+        endpoint = "/v1/email_addresses"
+        return self._make_request(
+            "POST",
+            endpoint,
+            payload={"user_id": user_id, "email_address": new_email, "primary": True, "verified": True},
+        )
