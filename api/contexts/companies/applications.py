@@ -2,6 +2,7 @@ from fastapi import (
     APIRouter,
     Request,
     Depends,
+    Body
 )
 
 from ajb.base import (
@@ -14,7 +15,6 @@ from ajb.contexts.applications.models import (
     CompanyApplicationView,
     PaginatedDataReducedApplication,
     DataReducedApplication,
-    ScanStatus,
 )
 from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
@@ -69,8 +69,8 @@ def get_all_company_applications(
 def get_all_pending_applications(
     request: Request,
     company_id: str,
-    job_id: str | None = None,
-    include_failed: bool = False,
+    job_id: str | None = Body(None),
+    include_failed: bool = Body(False),
     page: int = 0,
     page_size: int = 25,
 ):

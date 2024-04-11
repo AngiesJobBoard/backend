@@ -7,12 +7,13 @@ from ajb.vendor.openai.client_factory import OpenAIClientFactory
 
 
 class OpenAIRepository:
-    def __init__(self, client: OpenAI | None = None):
+    def __init__(self, client: OpenAI | None = None, model_override: str | None = None):
         self.client = client or OpenAIClientFactory.get_client()
+        self.model_override = model_override
 
     def text_prompt(self, prompt: str, max_tokens: int = 100) -> str:
         response = self.client.chat.completions.create(
-            model=SETTINGS.OPENAI_MODEL,
+            model=self.model_override or SETTINGS.OPENAI_MODEL,
             messages=[{"role": "assistant", "content": prompt}],
             max_tokens=max_tokens,
         )
@@ -23,7 +24,7 @@ class OpenAIRepository:
 
     def json_prompt(self, prompt: str, max_tokens: int = 100) -> dict:
         response = self.client.chat.completions.create(
-            model=SETTINGS.OPENAI_MODEL,
+            model=self.model_override or SETTINGS.OPENAI_MODEL,
             response_format={"type": "json_object"},
             messages=[{"role": "assistant", "content": prompt}],
             max_tokens=max_tokens,
@@ -35,16 +36,17 @@ class OpenAIRepository:
 
 
 class AsyncOpenAIRepository:
-    def __init__(self, async_session: ClientSession):
+    def __init__(self, async_session: ClientSession, model_override: str | None = None):
         self.async_session = async_session
         self.url = "https://api.openai.com/v1/chat/completions"
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SETTINGS.OPENAI_API_KEY}",
         }
+        self.model_override = model_override
 
     async def _send_request(self, data: dict) -> dict:
-        data["model"] = SETTINGS.OPENAI_MODEL
+        data["model"] = self.model_override or SETTINGS.OPENAI_MODEL
         # data["temperature"] = 0.7
         async with self.async_session.post(
             self.url, json=data, headers=self.headers

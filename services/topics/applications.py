@@ -26,7 +26,7 @@ async def application_is_submitted(message: BaseKafkaMessage):
         repo = ApplicationEventsResolver(
             message,
             make_request_scope(message),
-            async_openai=AsyncOpenAIRepository(session),
+            async_openai=AsyncOpenAIRepository(session, model_override="gpt-4-turbo"),
         )
         await repo.application_is_submitted()
     mixpanel.application_is_submitted_and_enriched(
