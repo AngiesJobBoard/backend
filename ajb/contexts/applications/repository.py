@@ -16,6 +16,7 @@ from .models import (
     Application,
     AdminApplicationView,
     ApplicantAndJob,
+    ScanStatus,
 )
 
 
@@ -100,6 +101,52 @@ class CompanyApplicationRepository(ApplicationRepository):
             repo_filters=repo_filters,
             return_model=CompanyApplicationView,
         )
+
+    def get_all_pending_applications(
+        self,
+        company_id: str,
+        query: QueryFilterParams | RepoFilterParams | None = None,
+        job_id: str | None = None,
+        include_failed: bool = False,
+    ):
+        if isinstance(query, QueryFilterParams):
+            repo_filters = query.convert_to_repo_filters()
+        else:
+            repo_filters = query or RepoFilterParams()
+
+        repo_filters.filters.extend(
+            [
+                Filter(
+                    field="resume_scan_status",
+                    value=ScanStatus.PENDING.value,
+                    and_or_operator="OR",
+                ),
+                Filter(
+                    field="resume_scan_status",
+                    value=ScanStatus.STARTED.value,
+                    and_or_operator="OR",
+                ),
+                Filter(
+                    field="match_score_status",
+                    value=ScanStatus.PENDING.value,
+                    and_or_operator="OR",
+                ),
+                Filter(
+                    field="match_score_status",
+                    value=ScanStatus.STARTED.value,
+                    and_or_operator="OR",
+                ),
+            ]
+        )
+        if include_failed:
+            repo_filters.filters.append(
+                Filter(
+                    field="resume_scan_status",
+                    value=ScanStatus.FAILED.value,
+                    and_or_operator="OR",
+                )
+            )
+        return self.get_company_view_list(company_id, repo_filters, job_id=job_id)
 
     def get_all_company_applications_from_email(
         self, company_id: str, email: str

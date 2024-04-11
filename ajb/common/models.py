@@ -240,7 +240,7 @@ class QuestionStatus(str, Enum):
     FAILED = "Failed"
 
 
-class AnwserEnum(str, Enum):
+class AnswerEnum(str, Enum):
     YES = "Yes"
     NO = "No"
     UNSURE = "Unsure"
@@ -254,7 +254,7 @@ class ApplicationQuestion(BaseModel):
 
     question: str
     question_status: QuestionStatus = QuestionStatus.PENDING_ANSWER
-    answer: AnwserEnum | None = None
+    answer: AnswerEnum | None = None
     confidence: int | None = None
     reasoning: str | None = None
     error_text: str | None = None

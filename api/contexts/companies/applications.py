@@ -8,17 +8,13 @@ from ajb.base import (
     QueryFilterParams,
     RepoFilterParams,
     build_pagination_response,
+    Pagination,
 )
 from ajb.contexts.applications.models import (
     CompanyApplicationView,
     PaginatedDataReducedApplication,
     DataReducedApplication,
-)
-from ajb.contexts.applications.recruiter_updates.repository import (
-    RecruiterUpdatesRepository,
-)
-from ajb.contexts.applications.recruiter_updates.models import (
-    UserCreateRecruiterComment,
+    ScanStatus,
 )
 from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
@@ -69,16 +65,42 @@ def get_all_company_applications(
     )
 
 
+@router.post("/pending", response_model=PaginatedDataReducedApplication)
+def get_all_pending_applications(
+    request: Request,
+    company_id: str,
+    job_id: str | None = None,
+    include_failed: bool = False,
+    page: int = 0,
+    page_size: int = 25,
+):
+    """Gets all pending applications"""
+    query = RepoFilterParams(
+        pagination=Pagination(page=page, page_size=page_size),
+    )
+    results = CompanyApplicationRepository(
+        request.state.request_scope
+    ).get_all_pending_applications(company_id, query, job_id, include_failed)
+    return build_pagination_response(
+        results,
+        page,
+        page_size,
+        request.url._url,
+        PaginatedDataReducedApplication,
+    )
+
+
 @router.post("/many", response_model=PaginatedDataReducedApplication)
 def get_many_company_applications(
     request: Request,
     company_id: str,
     application_ids: list[str],
     page: int = 0,
-    page_size: int = 50,
+    page_size: int = 25,
 ):
     """Gets all applications by a list of ids"""
     query = RepoFilterParams(
+        pagination=Pagination(page=page, page_size=page_size),
         filters=[
             Filter(field="_key", operator=Operator.ARRAY_IN, value=application_ids)
         ],

@@ -22,6 +22,7 @@ class CreateApplicationUpdate(UserCreateApplicationUpdate):
     job_id: str
     application_id: str
     recruiter_id: str
+    recruiter_user_id: str
 
 
 class ApplicationUpdate(CreateApplicationUpdate, BaseDataModel): ...
@@ -34,7 +35,7 @@ class ApplicationUpdateRecruiterModel(BaseModel):
 
 
 class CompanyApplicationUpdateView(CreateApplicationUpdate, BaseDataModel):
-    recruiter: ApplicationUpdateRecruiterModel
+    recruiter_user: ApplicationUpdateRecruiterModel
 
 
 @dataclass

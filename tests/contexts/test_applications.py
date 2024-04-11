@@ -14,6 +14,7 @@ from ajb.contexts.applications.models import (
     Education,
     CreateApplication,
     CreateApplicationStatusUpdate,
+    ScanStatus,
 )
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.jobs.repository import JobRepository
@@ -22,6 +23,7 @@ from ajb.contexts.applications.matching.ai_matching import ApplicantMatchScore
 from ajb.contexts.applications.recruiter_updates.repository import (
     RecruiterUpdatesRepository,
 )
+from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.companies.notifications.repository import (
     CompanyNotificationRepository,
 )
@@ -350,3 +352,77 @@ def test_application_status_update(request_scope):
 
     assert len(recruiter_update_repo.get_all()) == 1
     assert len(company_notifications_repo.get_all()) == 1
+
+
+def test_get_pending_applications(request_scope):
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
+    another_job = CompanyFixture(request_scope).create_company_job(app_data.company.id)
+    app_repo = ApplicationRepository(request_scope)
+    company_app_repo = CompanyApplicationRepository(request_scope)
+
+    # Make 1 application that matches each of the expected statuses
+    scan_pending = app_data.application.model_copy()
+    scan_started = app_data.application.model_copy()
+    scan_failed = app_data.application.model_copy()
+    matching_score_pending = app_data.application.model_copy()
+    matching_score_started = app_data.application.model_copy()
+
+    scan_completed_match_pending = app_data.application.model_copy()
+    scan_completed_match_started = app_data.application.model_copy()
+    scan_completed_match_completed = app_data.application.model_copy()
+
+    scan_pending.resume_scan_status = ScanStatus.PENDING
+    scan_started.resume_scan_status = ScanStatus.STARTED
+    scan_failed.resume_scan_status = ScanStatus.FAILED
+    matching_score_pending.match_score_status = ScanStatus.PENDING
+    matching_score_started.match_score_status = ScanStatus.STARTED
+
+    scan_completed_match_pending.resume_scan_status = ScanStatus.COMPLETED
+    scan_completed_match_pending.match_score_status = ScanStatus.PENDING
+    scan_completed_match_started.resume_scan_status = ScanStatus.COMPLETED
+    scan_completed_match_started.match_score_status = ScanStatus.STARTED
+    scan_completed_match_completed.resume_scan_status = ScanStatus.COMPLETED
+    scan_completed_match_completed.match_score_status = ScanStatus.COMPLETED
+
+    scan_started.job_id = another_job.id
+    scan_failed.job_id = another_job.id
+
+    for app in [
+        scan_pending,
+        scan_started,
+        scan_failed,
+        matching_score_pending,
+        matching_score_started,
+        scan_completed_match_pending,
+        scan_completed_match_started,
+        scan_completed_match_completed,
+    ]:
+        app = app_repo.create(CreateApplication(**app.model_dump()))
+
+    # Not include failed
+    pending_results, count = company_app_repo.get_all_pending_applications(
+        app_data.company.id
+    )
+    assert len(pending_results) == 6
+    assert count == 6
+
+    # Include failed
+    pending_results, count = company_app_repo.get_all_pending_applications(
+        app_data.company.id, include_failed=True
+    )
+    assert len(pending_results) == 7
+    assert count == 7
+
+    # Query on specific job no failed
+    pending_results, count = company_app_repo.get_all_pending_applications(
+        app_data.company.id, job_id=another_job.id
+    )
+    assert len(pending_results) == 1
+    assert count == 1
+
+    # Query on specific job and include failed
+    pending_results, count = company_app_repo.get_all_pending_applications(
+        app_data.company.id, job_id=another_job.id, include_failed=True
+    )
+    assert len(pending_results) == 2
+    assert count == 2

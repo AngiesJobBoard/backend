@@ -218,8 +218,27 @@ class ArangoDBRepository:
             """
         )
 
+    def _build_or_filter_string(self, or_filters: list[Filter]):
+        """
+        This builds a string to group all "OR" type filters together
+        """
+        filter_strings = []
+        for filter in or_filters:
+            next_bind_key = self.get_next_bind_var_key()
+            self.bind_vars[next_bind_key] = filter.search_value
+            filter_strings.append(
+                f"doc.{filter.field} == @{next_bind_key}"
+            )
+
+        return "AND (\n" + "\nOR ".join(filter_strings) + "\n)"
+
     def _append_all_filters(self):
-        for i, filter_obj in enumerate(self.filters):
+        all_and_filters = [
+            filter_obj
+            for filter_obj in self.filters
+            if filter_obj.and_or_operator == "AND"
+        ]
+        for i, filter_obj in enumerate(all_and_filters):
             # If the filter is a text search, use lower
             if filter_obj.operator.is_text_search():
                 self._append_text_search_filter(i, filter_obj)
@@ -229,11 +248,21 @@ class ArangoDBRepository:
                 self._append_is_null_filter(i, filter_obj)
             elif filter_obj.operator == Operator.ARRAY_IN:
                 self._append_array_in_filter(i, filter_obj)
+            elif filter_obj.and_or_operator == "OR":
+                continue
             else:
                 self._append_default_filter(i, filter_obj)
 
             if not filter_obj.operator.is_null_filter():
                 self.bind_vars[self.get_next_bind_var_key()] = filter_obj.search_value
+
+        all_or_filters = [
+            filter_obj
+            for filter_obj in self.filters
+            if filter_obj.and_or_operator == "OR"
+        ]
+        if all_or_filters:
+            self.query_parts.append(self._build_or_filter_string(all_or_filters))
 
     def _append_all_search_filters(self):
         if self.search_filters:

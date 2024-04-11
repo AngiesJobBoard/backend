@@ -3,7 +3,7 @@ This module will take an application and answer all pending questions
 """
 
 from ajb.vendor.openai.repository import AsyncOpenAIRepository
-from ajb.common.models import AnwserEnum, ApplicationQuestion, QuestionStatus
+from ajb.common.models import AnswerEnum, ApplicationQuestion, QuestionStatus
 from ajb.contexts.applications.models import Qualifications
 from ajb.utils import closest_string_enum_match
 
@@ -20,7 +20,7 @@ class AIApplicantionQuestionAnswer:
             The question is: {question}.
             The candidate's qualifications are: {qualifications}.
             Provide a JSON response with the keys 'answer', 'confidence', and 'reasoning'.
-            'answer' should be one of the following: {AnwserEnum}.
+            'answer' should be one of the following: {AnswerEnum}.
             'confidence' should be a number between 0 and 10.
             'reasoning' should be a string.
         """
@@ -28,8 +28,8 @@ class AIApplicantionQuestionAnswer:
         return ApplicationQuestion(
             question=question,
             question_status=QuestionStatus.ANSWERED,
-            answer=AnwserEnum(
-                closest_string_enum_match(response["answer"], AnwserEnum)
+            answer=AnswerEnum(
+                closest_string_enum_match(response["answer"], AnswerEnum)
             ),
             confidence=response["confidence"],
             reasoning=response["reasoning"],

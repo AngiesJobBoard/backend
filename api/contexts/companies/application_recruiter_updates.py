@@ -7,6 +7,7 @@ from ajb.base import build_pagination_response
 from ajb.contexts.applications.recruiter_updates.repository import (
     RecruiterUpdatesRepository,
 )
+from ajb.contexts.applications.recruiter_updates.usecase import RecruiterUpdatesUseCase
 from ajb.contexts.applications.recruiter_updates.models import (
     ApplicationUpdate,
     PaginatedCompanyUpdateView,
@@ -26,7 +27,7 @@ def get_all_recruiter_updates(
     update_query: ApplicationUpdateQuery = Depends(),
 ):
     """Gets all recruiter updates for a given company"""
-    results = RecruiterUpdatesRepository(
+    results = RecruiterUpdatesUseCase(
         request.state.request_scope
     ).get_application_update_timeline(
         update_query.company_id,
@@ -58,8 +59,8 @@ def create_recruiter_comment(
     recruiter_comment: UserCreateRecruiterComment,
 ):
     """Creates a recruiter comment"""
-    return RecruiterUpdatesRepository(
-        request.state.request_scope, application_id
+    return RecruiterUpdatesUseCase(
+        request.state.request_scope
     ).add_recruiter_comment(
         company_id,
         job_id,

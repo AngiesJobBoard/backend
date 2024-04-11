@@ -12,8 +12,8 @@ from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
     CompanyApplicationView,
 )
-from ajb.contexts.applications.recruiter_updates.repository import (
-    RecruiterUpdatesRepository,
+from ajb.contexts.applications.recruiter_updates.usecase import (
+    RecruiterUpdatesUseCase
 )
 from ajb.contexts.companies.notifications.usecase import CompanyNotificationUsecase
 from ajb.contexts.companies.notifications.models import (
@@ -263,7 +263,7 @@ class ApplicationUseCase(BaseUseCase):
             ).update_fields(
                 application_id, application_status=new_status.application_status
             )
-            RecruiterUpdatesRepository(transaction_scope).update_application_status(
+            RecruiterUpdatesUseCase(transaction_scope).update_application_status(
                 company_id,
                 job_id,
                 application_id,

@@ -100,12 +100,21 @@ class ArangoMigrator:
     def load_default_static_data(self):
         StaticDataRepository(self.request_scope).load_default_data()
 
+    def delete_collections_that_dont_exist_in_collections(self):
+        for collection in self.db.collections():  # type: ignore
+            if collection["name"] not in [c.value for c in self.collections]:
+                if collection.get("system", False):
+                    continue
+                self.db.delete_collection(collection["name"])
+                print(f"Deleted collection {collection}")
+
     def execute(self):
         self.create_collections()
         self.create_views()
         print("\nDatabase setup complete\n")
         self.create_system_user()
         self.load_default_static_data()
+        self.delete_collections_that_dont_exist_in_collections()
 
     def run_migrations(self):
         self.collections = Collection
