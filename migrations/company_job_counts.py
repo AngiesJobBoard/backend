@@ -2,6 +2,7 @@ from ajb.base import BaseUseCase, Collection
 from ajb.contexts.companies.models import Company
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.applications.models import Application
+from ajb.config.settings import SETTINGS
 
 from migrations.base import MIGRATION_REQUEST_SCOPE
 
@@ -37,7 +38,8 @@ class CompanyCountsMigrationUseCase(BaseUseCase):
             for application in applications:
                 if (
                     application.application_match_score
-                    and application.application_match_score >= 70
+                    and application.application_match_score
+                    >= SETTINGS.DEFAULT_HIGH_MATCH_THRESHOLD
                 ):
                     high_matching_applicants += 1
 
@@ -81,7 +83,8 @@ class JobCountsMigrationUseCase(BaseUseCase):
         for application in applications:
             if (
                 application.application_match_score
-                and application.application_match_score >= 70
+                and application.application_match_score
+                >= SETTINGS.DEFAULT_HIGH_MATCH_THRESHOLD
             ):
                 high_matching_applicants += 1
 

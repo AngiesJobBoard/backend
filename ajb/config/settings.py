@@ -14,6 +14,7 @@ class AppSettings:
     APP_NAME: str = os.getenv("APP_NAME", "Angie's Job Board")
     SUPPORT_EMAIL: str = f"support@{APP_DOMAIN}"
     DEFAULT_PAGE_SIZE: int = 25
+    DEFAULT_HIGH_MATCH_THRESHOLD: float = 70
 
     # Firebase config
     FIRESTORE_APP_NAME: str = "ajb"

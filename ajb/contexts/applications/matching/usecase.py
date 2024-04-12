@@ -9,6 +9,7 @@ from ajb.contexts.companies.notifications.models import (
     NotificationType,
     SystemCreateCompanyNotification,
 )
+from ajb.config.settings import SETTINGS
 from ajb.vendor.openai.repository import AsyncOpenAIRepository
 
 from .ai_matching import AIApplicationMatcher, ApplicantMatchScore
@@ -47,12 +48,25 @@ class ApplicantMatchUsecase(BaseUseCase):
                 company_id=application.company_id,
                 notification_type=NotificationType.HIGH_MATCHING_CANDIDATE,
                 title=f"High Matching Candidate for {job.position_title}",
-                message=f"{application.name} has a high match score for {job.position_title}. Here's why: {application.application_match_reason}",
+                message=f"{application.name} has a high match score for {job.position_title}!",
                 application_id=application.id,
                 job_id=job.id,
                 metadata={
-                    "email": application.email,
-                    "external_reference_code": application.external_reference_code,
+                    "application_name": application.name,
+                    "application_email": application.email,
+                    "match_score": application.application_match_score,
+                    "match_reason": application.application_match_reason,
+                    "application_city": (
+                        application.user_location.city or ""
+                        if application.user_location
+                        else ""
+                    ),
+                    "application_state": (
+                        application.user_location.state or ""
+                        if application.user_location
+                        else ""
+                    ),
+                    "job_name": job.position_title,
                 },
             ),
         )
@@ -68,15 +82,15 @@ class ApplicantMatchUsecase(BaseUseCase):
         job = self._get_job(application.job_id, job_data)
         try:
             match_results = await self.get_match(application, job)
-            if match_results.match_score >= 70:
-                self._handle_high_application_match(application, job)
-
-            return application_repo.update_fields(
+            updated_application = application_repo.update_fields(
                 application_id,
                 application_match_score=match_results.match_score,
                 application_match_reason=match_results.match_reason,
                 match_score_status=ScanStatus.COMPLETED,
             )
+            if match_results.match_score >= SETTINGS.DEFAULT_HIGH_MATCH_THRESHOLD:
+                self._handle_high_application_match(updated_application, job)
+            return updated_application
         except Exception as e:
             application_repo.update_fields(
                 application_id,

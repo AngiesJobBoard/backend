@@ -12,9 +12,7 @@ from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
     CompanyApplicationView,
 )
-from ajb.contexts.applications.recruiter_updates.usecase import (
-    RecruiterUpdatesUseCase
-)
+from ajb.contexts.applications.recruiter_updates.usecase import RecruiterUpdatesUseCase
 from ajb.contexts.companies.notifications.usecase import CompanyNotificationUsecase
 from ajb.contexts.companies.notifications.models import (
     NotificationType,
@@ -29,6 +27,7 @@ from ajb.contexts.billing.usecase import (
 )
 from ajb.vendor.arango.models import Filter
 from ajb.utils import random_salt
+from ajb.config.settings import SETTINGS
 
 from .models import CreateApplication, Application, ScanStatus
 from .constants import ApplicationConstants
@@ -204,7 +203,8 @@ class ApplicationUseCase(BaseUseCase):
         )
         if (
             application.application_match_score
-            and application.application_match_score > 70
+            and application.application_match_score
+            >= SETTINGS.DEFAULT_HIGH_MATCH_THRESHOLD
         ):
             self.update_application_counts(
                 company_id,
@@ -258,9 +258,11 @@ class ApplicationUseCase(BaseUseCase):
                 Collection.COMPANY_NOTIFICATIONS,
             ],
         ) as transaction_scope:
-            self.get_repository(
+            application_repo = self.get_repository(
                 Collection.APPLICATIONS, transaction_scope
-            ).update_fields(
+            )
+            original_application: Application = application_repo.get(application_id)
+            application_repo.update_fields(
                 application_id, application_status=new_status.application_status
             )
             RecruiterUpdatesUseCase(transaction_scope).update_application_status(
@@ -275,25 +277,25 @@ class ApplicationUseCase(BaseUseCase):
                 transaction_scope
             ).get_company_view_single(application_id)
             notification_message = f"{response.name} has been moved to status {new_status.application_status} for job {response.job.position_title}."
-            if new_status.update_reason:
-                notification_message += (
-                    f"\nNote from Recruiter: {new_status.update_reason}"
-                )
             CompanyNotificationUsecase(transaction_scope).create_company_notification(
                 company_id=company_id,
                 data=SystemCreateCompanyNotification(
                     company_id=company_id,
                     notification_type=NotificationType.APPLICATION_STATUS_CHANGE,
-                    title=f"Updated Application for job {response.job.position_title}",
+                    title=f"Updated Application for Job {response.job.position_title}",
                     message=notification_message,
                     application_id=application_id,
                     job_id=job_id,
                     metadata={
-                        "application_status": new_status.application_status,
+                        "applicant_name": response.name,
+                        "application_email": response.email,
+                        "job_name": response.job.position_title,
+                        "new_application_status": new_status.application_status,
+                        "old_application_status": original_application.application_status,
                         "update_reason": new_status.update_reason,
                     },
                 ),
-                all_but_current_recruiter=True,
+                # all_but_current_recruiter=True,
             )
             return response
 

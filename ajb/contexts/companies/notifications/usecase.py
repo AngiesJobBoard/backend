@@ -72,3 +72,10 @@ class CompanyNotificationUsecase(BaseUseCase):
         for notification in all_recruiter_notifications:
             notification_repo.update_fields(notification.id, is_read=True)
         return True
+
+    def mark_one_recruiter_notification_as_read(
+        self, company_id: str, notification_id: str
+    ) -> bool:
+        notification_repo = self.get_repository(Collection.COMPANY_NOTIFICATIONS, self.request_scope, company_id)
+        notification_repo.update_fields(notification_id, is_read=True)
+        return True
