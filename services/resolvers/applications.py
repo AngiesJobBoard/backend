@@ -83,12 +83,12 @@ class ApplicationEventsResolver:
                         and resume_information.most_recent_job_company
                         else None
                     ),
-                    work_history=resume_information.work_experience,
-                    education=resume_information.education,
-                    skills=resume_information.skills,
-                    licenses=resume_information.licenses,
-                    certifications=resume_information.certifications,
-                    language_proficiencies=resume_information.languages,
+                    work_history=resume_information.work_experience or [],
+                    education=resume_information.education or [],
+                    skills=resume_information.skills or [],
+                    licenses=resume_information.licenses or [],
+                    certifications=resume_information.certifications or [],
+                    language_proficiencies=resume_information.languages or [],
                 ),
                 user_location=(
                     Location(

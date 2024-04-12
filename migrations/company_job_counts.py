@@ -43,6 +43,9 @@ class CompanyCountsMigrationUseCase(BaseUseCase):
                 ):
                     high_matching_applicants += 1
 
+                if not application.application_status:
+                    new_applicants += 1
+
         updated_company: Company = company_repo.update_fields(
             company.id,
             total_jobs=len(jobs),
@@ -87,6 +90,9 @@ class JobCountsMigrationUseCase(BaseUseCase):
                 >= SETTINGS.DEFAULT_HIGH_MATCH_THRESHOLD
             ):
                 high_matching_applicants += 1
+
+            if not application.application_status:
+                new_applicants += 1
 
         updated_job: Job = job_repo.update_fields(
             job.id,
