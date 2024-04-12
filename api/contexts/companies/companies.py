@@ -53,7 +53,7 @@ def get_company_global_search(
 
 @router.patch("/{company_id}", response_model=Company)
 def update_company(request: Request, company_id: str, company: UpdateCompany):
-    return CompanyRepository(request.state.request_scope).update(company_id, company)
+    return CompaniesUseCase(request.state.request_scope).update_company(company_id, company)
 
 
 @router.get("/{company_id}", response_model=Company)

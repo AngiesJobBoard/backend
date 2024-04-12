@@ -22,6 +22,7 @@ from .models import (
     CompanyGlobalSearchJobs,
     CompanyGlobalSearchApplications,
     CompanyGlobalSearchResults,
+    UpdateCompany,
 )
 from .events import CompanyEventProducer
 
@@ -157,3 +158,24 @@ class CompaniesUseCase(BaseUseCase):
         return CompanyGlobalSearchResults(
             jobs=results["jobs"].result(), applications=results["applications"].result()
         )
+
+    def _update_job_applications_by_email(self, company_id: str, enabled: bool) -> None:
+        email_ingress_repository = self.get_repository(
+            Collection.COMPANY_EMAIL_INGRESS_WEBHOOKS
+        )
+        all_email_ingress = email_ingress_repository.get_all(company_id=company_id)
+        for ingress in all_email_ingress:
+            email_ingress_repository.update_fields(ingress.id, is_active=enabled)
+
+    def update_company(self, company_id: str, updates: UpdateCompany):
+        company_repo = self.get_repository(Collection.COMPANIES)
+        if updates.settings is not None:
+            original_doc: Company = company_repo.get(company_id)
+            if (
+                original_doc.settings.enable_all_email_ingress
+                != updates.settings.enable_all_email_ingress
+            ):
+                self._update_job_applications_by_email(
+                    company_id, updates.settings.enable_all_email_ingress
+                )
+        return company_repo.update(company_id, updates)
