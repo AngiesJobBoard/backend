@@ -11,7 +11,9 @@ from ajb.contexts.companies.email_ingress_webhooks.models import (
     EmailIngressType,
 )
 from ajb.contexts.companies.jobs.job_score.ai_job_score import AIJobScore
+from ajb.contexts.applications.models import Application
 from ajb.vendor.openai.repository import OpenAIRepository
+from ajb.config.settings import SETTINGS
 
 from .models import (
     Job,
@@ -97,6 +99,25 @@ class JobsUseCase(BaseUseCase):
         company_repo = self.get_repository(Collection.COMPANIES)
         job_repo.delete(job_id)
         company_repo.decrement_field(company_id, "total_jobs", 1)
+
+        # Delete all applications
+        application_repo = self.get_repository(Collection.APPLICATIONS)
+        all_job_applications: list[Application] = application_repo.get_all(company_id=company_id, job_id=job_id)
+        total_applicant_decrease = len(all_job_applications)
+        total_high_match_decrease = len(
+            [app for app in all_job_applications if app.application_match_score or 0 >= SETTINGS.DEFAULT_HIGH_MATCH_THRESHOLD]
+        )
+        total_new_application_decrease = len(
+            [app for app in all_job_applications if app.application_status is None]
+        )
+        application_repo.delete_many([app.id for app in all_job_applications])
+    
+        # Update company counts
+        company_repo = self.get_repository(Collection.COMPANIES)
+        company_repo.decrement_field(company_id, "total_applicants", total_applicant_decrease)
+        company_repo.decrement_field(company_id, "high_matching_applicants", total_high_match_decrease)
+        company_repo.decrement_field(company_id, "new_applicants", total_new_application_decrease)
+    
         CompanyEventProducer(
             self.request_scope, SourceServices.API
         ).company_deletes_job(job_id=job_id)
@@ -107,7 +128,6 @@ class JobsUseCase(BaseUseCase):
         job_to_update = CreateJob(**job.model_dump(), company_id=company_id)
         job_with_score = self._update_job_with_score(job_to_update)
         updated_job = job_repo.update(job_id, job_with_score)
-
         CompanyEventProducer(
             self.request_scope, SourceServices.API
         ).company_updates_job(job_id=job_id)
