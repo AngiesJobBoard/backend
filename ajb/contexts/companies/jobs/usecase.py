@@ -1,4 +1,4 @@
-from ajb.base import BaseUseCase, Collection
+from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.base.events import SourceServices
 from ajb.contexts.companies.models import Company
 from ajb.contexts.companies.events import CompanyEventProducer
@@ -10,6 +10,8 @@ from ajb.contexts.companies.email_ingress_webhooks.models import (
     CreateCompanyEmailIngress,
     EmailIngressType,
 )
+from ajb.contexts.companies.jobs.job_score.ai_job_score import AIJobScore
+from ajb.vendor.openai.repository import OpenAIRepository
 
 from .models import (
     Job,
@@ -19,12 +21,34 @@ from .models import (
 
 
 class JobsUseCase(BaseUseCase):
-    def create_job(self, company_id: str, job: UserCreateJob) -> Job:
+
+    def __init__(
+        self,
+        request_scope: RequestScope,
+        openai: OpenAIRepository | None = None,
+    ):
+        self.request_scope = request_scope
+        self.openai = openai or OpenAIRepository()
+
+    def _update_job_with_score(self, job: CreateJob) -> CreateJob:
+        job_score = AIJobScore(self.openai).get_job_score(job)
+        job.job_score = job_score.job_score
+        job.job_score_reason = job_score.job_score_reason
+        return job
+
+    def create_job(
+        self,
+        company_id: str,
+        job: UserCreateJob,
+        openai: OpenAIRepository | None = None,
+    ) -> Job:
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         company_repo = self.get_repository(Collection.COMPANIES)
         job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
-        job_to_create.job_score = job.calculate_score()
-        created_job: Job = job_repo.create(job_to_create)
+        job_with_score = self._update_job_with_score(job_to_create)
+
+        # Create the job
+        created_job: Job = job_repo.create(job_with_score)
 
         # Update company job count
         company_repo.increment_field(company_id, "total_jobs", 1)
@@ -54,8 +78,8 @@ class JobsUseCase(BaseUseCase):
         jobs_to_create = []
         for job in jobs:
             job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
-            job_to_create.job_score = job.calculate_score()
-            jobs_to_create.append(job_to_create)
+            job_with_score = self._update_job_with_score(job_to_create)
+            jobs_to_create.append(job_with_score)
         created_jobs = job_repo.create_many(jobs_to_create)
 
         # Update company job count
@@ -82,8 +106,8 @@ class JobsUseCase(BaseUseCase):
     def update_job(self, company_id: str, job_id: str, job: UserCreateJob) -> Job:
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         job_to_update = CreateJob(**job.model_dump(), company_id=company_id)
-        job_to_update.job_score = job.calculate_score()
-        updated_job = job_repo.update(job_id, job_to_update)
+        job_with_score = self._update_job_with_score(job_to_update)
+        updated_job = job_repo.update(job_id, job_with_score)
 
         CompanyEventProducer(
             self.request_scope, SourceServices.API

@@ -112,39 +112,6 @@ class UserCreateJob(BaseModel):
         }
         return self.model_dump(exclude=company_fields)
 
-    def calculate_score(self) -> float:
-        weights = {
-            "position_title": 10,
-            "description": 10,
-            "industry_category": 13,
-            "schedule": 5,
-            "experience_required": 6,
-            "location_type": 10,
-            "num_candidates_required": 3,
-            "ongoing_recruitment": 2,
-            "required_job_skills": 8,
-            "on_job_training_offered": 2,
-            "weekly_day_range": 3,
-            "shift_type": 3,
-            "pay": 8,
-            "language_requirements": 4,
-            "background_check_required": 2,
-            "drug_test_required": 2,
-            "felons_accepted": 2,
-            "disability_accepted": 2,
-            "ideal_days_to_hire": 2,
-            "external_reference_code": 1,
-            "job_associated_company_description": 4,
-            "desired_start_date": 3,
-        }
-
-        score = 0
-        for attr, weight in weights.items():
-            if getattr(self, attr):
-                score += weight
-
-        return score
-
     @classmethod
     def from_csv(cls, values: dict) -> "UserCreateJob":
         values["industry_subcategories"] = values.get(
@@ -210,10 +177,6 @@ class Job(CreateJob, BaseDataModel):
         missing_fields = self.get_missing_required_fields()
         if missing_fields:
             raise MissingJobFieldsException(fields=missing_fields)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.job_score = self.calculate_score()
 
 
 @dataclass

@@ -72,16 +72,18 @@ class AIApplicationMatcher:
     async def get_match_score(self, application: Application, job: Job):
         results = await self.openai.json_prompt(
             f"""
-            Given the following job description and applicant qualifications,
-            return a JSON object with the following keys:
-            - match_score (int between 0 and 10)
+            You are an expert at matching applicants to job postings.
+            Given the following job details, description, and application qualifications,
+            return a match score between 0 and 100 for how good of a fit the applicant is for the job. Try to not round to the nearest 10.
+            Return a JSON object with the following keys:
+            - match_score (int between 0 and 100)
             - match_reason (str)
             job: {self._get_job_details(job)}
-            user: {self._get_applicant_qualifications(application)}
+            applicant: {self._get_applicant_qualifications(application)}
             """,
             max_tokens=3000,
         )
         return ApplicantMatchScore(
-            match_score=results["match_score"] * 10,
+            match_score=results["match_score"],
             match_reason=results["match_reason"],
         )
