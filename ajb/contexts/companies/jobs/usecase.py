@@ -40,7 +40,6 @@ class JobsUseCase(BaseUseCase):
         self,
         company_id: str,
         job: UserCreateJob,
-        openai: OpenAIRepository | None = None,
     ) -> Job:
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         company_repo = self.get_repository(Collection.COMPANIES)

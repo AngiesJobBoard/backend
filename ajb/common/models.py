@@ -2,7 +2,7 @@ from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel, root_validator
 
-from ajb.vendor.google_maps import get_lat_long_from_address
+from ajb.vendor.google_maps import get_lat_long_from_address, get_city_and_state_from_lat_long
 from ajb.static.enumerations import PayType
 from ajb.utils import get_nested_value
 
@@ -42,6 +42,12 @@ class Location(BaseModel):
                 new_lat, new_lng = get_lat_long_from_address(address_string)
                 values["lat"] = new_lat
                 values["lng"] = new_lng
+
+                # If city and state are not provided, get them from the lat/long
+                if not values.get("city") or not values.get("state"):
+                    city, state = get_city_and_state_from_lat_long(new_lat, new_lng)
+                    values["city"] = values.get("city") or city
+                    values["state"] = values.get("state") or state
             except IndexError:
                 pass
         return values
