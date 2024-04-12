@@ -51,30 +51,12 @@ class Education(BaseModel):
 
 class Qualifications(BaseModel):
     most_recent_job: WorkHistory | None = None
-    work_history: list[WorkHistory] | None = None
-    education: list[Education] | None = None
-    skills: list[str] | None = None
-    licenses: list[str] | None = None
-    certifications: list[str] | None = None
-    language_proficiencies: list[str] | None = None
-
-    def get_qualifications_score(self):
-        """Returns a 0-100 score based on the details provided"""
-        weights = {
-            "most_recent_job": 40,
-            "education": 25,
-            "skills": 20,
-            "licenses": 5,
-            "certifications": 5,
-            "language_proficiencies": 5,
-        }
-
-        score = 0
-        for attr, weight in weights.items():
-            if getattr(self, attr):
-                score += weight
-
-        return score
+    work_history: list[WorkHistory] = Field(default_factory=list)
+    education: list[Education] = Field(default_factory=list)
+    skills: list[str] = Field(default_factory=list)
+    licenses: list[str] = Field(default_factory=list)
+    certifications: list[str] = Field(default_factory=list)
+    language_proficiencies: list[str] = Field(default_factory=list)
 
 
 class JobDuration(BaseModel):
@@ -110,7 +92,7 @@ class UserCreatedApplication(BaseModel):
     resume_scan_attempts: int = 0
     match_score_status: ScanStatus = ScanStatus.NO_SCAN
     match_score_error_text: str | None = None
-    qualifications: Qualifications | None = None
+    qualifications: Qualifications = Qualifications()
     additional_filters: AdditionalFilterInformation | None = None
     application_questions: list[ApplicationQuestion] | None = None
     name: str
@@ -166,28 +148,28 @@ class UserCreatedApplication(BaseModel):
                     if not pd.isnull(record.get("school_name_1"))
                     and not pd.isnull(record.get("education_level_1"))
                     and not pd.isnull(record.get("field_of_study_1"))
-                    else None
+                    else []
                 ),
                 skills=(
                     record.get("skills", "").split(",")
                     if not pd.isnull(record.get("skills"))
-                    else None
+                    else []
                 ),
                 licenses=(
                     record.get("licenses", "").split(",")
                     if not pd.isnull(record.get("licenses"))
-                    else None
+                    else []
                 ),
                 certifications=(
                     record.get("certifications", "").split(",")
                     if not pd.isnull(record.get("certifications"))
-                    else None
+                    else []
                 ),
                 language_proficiencies=(
                     record.get("language_proficiencies", "").split(",")
                     if not pd.isnull(record.get("language_proficiencies"))
                     and record.get("language_proficiencies")
-                    else None
+                    else []
                 ),
             ),
         )

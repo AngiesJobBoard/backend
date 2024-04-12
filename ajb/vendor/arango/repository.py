@@ -239,7 +239,6 @@ class ArangoDBRepository:
             if filter_obj.and_or_operator == "AND"
         ]
         for i, filter_obj in enumerate(all_and_filters):
-            # If the filter is a text search, use lower
             if filter_obj.operator.is_text_search():
                 self._append_text_search_filter(i, filter_obj)
             elif filter_obj.operator.is_in_search():
