@@ -22,6 +22,7 @@ from ajb.contexts.applications.models import (
 )
 from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
 from ajb.contexts.applications.repository import ApplicationRepository
+from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.applications.extract_data.usecase import ResumeExtractorUseCase
@@ -123,8 +124,11 @@ class ApplicationEventsResolver:
                 matched_application.id,
             )
 
-        # Delete the original application (like a merge operation)
-        application_repository.delete(data.application_id)
+        # Delete the original application
+        ApplicationUseCase(self.request_scope).delete_application_for_job(
+            company_id=data.company_id,
+            application_id=data.application_id,
+        )
         original_application_deleted = True
         return original_application_deleted
 
