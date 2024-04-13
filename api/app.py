@@ -44,7 +44,7 @@ from api.contexts.health.health import router as health_router
 
 from .middleware import (
     add_app_middleware,
-    verify_user,
+    determine_middleware_check,
     ValidationErrorLoggingMiddleware,
 )
 
@@ -53,7 +53,7 @@ app = FastAPI(
     title="Angies Job Board API",
     description="The public facing API for Angies Job Board",
     version=SETTINGS.APP_VERSION,
-    dependencies=[Depends(verify_user)],
+    dependencies=[Depends(determine_middleware_check)],
 )
 
 initialize_sentry()

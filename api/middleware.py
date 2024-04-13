@@ -155,8 +155,8 @@ async def determine_middleware_check(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
 ):
+    # AJBTODO update this to be separate apps instead of 1 app with conditional checks...
     initial_path = request.url.path.split("/")[0]
-    logging.info("Initial path: %s", initial_path)
     if initial_path == "webhooks":
         return await verify_webhook_request(request, credentials)
 
