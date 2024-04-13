@@ -156,6 +156,7 @@ async def determine_middleware_check(
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
 ):
     initial_path = request.url.path.split("/")[0]
+    print(initial_path)
 
     if initial_path == "webhooks":
         return await verify_webhook_request(request, credentials)
