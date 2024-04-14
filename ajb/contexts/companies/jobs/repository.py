@@ -52,10 +52,7 @@ class JobRepository(MultipleChildrenRepository[CreateJob, Job]):
             repo_filters=query,
         )
         formatted_job_results = [
-            Job(
-                **job,
-                id=job["_key"],
-            )
+            Job(**{**job, "id": job["_key"]}) if "id" not in job else Job(**job)
             for job in results
         ]
         return formatted_job_results, count
