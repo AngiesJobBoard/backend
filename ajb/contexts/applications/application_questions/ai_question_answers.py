@@ -22,7 +22,7 @@ class AIApplicantionQuestionAnswer:
             Provide a JSON response with the keys 'answer', 'confidence', and 'reasoning'.
             'answer' should be one of the following: {AnswerEnum}.
             'confidence' should be a number between 0 and 10.
-            'reasoning' should be a string.
+            'reasoning' should be a string with a max length of 150 characters.
         """
         response = await self.openai.json_prompt(prompt, max_tokens=4000)
         return ApplicationQuestion(
