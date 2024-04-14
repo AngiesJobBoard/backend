@@ -10,7 +10,6 @@ from ajb.contexts.companies.email_ingress_webhooks.models import (
     CreateCompanyEmailIngress,
     EmailIngressType,
 )
-from ajb.contexts.companies.jobs.job_score.ai_job_score import AIJobScore
 from ajb.contexts.applications.models import Application
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.config.settings import SETTINGS
@@ -32,39 +31,14 @@ class JobsUseCase(BaseUseCase):
         self.request_scope = request_scope
         self.openai = openai or OpenAIRepository()
 
-    def _update_job_with_score(self, job: CreateJob) -> CreateJob:
-        job_score = AIJobScore(self.openai).get_job_score(job)
-        job.job_score = job_score.job_score
-        job.job_score_reason = job_score.job_score_reason
-        return job
-
     def create_job(
         self,
         company_id: str,
         job: UserCreateJob,
     ) -> Job:
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
-        company_repo = self.get_repository(Collection.COMPANIES)
-        job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
-        job_with_score = self._update_job_with_score(job_to_create)
-
-        # Create the job
-        created_job: Job = job_repo.create(job_with_score)
-
-        # Update company job count
-        company_repo.increment_field(company_id, "total_jobs", 1)
-
-        # Get the company object to check default ingress settings
-        company: Company = self.get_object(Collection.COMPANIES, company_id)
-
-        # Create email ingress record
-        CompanyEmailIngressRepository(self.request_scope).create(
-            CreateCompanyEmailIngress.generate(
-                company_id,
-                EmailIngressType.CREATE_APPLICATION,
-                created_job.id,
-                company.settings.enable_all_email_ingress,
-            )
+        created_job: Job = job_repo.create(
+            CreateJob(**job.model_dump(), company_id=company_id)
         )
 
         # Create event
@@ -78,9 +52,7 @@ class JobsUseCase(BaseUseCase):
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         jobs_to_create = []
         for job in jobs:
-            job_to_create = CreateJob(**job.model_dump(), company_id=company_id)
-            job_with_score = self._update_job_with_score(job_to_create)
-            jobs_to_create.append(job_with_score)
+            jobs_to_create.append(CreateJob(**job.model_dump(), company_id=company_id))
         created_jobs = job_repo.create_many(jobs_to_create)
 
         # Update company job count
@@ -102,22 +74,35 @@ class JobsUseCase(BaseUseCase):
 
         # Delete all applications
         application_repo = self.get_repository(Collection.APPLICATIONS)
-        all_job_applications: list[Application] = application_repo.get_all(company_id=company_id, job_id=job_id)
+        all_job_applications: list[Application] = application_repo.get_all(
+            company_id=company_id, job_id=job_id
+        )
         total_applicant_decrease = len(all_job_applications)
         total_high_match_decrease = len(
-            [app for app in all_job_applications if app.application_match_score or 0 >= SETTINGS.DEFAULT_HIGH_MATCH_THRESHOLD]
+            [
+                app
+                for app in all_job_applications
+                if app.application_match_score
+                or 0 >= SETTINGS.DEFAULT_HIGH_MATCH_THRESHOLD
+            ]
         )
         total_new_application_decrease = len(
             [app for app in all_job_applications if app.application_status is None]
         )
         application_repo.delete_many([app.id for app in all_job_applications])
-    
+
         # Update company counts
         company_repo = self.get_repository(Collection.COMPANIES)
-        company_repo.decrement_field(company_id, "total_applicants", total_applicant_decrease)
-        company_repo.decrement_field(company_id, "high_matching_applicants", total_high_match_decrease)
-        company_repo.decrement_field(company_id, "new_applicants", total_new_application_decrease)
-    
+        company_repo.decrement_field(
+            company_id, "total_applicants", total_applicant_decrease
+        )
+        company_repo.decrement_field(
+            company_id, "high_matching_applicants", total_high_match_decrease
+        )
+        company_repo.decrement_field(
+            company_id, "new_applicants", total_new_application_decrease
+        )
+
         CompanyEventProducer(
             self.request_scope, SourceServices.API
         ).company_deletes_job(job_id=job_id)
@@ -126,8 +111,7 @@ class JobsUseCase(BaseUseCase):
     def update_job(self, company_id: str, job_id: str, job: UserCreateJob) -> Job:
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         job_to_update = CreateJob(**job.model_dump(), company_id=company_id)
-        job_with_score = self._update_job_with_score(job_to_update)
-        updated_job = job_repo.update(job_id, job_with_score)
+        updated_job = job_repo.update(job_id, job_to_update)
         CompanyEventProducer(
             self.request_scope, SourceServices.API
         ).company_updates_job(job_id=job_id)

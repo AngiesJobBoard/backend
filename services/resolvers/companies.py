@@ -20,6 +20,9 @@ from ajb.contexts.companies.email_ingress_webhooks.models import (
 from ajb.contexts.companies.api_ingress_webhooks.repository import (
     CompanyAPIIngressRepository,
 )
+from ajb.contexts.companies.jobs.job_score.ai_job_score import AIJobScore
+from ajb.contexts.companies.jobs.repository import JobRepository, Job
+from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.api_ingress_webhooks.models import CreateCompanyAPIIngress
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.webhooks.egress.jobs.usecase import CompanyJobWebhookEgress
@@ -72,8 +75,34 @@ class CompanyEventsResolver:
             ),
         )
 
+    def _update_job_with_score(self, job: Job) -> Job:
+        job_score = AIJobScore(self.openai or OpenAIRepository()).get_job_score(job)
+        job.job_score = job_score.job_score
+        job.job_score_reason = job_score.job_score_reason
+        return job
+
     async def company_creates_job(self) -> None:
         data = CompanyAndJob.model_validate(self.message.data)
+        job_repo = JobRepository(self.request_scope, data.company_id)
+        job = job_repo.get(data.job_id)
+
+        # Update job with score
+        update_job = self._update_job_with_score(job)
+        job_repo.update(job.id, update_job)
+
+        # Inremenet company count
+        company_repo = CompanyRepository(self.request_scope)
+        updated_company = company_repo.increment_field(data.company_id, "total_jobs", 1)
+
+        # Create email ingress record
+        CompanyEmailIngressRepository(self.request_scope).create(
+            CreateCompanyEmailIngress.generate(
+                data.company_id,
+                EmailIngressType.CREATE_APPLICATION,
+                data.job_id,
+                updated_company.settings.enable_all_email_ingress,
+            )
+        )
 
         # Send out job creation webhooks
         CompanyJobWebhookEgress(self.request_scope).send_create_job_webhook(
@@ -82,6 +111,12 @@ class CompanyEventsResolver:
 
     async def company_updates_job(self) -> None:
         data = CompanyAndJob.model_validate(self.message.data)
+        job_repo = JobRepository(self.request_scope, data.company_id)
+        job = job_repo.get(data.job_id)
+
+        # Update job with score
+        update_job = self._update_job_with_score(job)
+        job_repo.update(job.id, update_job)
         CompanyJobWebhookEgress(self.request_scope).send_update_job_webhook(
             data.company_id, data.job_id
         )
