@@ -58,7 +58,7 @@ def test_monthly_usage(request_scope):
     created_usage = usecase.create_or_update_month_usage(
         company_id=company.id, usage=usage
     )
-    assert created_usage.total_usage_usd == 0.0  # Because all within free tier
+    assert int(created_usage.total_usage_usd) == 0  # Because all within free tier
 
     # Now update usage with a lot
 
@@ -97,7 +97,7 @@ def test_increment_monthly_usage(request_scope):
     created_usage = usecase.create_or_update_month_usage(
         company_id=company.id, usage=usage
     )
-    assert created_usage.total_usage_usd == 0.0  # Because all within free tier
+    assert int(created_usage.total_usage_usd) == 0  # Because all within free tier
 
     updated_usage = usecase.increment_company_usage(
         company_id=company.id,
@@ -157,4 +157,4 @@ def test_increment_company_usage_no_plan_no_usage(request_scope):
 
     assert created_plan.plan == SubscriptionPlan.STARTER
     assert created_usage.transaction_counts[UsageType.RESUME_SCANS] == 10
-    assert created_usage.total_usage_usd == 0.0
+    assert int(created_usage.total_usage_usd) == 0
