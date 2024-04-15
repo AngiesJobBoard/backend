@@ -241,9 +241,11 @@ class Application(CreateApplication, BaseDataModel):
         for job_duration in job_duration_tuples:
             if job_duration.start_date and job_duration.end_date:
                 duration = relativedelta(job_duration.end_date, job_duration.start_date)
-                durations.append(
-                    duration.years * 12 + duration.months + duration.days / 30.0
-                )
+                # only append the duration if it is not negative
+                if duration.years >= 0 and duration.months >= 0 and duration.days >= 0:
+                    durations.append(
+                        duration.years * 12 + duration.months + duration.days / 30.0
+                    )
         if not durations:
             return 0
         return int(sum(durations) / len(durations))
