@@ -66,7 +66,7 @@ class UserCreateJob(BaseModel):
     experience_required: ExperienceLevel | None = None
 
     location_type: JobLocationType | None = None
-    location_override: Location | Location | None = None
+    location_override: Location | None = None
     company_office_id: str | None = None
 
     required_job_skills: t.List[str] | None = None
