@@ -145,7 +145,7 @@ class CompanyInvitationUseCase(BaseUseCase):
             company_id=decoded_invitation.company_id,
             incremental_usages={
                 UsageType.TOTAL_RECRUITERS: 1,
-            }
+            },
         )
         return recruiter_and_user
 

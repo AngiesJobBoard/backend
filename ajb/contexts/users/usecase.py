@@ -15,7 +15,7 @@ from ajb.contexts.companies.recruiters.models import (
 )
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 from ajb.utils import random_salt
-from ajb.exceptions import AdminCreateUserException
+from ajb.exceptions import AdminCreateUserException, RepositoryNotProvided
 
 from .models import User
 
@@ -83,7 +83,7 @@ class UserUseCase(BaseUseCase):
 
     def update_profile_picture(self, data: UserProfileUpload):
         if not self.storage_repo:
-            raise Exception("Storage repository not provided")
+            raise RepositoryNotProvided("Storage")
 
         user_repo = self.get_repository(Collection.USERS, self.request_scope)
         remote_file_path = self._create_profile_picture_path(

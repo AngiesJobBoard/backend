@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import jwt
 
 from ajb.config.settings import SETTINGS
@@ -8,11 +8,11 @@ from ajb.exceptions import ExpiredTokenException, InvalidTokenException
 def generate_jwt(
     username: str | None,
     jwt_secret: str,
-    expire_datetime: datetime = (datetime.utcnow() + timedelta(seconds=60)),
+    expire_datetime: datetime = (datetime.now(timezone.utc) + timedelta(seconds=60)),
 ) -> str:
     payload = {
         "iss": username or "ajb",
-        "iat": datetime.utcnow(),
+        "iat": datetime.now(timezone.utc),
         "exp": expire_datetime,
     }
     return jwt.encode(payload, jwt_secret, algorithm="HS256")
@@ -20,7 +20,7 @@ def generate_jwt(
 
 def encode_jwt(data: dict, secret: str, expiry: datetime | None = None) -> str:
     data["exp"] = expiry or (
-        datetime.utcnow() + timedelta(hours=SETTINGS.DEFAULT_EXPIRY_HOURS)
+        datetime.now(timezone.utc) + timedelta(hours=SETTINGS.DEFAULT_EXPIRY_HOURS)
     )
     return jwt.encode(
         data, secret, algorithm="HS256", headers={"typ": "JWT", "alg": "HS256"}

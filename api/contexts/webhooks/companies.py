@@ -69,9 +69,9 @@ async def jobs_email_webhook_handler(
     # AJBTODO there is only handling for applicants coming in through email but jobs are technically also supported...
     ingress_record = WebhookValidator(request).validate_email_ingress_request(envelope)
     ingress_email = message_from_string(email)
-    created_applications = ApplicationUseCase(request.state.request_scope, storage).process_email_application_ingress(
-        ingress_email, ingress_record
-    )
+    created_applications = ApplicationUseCase(
+        request.state.request_scope, storage
+    ).process_email_application_ingress(ingress_email, ingress_record)
     for application in created_applications:
         mixpanel.application_created_from_email_ingress(
             request.state.request_scope.user_id,

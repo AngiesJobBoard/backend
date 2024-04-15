@@ -226,9 +226,7 @@ class ArangoDBRepository:
         for filter in or_filters:
             next_bind_key = self.get_next_bind_var_key()
             self.bind_vars[next_bind_key] = filter.search_value
-            filter_strings.append(
-                f"doc.{filter.field} == @{next_bind_key}"
-            )
+            filter_strings.append(f"doc.{filter.field} == @{next_bind_key}")
 
         return "AND (\n" + "\nOR ".join(filter_strings) + "\n)"
 

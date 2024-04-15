@@ -45,6 +45,6 @@ class AIJobScore:
             - job_score_reason: str
             job: {self._get_job_details(job)}
             """,
-            max_tokens=3000
+            max_tokens=3000,
         )
         return JobScore(**results)

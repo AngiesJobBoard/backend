@@ -59,9 +59,7 @@ def create_recruiter_comment(
     recruiter_comment: UserCreateRecruiterComment,
 ):
     """Creates a recruiter comment"""
-    return RecruiterUpdatesUseCase(
-        request.state.request_scope
-    ).add_recruiter_comment(
+    return RecruiterUpdatesUseCase(request.state.request_scope).add_recruiter_comment(
         company_id,
         job_id,
         application_id,

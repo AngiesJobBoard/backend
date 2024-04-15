@@ -16,8 +16,7 @@ class WebhookJobsUseCase(BaseUseCase):
 
     def handle_webhook_event(self, company_id: str, event: JobsWebhook):
         CompanyBillingUsecase(self.request_scope).increment_company_usage(
-            company_id=company_id,
-            incremental_usages={UsageType.API_INGRESS: 1}
+            company_id=company_id, incremental_usages={UsageType.API_INGRESS: 1}
         )
         if event.type == JobWebhookEventType.CREATE:
             return self.create_job(company_id, CreateJobWebhook(**event.data))

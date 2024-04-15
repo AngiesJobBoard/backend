@@ -35,7 +35,7 @@ class ApplicantQuestionsUsecase(BaseUseCase):
                     application.application_questions[idx] = (
                         updated_application_question
                     )
-                    questions_answered  += 1  # Only increment if question was answered
+                    questions_answered += 1  # Only increment if question was answered
                 except Exception as e:
                     stored_exception = e
                     application.application_questions[idx].question_status = (
@@ -50,7 +50,6 @@ class ApplicantQuestionsUsecase(BaseUseCase):
         if stored_exception:
             raise stored_exception
         return questions_answered
-    
 
     def update_many_application_questions(self, application_id_list: list[str]):
         with ThreadPoolExecutor(max_workers=5) as executor:

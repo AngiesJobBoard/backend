@@ -22,7 +22,7 @@ def test_cannot_start_transaction_inside_transaction(request_scope: RequestScope
             with transaction_scope.start_transaction(
                 read_collections=[], write_collections=[]
             ) as _:
-                pass
+                return True
 
 
 def test_paginated_response_class():

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytest
 
 from ajb.vendor.kafka.repository import (
@@ -27,7 +27,9 @@ def test_decode_jwt():
 def test_decode_jwt_expired():
     with pytest.raises(ExpiredTokenException):
         token = generate_jwt(
-            "test", "test", expire_datetime=datetime.utcnow() - timedelta(seconds=60)
+            "test",
+            "test",
+            expire_datetime=datetime.now(timezone.utc) - timedelta(seconds=60),
         )
         decode_jwt(token, "test")
 

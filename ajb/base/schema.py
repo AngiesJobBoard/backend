@@ -34,7 +34,6 @@ class Collection(str, Enum):
     # Billing
     COMPANY_SUBSCRIPTIONS = "company_subscriptions"
     COMPANY_SUBSCRIPTION_USAGE_AND_BILLING = "company_subscription_usage_and_billing"
-    # COMPANY_PAYMENT_HISTORY = "company_payment_history"  # to be added later...
 
     # System
     SCHEDULED_EVENTS = "scheduled_events"

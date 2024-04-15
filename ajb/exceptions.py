@@ -111,3 +111,9 @@ class RequestScopeWithoutCompanyException(Exception):
     def __init__(self, message="Request scope without company being used"):
         self.message = message
         super().__init__(self.message)
+
+
+class RepositoryNotProvided(Exception):
+    def __init__(self, repository_name: str):
+        self.message = f"{repository_name} not provided"
+        super().__init__(self.message)

@@ -1,6 +1,5 @@
 import typing as t
 import os
-import random
 import importlib
 from uuid import uuid4
 import string
@@ -46,7 +45,7 @@ def generate_random_long_code():
 
 
 def random_salt():
-    return "".join(random.choice(string.ascii_letters) for _ in range(10))
+    return "".join(secrets.choice(string.ascii_lowercase) for _ in range(10))
 
 
 def string_to_bool(string_in: str | None = None) -> bool:
@@ -176,10 +175,9 @@ def get_datetime_from_string(date_string: str) -> datetime | None:
     except (ValueError, OverflowError):
         for format_label, regex in datetime_regex_map.items():
             match = regex.match(date_string)
-            if match:
-                if format_label == "DD-MM-YYYY":
-                    day, month, year = match.groups()
-                    return datetime(int(year), int(month), int(day))
+            if match and format_label:
+                day, month, year = match.groups()
+                return datetime(int(year), int(month), int(day))
     return None
 
 

@@ -47,7 +47,6 @@ class AsyncOpenAIRepository:
 
     async def _send_request(self, data: dict) -> dict:
         data["model"] = self.model_override or SETTINGS.OPENAI_MODEL
-        # data["temperature"] = 0.7
         async with self.async_session.post(
             self.url, json=data, headers=self.headers
         ) as response:

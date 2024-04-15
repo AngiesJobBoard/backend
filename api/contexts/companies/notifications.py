@@ -52,6 +52,4 @@ def mark_notification_as_read(request: Request, company_id: str, notification_id
     """Marks a notification as read"""
     return CompanyNotificationUsecase(
         request.state.request_scope,
-    ).mark_one_recruiter_notification_as_read(
-        company_id, notification_id
-    )
+    ).mark_one_recruiter_notification_as_read(company_id, notification_id)

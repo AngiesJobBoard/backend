@@ -158,9 +158,9 @@ class TestInitializeOrCast(unittest.TestCase):
 
 
 def test_modify_query_parameters_in_url():
-    url = "http://example.com?param1=value1&param2=value2"
+    url = "https://example.com?param1=value1&param2=value2"
     new_params = {"param2": "newvalue2", "param3": "value3"}
-    expected_url = "http://example.com?param1=value1&param2=newvalue2&param3=value3"
+    expected_url = "https://example.com?param1=value1&param2=newvalue2&param3=value3"
     assert modify_query_parameters_in_url(url, new_params) == expected_url
 
 

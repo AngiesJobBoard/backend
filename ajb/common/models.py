@@ -2,7 +2,10 @@ from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel, root_validator
 
-from ajb.vendor.google_maps import get_lat_long_from_address, get_city_and_state_from_lat_long
+from ajb.vendor.google_maps import (
+    get_lat_long_from_address,
+    get_city_and_state_from_lat_long,
+)
 from ajb.static.enumerations import PayType
 from ajb.utils import get_nested_value
 

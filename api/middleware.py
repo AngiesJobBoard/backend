@@ -129,7 +129,6 @@ async def get_companies_from_user(request_scope: RequestScope) -> list[CompanyAn
 
 async def verify_webhook_request(
     request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
 ):
     request.state.request_scope = RequestScope(
         user_id="webhook",
@@ -141,7 +140,6 @@ async def verify_webhook_request(
 
 async def verify_open_api_request(
     request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
 ):
     request.state.request_scope = RequestScope(
         user_id="open_api",
@@ -158,10 +156,10 @@ async def determine_middleware_check(
     # AJBTODO update this to be separate apps instead of 1 app with conditional checks...
     initial_path = request.url.path.split("/")[1]
     if initial_path == "webhooks":
-        return await verify_webhook_request(request, credentials)
+        return await verify_webhook_request(request)
 
     if initial_path == "open":
-        return await verify_open_api_request(request, credentials)
+        return await verify_open_api_request(request)
 
     return await verify_user(request, credentials)
 

@@ -28,7 +28,9 @@ class UsageDetail(BaseModel):
     cost_usd_per_transaction: float
 
 
-SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS: dict[SubscriptionPlan, dict[UsageType, UsageDetail]] = {
+SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS: dict[
+    SubscriptionPlan, dict[UsageType, UsageDetail]
+] = {
     SubscriptionPlan.STARTER: {
         UsageType.RESUME_SCANS: UsageDetail(
             free_tier_limit_per_month=50, cost_usd_per_transaction=1.0

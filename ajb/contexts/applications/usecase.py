@@ -242,9 +242,14 @@ class ApplicationUseCase(BaseUseCase):
                 application.company_id, application.job_id, application.id
             )
         return True
-    
-    def _update_company_count_for_new_applications(self, original_application: Application, new_application: Application):
-        if original_application.application_status is not None or new_application.application_status is None:
+
+    def _update_company_count_for_new_applications(
+        self, original_application: Application, new_application: Application
+    ):
+        if (
+            original_application.application_status is not None
+            or new_application.application_status is None
+        ):
             return
         self.update_application_counts(
             company_id=new_application.company_id,
@@ -287,7 +292,9 @@ class ApplicationUseCase(BaseUseCase):
             response = CompanyApplicationRepository(
                 transaction_scope
             ).get_company_view_single(application_id)
-            self._update_company_count_for_new_applications(original_application, response)
+            self._update_company_count_for_new_applications(
+                original_application, response
+            )
             notification_message = f"{response.name} has been moved to status {new_status.application_status} for job {response.job.position_title}."
             CompanyNotificationUsecase(transaction_scope).create_company_notification(
                 company_id=company_id,

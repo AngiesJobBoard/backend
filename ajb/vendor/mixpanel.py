@@ -18,8 +18,14 @@ class MixpanelService:
             self.mp = Mixpanel(SETTINGS.MIXPANEL_TOKEN)
 
     def track(
-        self, user_id: str, company_id: str | None, event: str, properties: dict = {}
+        self,
+        user_id: str,
+        company_id: str | None,
+        event: str,
+        properties: dict | None = None,
     ):
+        if not properties:
+            properties = {}
         if company_id:
             properties["company_id"] = company_id
         if self.mp:

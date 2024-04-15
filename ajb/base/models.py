@@ -5,7 +5,7 @@ This module contains the base models that are used throughout the application.
 import typing as t
 from enum import Enum
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
 from arango.database import StandardDatabase, TransactionDatabase
@@ -283,4 +283,4 @@ class BaseDeepLinkData(BaseModel):
 
 class BaseAction(BaseModel):
     action: Enum
-    created_at: datetime = datetime.utcnow()
+    created_at: datetime = datetime.now(timezone.utc)

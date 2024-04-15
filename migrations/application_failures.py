@@ -26,9 +26,6 @@ class ApplicationFailureReRunUseCase(BaseUseCase):
         started = application_repo.get_all(match_score_status=ScanStatus.STARTED.value)
         return failed + started
 
-    def rerun_failed_resume_scans(self):
-        failed_resume_scans = self.get_failed_resume_scans()
-
     async def rerun_failed_application_match(self):
         failed_application_matches = self.get_failed_application_match()
         print(f"Found {len(failed_application_matches)} failed application matches")

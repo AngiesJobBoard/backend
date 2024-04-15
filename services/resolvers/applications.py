@@ -39,6 +39,7 @@ from ajb.contexts.billing.usecase import (
 )
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
+from ajb.exceptions import RepositoryNotProvided
 
 
 class ApplicationEventsResolver:
@@ -136,7 +137,7 @@ class ApplicationEventsResolver:
         self, data: ResumeAndApplication, application_repository: ApplicationRepository
     ) -> bool:
         if not self.async_openai:
-            raise RuntimeError("Async OpenAI Repository is not provided")
+            raise RepositoryNotProvided("Async OpenaI Repository")
 
         extractor = ResumeExtractorUseCase(self.request_scope, self.async_openai)
         raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
@@ -228,7 +229,7 @@ class ApplicationEventsResolver:
 
     async def calculate_match_score(self) -> None:
         if not self.async_openai:
-            raise RuntimeError("Async OpenAI Repository is not provided")
+            raise RepositoryNotProvided("Async OpenaI Repository")
         data = ApplicantAndCompany.model_validate(self.message.data)
         await ApplicantMatchUsecase(
             self.request_scope, self.async_openai
@@ -255,7 +256,7 @@ class ApplicationEventsResolver:
 
     async def answer_application_questions(self) -> None:
         if not self.async_openai:
-            raise RuntimeError("Async OpenAI Repository is not provided")
+            raise RepositoryNotProvided("Async OpenaI Repository")
         data = ApplicantAndCompany.model_validate(self.message.data)
         question_usecase = ApplicantQuestionsUsecase(
             self.request_scope, self.async_openai

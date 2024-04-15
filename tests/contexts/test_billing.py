@@ -7,7 +7,7 @@ from ajb.contexts.billing.subscriptions.models import (
 )
 from ajb.contexts.billing.billing_models import (
     SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS,
-    UsageType
+    UsageType,
 )
 from ajb.contexts.billing.usecase import CompanyBillingUsecase
 from ajb.contexts.billing.usage.models import CreateMonthlyUsage
@@ -52,7 +52,7 @@ def test_monthly_usage(request_scope):
             UsageType.API_INGRESS: 10,
             UsageType.API_EGRESS: 10,
             UsageType.TOTAL_RECRUITERS: 10,
-        }
+        },
     )
 
     created_usage = usecase.create_or_update_month_usage(
@@ -63,10 +63,7 @@ def test_monthly_usage(request_scope):
     # Now update usage with a lot
 
     new_usage = CreateMonthlyUsage(
-        company_id=company.id,
-        transaction_counts={
-            UsageType.RESUME_SCANS: 1000
-        }
+        company_id=company.id, transaction_counts={UsageType.RESUME_SCANS: 1000}
     )
     updated_usage = usecase.create_or_update_month_usage(
         company_id=company.id, usage=new_usage
@@ -94,7 +91,7 @@ def test_increment_monthly_usage(request_scope):
             UsageType.API_INGRESS: 10,
             UsageType.API_EGRESS: 10,
             UsageType.TOTAL_RECRUITERS: 10,
-        }
+        },
     )
 
     created_usage = usecase.create_or_update_month_usage(
@@ -107,7 +104,7 @@ def test_increment_monthly_usage(request_scope):
         incremental_usages={
             UsageType.RESUME_SCANS: 1000,
             UsageType.MATCH_SCORES: 1000,
-        }
+        },
     )
 
     queried_updated_usage = usecase.get_or_create_company_current_usage(company.id)
@@ -129,16 +126,14 @@ def test_decrement_monthly_usage(request_scope):
         company_id=company.id,
         transaction_counts={
             UsageType.RESUME_SCANS: 10,
-        }
+        },
     )
-    usecase.create_or_update_month_usage(
-        company_id=company.id, usage=usage
-    )
+    usecase.create_or_update_month_usage(company_id=company.id, usage=usage)
     usecase.increment_company_usage(
         company_id=company.id,
         incremental_usages={
             UsageType.RESUME_SCANS: -5,
-        }
+        },
     )
 
     queried_updated_usage = usecase.get_or_create_company_current_usage(company.id)
@@ -154,7 +149,7 @@ def test_increment_company_usage_no_plan_no_usage(request_scope):
         company_id=company.id,
         incremental_usages={
             UsageType.RESUME_SCANS: 10,
-        }
+        },
     )
 
     created_plan = usecase.get_or_create_company_subscription(company.id)

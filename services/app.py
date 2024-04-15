@@ -28,7 +28,6 @@ async def handle_message(
     ):
         consumer.commit()
         commit_counter = 0
-        last_commit_time = current_time
 
 
 async def handle_messages(consumer: KafkaConsumer):

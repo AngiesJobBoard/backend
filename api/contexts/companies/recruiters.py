@@ -55,9 +55,7 @@ def update_recruiter_role(request: Request, recruiter_id: str, new_role: Recruit
 def delete_recruiter(request: Request, company_id: str, recruiter_id: str):
     """Deletes a recruiter"""
     res = RecruiterRepository(request.state.request_scope).delete(recruiter_id)
-    CompanyBillingUsecase(
-        request.state.request_scope
-    ).increment_company_usage(
+    CompanyBillingUsecase(request.state.request_scope).increment_company_usage(
         company_id=company_id,
         incremental_usages={
             UsageType.TOTAL_RECRUITERS: -1,

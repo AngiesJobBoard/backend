@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel
 from croniter import croniter
 
@@ -19,7 +19,7 @@ class CreateScheduledEvent(BaseModel):
     is_active: bool = True
 
     def calculate_next_invocation(self):
-        cron = croniter(self.cron, datetime.utcnow())
+        cron = croniter(self.cron, datetime.now(timezone.utc))
         return cron.get_next(datetime)
 
 

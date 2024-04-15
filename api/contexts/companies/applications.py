@@ -1,9 +1,4 @@
-from fastapi import (
-    APIRouter,
-    Request,
-    Depends,
-    Body
-)
+from fastapi import APIRouter, Request, Depends, Body
 
 from ajb.base import (
     QueryFilterParams,

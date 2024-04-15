@@ -219,7 +219,7 @@ def test_application_counts(request_scope):
     assert retrieved_job.new_applicants == 0
 
     usecase = ApplicationUseCase(request_scope)
-    created_application = usecase.create_application(
+    usecase.create_application(
         company.id,
         job.id,
         CreateApplication(

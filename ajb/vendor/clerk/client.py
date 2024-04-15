@@ -88,5 +88,10 @@ class ClerkClient:
         return self._make_request(
             "POST",
             endpoint,
-            payload={"user_id": user_id, "email_address": new_email, "primary": True, "verified": True},
+            payload={
+                "user_id": user_id,
+                "email_address": new_email,
+                "primary": True,
+                "verified": True,
+            },
         )

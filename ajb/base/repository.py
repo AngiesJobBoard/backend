@@ -8,7 +8,7 @@ They are the main connection point between the application and the database.
 
 import typing as t
 from warnings import warn
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel
 from arango.database import StandardDatabase, TransactionDatabase
 from arango.exceptions import (
@@ -216,8 +216,8 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
     ) -> DataSchema:
         create_dict = {
             **data.model_dump(mode="json"),
-            BaseConstants.CREATED_AT: datetime.utcnow().isoformat(),
-            BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
+            BaseConstants.CREATED_AT: datetime.now(timezone.utc).isoformat(),
+            BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
             BaseConstants.CREATED_BY: self.request_scope.user_id,
             BaseConstants.UPDATED_BY: self.request_scope.user_id,
         }
@@ -236,7 +236,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
     def update(self, id: str, data: BaseModel) -> DataSchema:
         update_dict = {
             **data.model_dump(exclude_none=True, mode="json"),
-            BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
+            BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
             BaseConstants.UPDATED_BY: self.request_scope.user_id,
             BaseConstants.KEY: id,
         }
@@ -251,7 +251,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
     def update_fields(self, id: str, **kwargs) -> DataSchema:
         update_dict = {
             **kwargs,
-            BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
+            BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
             BaseConstants.UPDATED_BY: self.request_scope.user_id,
             BaseConstants.KEY: id,
         }
@@ -272,8 +272,8 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
     ) -> DataSchema:
         create_dict = {
             **data.model_dump(mode="json"),
-            BaseConstants.CREATED_AT: datetime.utcnow().isoformat(),
-            BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
+            BaseConstants.CREATED_AT: datetime.now(timezone.utc).isoformat(),
+            BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
             BaseConstants.CREATED_BY: self.request_scope.user_id,
             BaseConstants.UPDATED_BY: self.request_scope.user_id,
         }
@@ -296,8 +296,8 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         create_docs = [
             {
                 **create_data.model_dump(mode="json"),
-                BaseConstants.CREATED_AT: datetime.utcnow().isoformat(),
-                BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
+                BaseConstants.CREATED_AT: datetime.now(timezone.utc).isoformat(),
+                BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
                 BaseConstants.CREATED_BY: self.request_scope.user_id,
                 BaseConstants.UPDATED_BY: self.request_scope.user_id,
             }
@@ -464,8 +464,8 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         create_docs = [
             {
                 **create_data.model_dump(mode="json"),
-                BaseConstants.CREATED_AT: datetime.utcnow().isoformat(),
-                BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
+                BaseConstants.CREATED_AT: datetime.now(timezone.utc).isoformat(),
+                BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
                 BaseConstants.CREATED_BY: self.request_scope.user_id,
                 BaseConstants.UPDATED_BY: self.request_scope.user_id,
             }
@@ -495,7 +495,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         update_docs = [
             {
                 **update_data,
-                BaseConstants.UPDATED_AT: datetime.utcnow().isoformat(),
+                BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
                 BaseConstants.UPDATED_BY: self.request_scope.user_id,
                 BaseConstants.KEY: key,
             }
@@ -646,7 +646,9 @@ class MultipleChildrenRepository(BaseRepository[CreateDataSchema, DataSchema]):
         if parent_id is not None:
             check_if_parent_exists(self.request_scope.db, parent_collection, parent_id)
         else:
-            warn("No parent id provided for %s, parent document may not exist" % parent_collection)
+            warn(
+                f"No parent id provided for {parent_collection}, parent document may not exist"
+            )
 
     # pylint: disable=arguments-differ
     def create(

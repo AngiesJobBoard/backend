@@ -17,6 +17,8 @@ from ajb.contexts.companies.jobs.models import Job
 from ajb.fixtures.companies import CompanyFixture
 from ajb.fixtures.users import UserFixture
 
+TEST_COMPANY = "Test Company"
+
 
 class ApplicationData(BaseModel):
     application: Application
@@ -52,7 +54,7 @@ class ApplicationFixture:
                 qualifications=Qualifications(
                     most_recent_job=WorkHistory(
                         job_title="Software Engineer",
-                        company_name="Test Company",
+                        company_name=TEST_COMPANY,
                         job_industry="Tech",
                         still_at_job=True,
                         start_date=datetime(2023, 1, 1),
@@ -60,7 +62,7 @@ class ApplicationFixture:
                     work_history=[
                         WorkHistory(
                             job_title="Software Intern",
-                            company_name="Test Company",
+                            company_name=TEST_COMPANY,
                             job_industry="Tech",
                             still_at_job=False,
                             start_date=datetime(2022, 1, 1),
@@ -109,7 +111,7 @@ class ApplicationFixture:
                 qualifications=Qualifications(
                     most_recent_job=WorkHistory(
                         job_title="Software Engineer",
-                        company_name="Test Company",
+                        company_name=TEST_COMPANY,
                         job_industry="Tech",
                         still_at_job=True,
                         start_date=datetime(2023, 1, 1),
@@ -117,7 +119,7 @@ class ApplicationFixture:
                     work_history=[
                         WorkHistory(
                             job_title="Software Intern",
-                            company_name="Test Company",
+                            company_name=TEST_COMPANY,
                             job_industry="Tech",
                             still_at_job=False,
                             start_date=datetime(2022, 1, 1),

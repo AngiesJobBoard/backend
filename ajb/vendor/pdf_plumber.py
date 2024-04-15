@@ -80,7 +80,7 @@ async def extract_text(file: UploadFile):
 
     if file_extension == "pdf":
         return await extract_pdf_text_by_file(file)
-    elif file_extension == "txt":
+    if file_extension == "txt":
         return await extract_text_file(file)
     else:
         try:
