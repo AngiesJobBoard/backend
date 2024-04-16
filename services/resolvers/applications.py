@@ -42,6 +42,10 @@ from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 from ajb.exceptions import RepositoryNotProvided
 
 
+class CouldNotParseResumeText(Exception):
+    pass
+
+
 class ApplicationEventsResolver:
     def __init__(
         self,
@@ -141,6 +145,8 @@ class ApplicationEventsResolver:
 
         extractor = ResumeExtractorUseCase(self.request_scope, self.async_openai)
         raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
+        if not raw_text or len(raw_text) == 0:
+            raise CouldNotParseResumeText
         resume_information = await extractor.extract_resume_information(raw_text)
 
         CompanyBillingUsecase(self.request_scope).increment_company_usage(

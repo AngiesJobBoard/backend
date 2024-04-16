@@ -83,6 +83,7 @@ class CreateCompany(UserCreateCompany):
     new_applicants: int = 0
     company_has_created_first_job: bool = False
     company_has_imported_first_application: bool = False
+    stripe_customer_id: str | None = None
 
 
 class Company(BaseDataModel, CreateCompany): ...

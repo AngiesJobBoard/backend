@@ -94,6 +94,9 @@ class AppSettings:
         "MIXPANEL_TOKEN", "38f552bd01fdd7399ad3a2aac8becdba"
     )
 
+    # Stripe for handling subscriptions and invoicing
+    STRIPE_API_KEY: str = os.getenv("STRIPE_API_KEY", "")
+
     class Config:
         env_file = ".env"
 

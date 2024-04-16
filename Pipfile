@@ -23,6 +23,7 @@ croniter = "*"
 aiohttp = "*"
 python-docx = "*"
 mixpanel = "*"
+stripe = "*"
 
 [dev-packages]
 mypy = "*"
