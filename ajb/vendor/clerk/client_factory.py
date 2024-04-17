@@ -3,7 +3,7 @@ from .mock import MockClerkClient
 from ..vendor_client_factory import VendorClientFactory
 
 
-class ClerkClientFactory(VendorClientFactory):
+class ClerkClientFactory(VendorClientFactory[ClerkClient]):
     @staticmethod
     def _return_mock():
         return MockClerkClient()

@@ -1,4 +1,5 @@
-from ajb.base import BaseUseCase, Collection, RepoFilterParams, Pagination
+from ajb.base import BaseUseCase, Collection, RepoFilterParams, Pagination, RequestScope
+from ajb.contexts.companies.models import Company
 from ajb.contexts.billing.subscriptions.models import (
     CompanySubscription,
     CreateCompanySubscription,
@@ -6,6 +7,7 @@ from ajb.contexts.billing.subscriptions.models import (
 )
 from ajb.exceptions import EntityNotFound
 from ajb.vendor.arango.models import Filter
+from ajb.vendor.stripe.repository import StripeRepository
 
 from .usage.models import (
     CreateMonthlyUsage,
@@ -16,6 +18,12 @@ from .billing_models import UsageType, SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS
 
 
 class CompanyBillingUsecase(BaseUseCase):
+    def __init__(
+        self, request_scope: RequestScope, stripe: StripeRepository | None = None
+    ):
+        super().__init__(request_scope)
+        self.stripe = stripe or StripeRepository()
+
     def get_or_create_company_subscription(
         self, company_id: str
     ) -> CompanySubscription:
@@ -48,17 +56,20 @@ class CompanyBillingUsecase(BaseUseCase):
         )
         return recruiter_repo.get_count(company_id=company_id)
 
-    def get_or_create_company_current_usage(self, company_id: str) -> MonthlyUsage:
+    def get_or_create_company_usage(
+        self, company_id: str, billing_period: str | None = None
+    ) -> MonthlyUsage:
+        """Default usage is current if not provided."""
         usage_repo = self.get_repository(
             Collection.COMPANY_SUBSCRIPTION_USAGE_AND_BILLING,
             self.request_scope,
             company_id,
         )
-        current_billing_period = generate_billing_period_string()
+        billing_period = billing_period or generate_billing_period_string()
 
         try:
             return usage_repo.get_one(
-                company_id=company_id, billing_period=current_billing_period
+                company_id=company_id, billing_period=billing_period
             )
         except EntityNotFound:
             return usage_repo.create(
@@ -90,7 +101,7 @@ class CompanyBillingUsecase(BaseUseCase):
             company_id,
         )
         subscription = self.get_or_create_company_subscription(company_id)
-        current_usage = self.get_or_create_company_current_usage(company_id)
+        current_usage = self.get_or_create_company_usage(company_id)
         current_usage.add_usage(usage, subscription.usage_cost_details)
         return usage_repo.update(current_usage.id, current_usage)
 
@@ -103,3 +114,24 @@ class CompanyBillingUsecase(BaseUseCase):
                 company_id=company_id, transaction_counts=incremental_usages
             ),
         )
+
+    def _get_or_update_company_with_created_stripe_company_id(
+        self, company_id: str
+    ) -> Company:
+        company_repo = self.get_repository(Collection.COMPANIES, self.request_scope)
+        company: Company = company_repo.get(company_id)
+        if company.stripe_customer_id is not None:
+            return company
+
+        new_stripe_customer = self.stripe.create_customer(
+            company.name, company.owner_email, company.id
+        )
+        return company_repo.update_fields(
+            company.id, stripe_customer_id=new_stripe_customer.id
+        )
+
+    def generate_stripe_invoice(self, company_id: str, billing_period: str):
+        company_with_stripe_id = (
+            self._get_or_update_company_with_created_stripe_company_id(company_id)
+        )
+        usage = self.get_or_create_company_usage(company_id)

@@ -4,7 +4,7 @@ from ajb.config.settings import SETTINGS
 from ..vendor_client_factory import VendorClientFactory
 
 
-class StripeClientFactory(VendorClientFactory):
+class StripeClientFactory(VendorClientFactory[StripeClient]):
     @staticmethod
     def _return_mock():
         return None

@@ -27,6 +27,7 @@ class CreateMonthlyUsage(BaseModel):
 
     outstanding_balance_usd: float = 0.0
     total_usage_usd: float = 0.0
+    stripe_invoice_id: str | None = None
 
     def calculate_total_usage_cost(
         self, usage_cost_details: dict[UsageType, UsageDetail]

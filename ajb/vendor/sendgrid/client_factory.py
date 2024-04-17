@@ -5,7 +5,7 @@ from .mock import MockSendgrid
 from ..vendor_client_factory import VendorClientFactory
 
 
-class SendgridFactory(VendorClientFactory):
+class SendgridFactory(VendorClientFactory[SendGridAPIClient]):
     @staticmethod
     def _return_mock():
         return MockSendgrid()

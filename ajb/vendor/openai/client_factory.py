@@ -5,7 +5,7 @@ from .mock import MockOpenAI
 from ..vendor_client_factory import VendorClientFactory
 
 
-class OpenAIClientFactory(VendorClientFactory):
+class OpenAIClientFactory(VendorClientFactory[OpenAI]):
     @staticmethod
     def _return_mock(return_content: str = '"content"'):
         return MockOpenAI(return_content)

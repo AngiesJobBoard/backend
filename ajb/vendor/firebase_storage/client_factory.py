@@ -2,13 +2,14 @@ import json
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import storage
+from google.cloud.storage.bucket import Bucket
 from ajb.config.settings import SETTINGS
 
 from .mock import MockFirebaseStorageClient
 from ..vendor_client_factory import VendorClientFactory
 
 
-class FirebaseStorageClientFactory(VendorClientFactory):
+class FirebaseStorageClientFactory(VendorClientFactory[Bucket]):
     @staticmethod
     def _return_mock():
         return MockFirebaseStorageClient()

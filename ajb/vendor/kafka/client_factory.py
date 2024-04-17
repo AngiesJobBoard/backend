@@ -4,7 +4,7 @@ from ajb.config.settings import SETTINGS
 from ..vendor_client_factory import VendorClientFactory
 
 
-class KafkaProducerFactory(VendorClientFactory):
+class KafkaProducerFactory(VendorClientFactory[KafkaProducer]):
     @staticmethod
     def _return_mock():
         return KafkaProducer(bootstrap_servers=["localhost:9092"])
@@ -22,7 +22,7 @@ class KafkaProducerFactory(VendorClientFactory):
         return KafkaProducer(**non_null_config)
 
 
-class KafkaConsumerFactory(VendorClientFactory):
+class KafkaConsumerFactory(VendorClientFactory[KafkaConsumer]):
     def __init__(self, group_id: str):
         self.group_id = group_id
 

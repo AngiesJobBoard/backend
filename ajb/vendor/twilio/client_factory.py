@@ -6,7 +6,7 @@ from .mock import MockTwilio
 from ..vendor_client_factory import VendorClientFactory
 
 
-class TwilioFactory(VendorClientFactory):
+class TwilioFactory(VendorClientFactory[Client]):
     @staticmethod
     def _return_mock():
         return MockTwilio()
