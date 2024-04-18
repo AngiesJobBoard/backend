@@ -98,36 +98,33 @@ class AdminSearchRepository:
         """Search multiple collections for a given text search"""
         pagination = Pagination(page=page, page_size=page_size)
         users_filters = RepoFilterParams(
-            filters=[
+            search_filters=[
                 Filter(
                     field="first_name",
                     operator=Operator.CONTAINS,
                     value=text,
-                    and_or_operator="OR",
                 ),
                 Filter(
                     field="last_name",
                     operator=Operator.CONTAINS,
                     value=text,
-                    and_or_operator="OR",
                 ),
                 Filter(
                     field="email",
                     operator=Operator.CONTAINS,
                     value=text,
-                    and_or_operator="OR",
                 ),
             ],
             pagination=pagination,
         )
         companies_filters = RepoFilterParams(
-            filters=[
+            search_filters=[
                 Filter(field="name", operator=Operator.CONTAINS, value=text),
             ],
             pagination=pagination,
         )
         jobs_filters = RepoFilterParams(
-            filters=[
+            search_filters=[
                 Filter(field="position_title", operator=Operator.CONTAINS, value=text),
             ],
             pagination=pagination,
