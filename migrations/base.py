@@ -7,5 +7,5 @@ MIGRATION_REQUEST_SCOPE = RequestScope(
     user_id="migration",
     db=get_arango_db(),
     kafka_producer=KafkaProducerFactory.get_client(),
-    company_id=None,
+    company_id=None
 )

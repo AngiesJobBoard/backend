@@ -28,10 +28,10 @@ def update_subscription(
 
 
 @router.get("/current-usage", response_model=MonthlyUsage)
-def get_current_usage(request: Request, company_id: str):
+def get_current_usage(request: Request, company_id: str, billing_period: str | None = None):
     return CompanyBillingUsecase(
         request.state.request_scope
-    ).get_or_create_company_current_usage(company_id)
+    ).get_or_create_company_usage(company_id, billing_period)
 
 
 @router.get("/usage-history", response_model=tuple[list[MonthlyUsage], int])

@@ -75,35 +75,3 @@ class StripeRepository:
 
         return self.client.invoices.retrieve(draft_invoice.id)  # type: ignore
 
-
-stripe = StripeRepository()
-
-new_invoice = stripe.create_invoice(
-    CreateInvoiceData(
-        stripe_customer_id="cus_PwFv8YLq3dGui0",
-        description="AJB Monthly usage invoice",
-        invoice_number=generate_invoice_number("abc123", "2022-01"),
-        invoice_items=[
-            InvoiceLineItem(
-                description="Pro Subscription",
-                unit_amount_decimal="10000",
-                quantity=1,
-            ),
-            InvoiceLineItem(
-                description="Additional Pro Resume scans",
-                unit_amount_decimal="10",
-                quantity=15,
-            ),
-            InvoiceLineItem(
-                description="Additional Pro Match scores",
-                unit_amount_decimal="10",
-                quantity=150,
-            ),
-            InvoiceLineItem(
-                description="Additional Pro Questions answered",
-                unit_amount_decimal="10",
-                quantity=323,
-            ),
-        ]
-    )
-)

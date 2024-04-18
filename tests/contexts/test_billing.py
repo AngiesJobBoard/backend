@@ -107,7 +107,7 @@ def test_increment_monthly_usage(request_scope):
         },
     )
 
-    queried_updated_usage = usecase.get_or_create_company_current_usage(company.id)
+    queried_updated_usage = usecase.get_or_create_company_usage(company.id)
 
     assert updated_usage == queried_updated_usage
     assert updated_usage.total_usage_usd == 1920
@@ -136,7 +136,7 @@ def test_decrement_monthly_usage(request_scope):
         },
     )
 
-    queried_updated_usage = usecase.get_or_create_company_current_usage(company.id)
+    queried_updated_usage = usecase.get_or_create_company_usage(company.id)
     assert queried_updated_usage.transaction_counts[UsageType.RESUME_SCANS] == 5
 
 
@@ -153,7 +153,7 @@ def test_increment_company_usage_no_plan_no_usage(request_scope):
     )
 
     created_plan = usecase.get_or_create_company_subscription(company.id)
-    created_usage = usecase.get_or_create_company_current_usage(company.id)
+    created_usage = usecase.get_or_create_company_usage(company.id)
 
     assert created_plan.plan == SubscriptionPlan.STARTER
     assert created_usage.transaction_counts[UsageType.RESUME_SCANS] == 10
