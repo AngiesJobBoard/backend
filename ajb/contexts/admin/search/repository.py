@@ -1,4 +1,4 @@
-from typing import cast
+from typing import cast, Literal
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
@@ -10,7 +10,6 @@ from ajb.base import (
     Collection,
     Pagination,
 )
-from ajb.base.events import UserEvent, CompanyEvent
 from ajb.vendor.arango.models import Filter, Operator
 
 from .models import AdminSearch, Aggregation
@@ -25,6 +24,27 @@ class AdminSearchRepository:
     def __init__(self, request_scope: RequestScope):
         self.db = request_scope.db
 
+    def _get_repo_params(self, search: AdminSearch):
+        repo_params = search.convert_to_repo_filters()
+
+        if search.start:
+            repo_params.filters.append(
+                Filter(
+                    field="created_at",
+                    operator=Operator.GREATER_THAN_EQUAL,
+                    value=search.start.isoformat(),
+                )
+            )
+        if search.end:
+            repo_params.filters.append(
+                Filter(
+                    field="created_at",
+                    operator=Operator.LESS_THAN_EQUAL,
+                    value=search.end.isoformat(),
+                )
+            )
+        return repo_params
+
     def admin_search(
         self,
         search: AdminSearch,
@@ -32,7 +52,7 @@ class AdminSearchRepository:
         response = build_and_execute_query(
             db=self.db,
             collection_name=search.collection.value,
-            repo_filters=search,
+            repo_filters=self._get_repo_params(search),
         )
         return cast(tuple[list[dict], int], response)
 
@@ -43,10 +63,18 @@ class AdminSearchRepository:
         response = build_and_execute_query(
             db=self.db,
             collection_name=search.collection.value,
-            repo_filters=search,
+            repo_filters=self._get_repo_params(search),
             execute_type="count",
         )
         return cast(int, response)
+
+    def _convert_timeseries_data(
+        self, data: tuple[list[dict], int]
+    ) -> dict[Literal["data"], dict[datetime, int]]:
+        return {"data": {
+            row["date"]: row["count"]
+            for row in data[0]
+        }}
 
     def get_timeseries_data(
         self,
@@ -54,7 +82,7 @@ class AdminSearchRepository:
         start: datetime | None = None,
         end: datetime | None = None,
         aggregation: Aggregation | None = None,
-    ) -> tuple[list[dict], int]:
+    ) -> dict[Literal["data"], dict[datetime, int]]:
         response = build_and_execute_timeseries_query(
             db=self.db,
             collection_name=collection.value,
@@ -64,42 +92,39 @@ class AdminSearchRepository:
                 aggregation.get_datetime_format() if aggregation else None
             ),
         )
-        return cast(tuple[list[dict], int], response)
+        return self._convert_timeseries_data(response)
 
     def admin_global_text_search(self, text: str, page: int = 0, page_size=5):
         """Search multiple collections for a given text search"""
         pagination = Pagination(page=page, page_size=page_size)
         users_filters = RepoFilterParams(
-            filters=[
+            search_filters=[
                 Filter(
                     field="first_name",
                     operator=Operator.CONTAINS,
                     value=text,
-                    and_or_operator="OR",
                 ),
                 Filter(
                     field="last_name",
                     operator=Operator.CONTAINS,
                     value=text,
-                    and_or_operator="OR",
                 ),
                 Filter(
                     field="email",
                     operator=Operator.CONTAINS,
                     value=text,
-                    and_or_operator="OR",
                 ),
             ],
             pagination=pagination,
         )
         companies_filters = RepoFilterParams(
-            filters=[
+            search_filters=[
                 Filter(field="name", operator=Operator.CONTAINS, value=text),
             ],
             pagination=pagination,
         )
         jobs_filters = RepoFilterParams(
-            filters=[
+            search_filters=[
                 Filter(field="position_title", operator=Operator.CONTAINS, value=text),
             ],
             pagination=pagination,

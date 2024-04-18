@@ -218,7 +218,7 @@ class ArangoDBRepository:
             """
         )
 
-    def _build_or_filter_string(self, or_filters: list[Filter]):
+    def _build_or_filter_string(self, filter_index: int, or_filters: list[Filter]):
         """
         This builds a string to group all "OR" type filters together
         """
@@ -228,7 +228,10 @@ class ArangoDBRepository:
             self.bind_vars[next_bind_key] = filter.search_value
             filter_strings.append(f"doc.{filter.field} == @{next_bind_key}")
 
-        return "AND (\n" + "\nOR ".join(filter_strings) + "\n)"
+        if filter_index == 0:
+            return "FILTER (\n" + "\nOR ".join(filter_strings) + "\n)"
+        else:
+            return "AND (\n" + "\nOR ".join(filter_strings) + "\n)"
 
     def _append_all_filters(self):
         all_and_filters = [
@@ -236,19 +239,19 @@ class ArangoDBRepository:
             for filter_obj in self.filters
             if filter_obj.and_or_operator == "AND"
         ]
-        for i, filter_obj in enumerate(all_and_filters):
+        for filter_index, filter_obj in enumerate(all_and_filters):
             if filter_obj.operator.is_text_search():
-                self._append_text_search_filter(i, filter_obj)
+                self._append_text_search_filter(filter_index, filter_obj)
             elif filter_obj.operator.is_in_search():
-                self._append_in_search_filter(i, filter_obj)
+                self._append_in_search_filter(filter_index, filter_obj)
             elif filter_obj.operator.is_null_filter():
-                self._append_is_null_filter(i, filter_obj)
+                self._append_is_null_filter(filter_index, filter_obj)
             elif filter_obj.operator == Operator.ARRAY_IN:
-                self._append_array_in_filter(i, filter_obj)
+                self._append_array_in_filter(filter_index, filter_obj)
             elif filter_obj.and_or_operator == "OR":
                 continue
             else:
-                self._append_default_filter(i, filter_obj)
+                self._append_default_filter(filter_index, filter_obj)
 
             if not filter_obj.operator.is_null_filter():
                 self.bind_vars[self.get_next_bind_var_key()] = filter_obj.search_value
@@ -259,7 +262,7 @@ class ArangoDBRepository:
             if filter_obj.and_or_operator == "OR"
         ]
         if all_or_filters:
-            self.query_parts.append(self._build_or_filter_string(all_or_filters))
+            self.query_parts.append(self._build_or_filter_string(filter_index, all_or_filters))
 
     def _append_all_search_filters(self):
         if self.search_filters:

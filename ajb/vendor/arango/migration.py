@@ -5,6 +5,7 @@ from ajb.base import (
     VIEW_DEFINITIONS,
     RequestScope,
 )
+from ajb.base.schema import COLLECTION_INDEXES
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.admin.users.repository import AdminUserRepository, CreateAdminUser
 from ajb.contexts.admin.users.models import AdminRoles
@@ -108,9 +109,21 @@ class ArangoMigrator:
                 self.db.delete_collection(collection["name"])
                 print(f"Deleted collection {collection}")
 
+    def create_collection_indexes(self):
+        for collection, indexes_to_create in COLLECTION_INDEXES.items():
+            res = self.db.collection(collection.value).add_hash_index(
+                fields=[",".join(indexes_to_create)],
+                unique=False,
+                name=f"{collection.value}_index",
+                in_background=True,
+                deduplicate=False
+            )
+            print(f"Index established:", res)
+
     def execute(self):
         self.create_collections()
         self.create_views()
+        self.create_collection_indexes()
         print("\nDatabase setup complete\n")
         self.create_system_user()
         self.load_default_static_data()
