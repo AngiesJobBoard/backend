@@ -71,10 +71,7 @@ class AdminSearchRepository:
     def _convert_timeseries_data(
         self, data: tuple[list[dict], int]
     ) -> dict[Literal["data"], dict[datetime, int]]:
-        return {"data": {
-            row["date"]: row["count"]
-            for row in data[0]
-        }}
+        return {"data": {row["date"]: row["count"] for row in data[0]}}
 
     def get_timeseries_data(
         self,
@@ -138,7 +135,13 @@ class AdminSearchRepository:
                 collection_name=Collection.USERS.value,
                 repo_filters=users_filters,
                 execute_type="execute",
-                return_fields=["first_name", "last_name", "email", "_key"],
+                return_fields=[
+                    "first_name",
+                    "last_name",
+                    "email",
+                    "_key",
+                    "created_at",
+                ],
             )
             results[Collection.COMPANIES] = executor.submit(
                 build_and_execute_query,
@@ -146,7 +149,7 @@ class AdminSearchRepository:
                 collection_name=Collection.COMPANIES.value,
                 repo_filters=companies_filters,
                 execute_type="execute",
-                return_fields=["name", "_key"],
+                return_fields=["name", "_key", "created_at"],
             )
             results[Collection.JOBS] = executor.submit(
                 build_and_execute_query,
@@ -154,7 +157,13 @@ class AdminSearchRepository:
                 collection_name=Collection.JOBS.value,
                 repo_filters=jobs_filters,
                 execute_type="execute",
-                return_fields=["position_title", "_key"],
+                return_fields=[
+                    "position_title",
+                    "company_id",
+                    "_key",
+                    "total_applicants",
+                    "created_at",
+                ],
             )
         return {
             collection: result.result()[0] for collection, result in results.items()

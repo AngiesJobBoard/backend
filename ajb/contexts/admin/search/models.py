@@ -20,6 +20,7 @@ class PaginatedDataReducedUser(PaginatedResponse[DataReducedUser]):
 
 
 class Aggregation(Enum):
+    RAW = None
     MINUTE = "minute"
     HOURLY = "hourly"
     DAILY = "daily"
@@ -29,6 +30,7 @@ class Aggregation(Enum):
 
     def get_datetime_format(self):
         return {
+            Aggregation.RAW: "%yyyy-%mm-%ddT%hh:%ii",
             Aggregation.MINUTE: "%yyyy-%mm-%ddT%hh:%ii",
             Aggregation.HOURLY: "%yyyy-%mm-%ddT%hh",
             Aggregation.DAILY: "%yyyy-%mm-%dd",
@@ -42,4 +44,4 @@ class AdminTimeseriesSearch(BaseModel):
     collection: Collection
     start: datetime | None = None
     end: datetime | None = None
-    aggregation: Aggregation | None = None
+    aggregation: Aggregation = Aggregation.RAW
