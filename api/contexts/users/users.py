@@ -89,7 +89,7 @@ def check_password_attempt_cache(user_id: str):
     """
     if user_id in verify_password_attempt_cache:
         attempts = verify_password_attempt_cache[user_id]
-        if attempts >= 3:
+        if attempts >= 5:
             raise GenericHTTPException(status_code=429, detail="Too many attempts")
         else:
             verify_password_attempt_cache[user_id] += 1
@@ -97,19 +97,15 @@ def check_password_attempt_cache(user_id: str):
         verify_password_attempt_cache[user_id] = 1
 
 
-@router.post("/verify-password", response_model=bool)
-def verify_password(request: Request, password: str = Body(...)):
+@router.post("/change-password", response_model=bool)
+def change_password(request: Request, old_password: str = Body(...), new_password: str = Body(...)):
     user_id = request.state.request_scope.user_id
     correct_password = UserUseCase(request.state.request_scope).verify_password(
-        user_id, password
+        user_id, old_password
     )
     if not correct_password:
         check_password_attempt_cache(user_id)
-    return correct_password
-
-
-@router.post("/change-password", response_model=bool)
-def change_password(request: Request, new_password: str = Body(...)):
+        raise GenericHTTPException(status_code=401, detail="Incorrect password")
     return UserUseCase(request.state.request_scope).change_password(
         request.state.request_scope.user_id, new_password
     )
