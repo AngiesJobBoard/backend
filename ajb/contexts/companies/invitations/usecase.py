@@ -19,6 +19,10 @@ from ajb.vendor.sendgrid.templates.recruiter_invitation import RecruiterInvitati
 from .models import UserCreateInvitation, CreateInvitation, Invitation, InvitationData
 
 
+class EmailAlreadyExistsException(Exception):
+    pass
+
+
 class CompanyInvitationUseCase(BaseUseCase):
     def user_creates_invite(
         self, data: UserCreateInvitation, inviting_user_id: str, company_id: str
@@ -27,9 +31,21 @@ class CompanyInvitationUseCase(BaseUseCase):
             read_collections=[Collection.RECRUITER_INVITATIONS, Collection.COMPANIES],
             write_collections=[Collection.RECRUITER_INVITATIONS],
         ) as transaction_scope:
+            user_repo = self.get_repository(Collection.USERS, transaction_scope)
+            recruiter_repo = self.get_repository(
+                Collection.COMPANY_RECRUITERS, transaction_scope, company_id
+            )
             invitation_repo = self.get_repository(
                 Collection.RECRUITER_INVITATIONS, transaction_scope, company_id
             )
+            # First check if email exists as user already and if that user is already a recruiter - then abort
+            potential_user = user_repo.get_all(email=data.email)
+            if potential_user:
+                potential_recruiter = recruiter_repo.get_all(
+                    user_id=potential_user[0].id, company_id=company_id
+                )
+                if potential_recruiter:
+                    raise EmailAlreadyExistsException
 
             # If there are any matches of same companyID and email then update the invitation
             potential_application = invitation_repo.get_all(

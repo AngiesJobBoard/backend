@@ -53,9 +53,9 @@ class CompaniesUseCase(BaseUseCase):
                 data.slug = make_arango_safe_key(data.name)
 
             # Check if the company name or slug has been taken
-            slug_results = company_repo.query(slug=data.slug)
-            if slug_results[0]:
-                raise CompanyCreateException("Company Name or Slug Taken")
+            slug_results = company_repo.get_all(slug=data.slug)
+            if slug_results:
+                data.slug = None
 
             user: User = self.get_object(Collection.USERS, creating_user_id)
 
