@@ -89,7 +89,7 @@ def check_password_attempt_cache(user_id: str):
     """
     if user_id in verify_password_attempt_cache:
         attempts = verify_password_attempt_cache[user_id]
-        if attempts >= 5:
+        if attempts >= 20:
             raise GenericHTTPException(status_code=429, detail="Too many attempts")
         else:
             verify_password_attempt_cache[user_id] += 1
