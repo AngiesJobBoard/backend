@@ -1,4 +1,7 @@
 import json
+from typing import Type
+from pydantic import BaseModel
+import instructor
 from openai import OpenAI
 from aiohttp import ClientSession
 
@@ -9,12 +12,13 @@ from ajb.vendor.openai.client_factory import OpenAIClientFactory
 class OpenAIRepository:
     def __init__(self, client: OpenAI | None = None, model_override: str | None = None):
         self.client = client or OpenAIClientFactory.get_client()
+        self.instructor = instructor.from_openai(self.client)
         self.model_override = model_override
 
     def text_prompt(self, prompt: str, max_tokens: int = 100) -> str:
         response = self.client.chat.completions.create(
             model=self.model_override or SETTINGS.OPENAI_MODEL,
-            messages=[{"role": "assistant", "content": prompt}],
+            messages=[{"role": "user", "content": prompt}],
             max_tokens=max_tokens,
         )
         output = response.choices[0].message.content
@@ -26,13 +30,23 @@ class OpenAIRepository:
         response = self.client.chat.completions.create(
             model=self.model_override or SETTINGS.OPENAI_MODEL,
             response_format={"type": "json_object"},
-            messages=[{"role": "assistant", "content": prompt}],
+            messages=[{"role": "user", "content": prompt}],
             max_tokens=max_tokens,
         )
         output = response.choices[0].message.content
         if not output:
             raise ValueError("OpenAI returned an empty response")
         return json.loads(output)
+
+    def structured_prompt(
+        self, prompt: str, response_model: Type[BaseModel], max_tokens: int = 100
+    ):
+        return self.instructor.chat.completions.create(
+            model=self.model_override or SETTINGS.OPENAI_MODEL,
+            response_model=response_model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=max_tokens,
+        )
 
 
 class AsyncOpenAIRepository:
@@ -55,7 +69,7 @@ class AsyncOpenAIRepository:
 
     async def text_prompt(self, prompt: str, max_tokens: int = 100) -> str:
         data = {
-            "messages": [{"role": "assistant", "content": prompt}],
+            "messages": [{"role": "user", "content": prompt}],
             "max_tokens": max_tokens,
         }
         response = await self._send_request(data)
@@ -67,7 +81,7 @@ class AsyncOpenAIRepository:
         data = {
             "messages": [
                 {
-                    "role": "assistant",
+                    "role": "user",
                     "content": prompt,
                 }
             ],

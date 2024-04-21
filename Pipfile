@@ -24,6 +24,8 @@ aiohttp = "*"
 python-docx = "*"
 mixpanel = "*"
 stripe = "*"
+jsonpath-ng = "*"
+instructor = "*"
 
 [dev-packages]
 mypy = "*"
@@ -48,7 +50,7 @@ check_all = "bash -c \"black .; pylint .; mypy . --ignore-missing-imports --expl
 test = "bash -c \"coverage run --source=ajb -m pytest -v --disable-warnings tests && coverage report && coverage html\""
 migrate = "python -m ajb.migrate"
 seed = "python -m ajb.seed"
-localapi = "uvicorn api.app:app --reload --port 8000 --host 0.0.0.0"
+localapi = "uvicorn api.app:app --reload --port 8001 --host 0.0.0.0"
 api = "uvicorn api.app:app --workers 4 --port $PORT --host 0.0.0.0"
 services = "python -m services.main"
 dead = "deadcode . --exclude=tests"
