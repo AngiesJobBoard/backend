@@ -122,26 +122,21 @@ def build_and_execute_timeseries_query(
     db: StandardDatabase | TransactionDatabase,
     collection_name: str,
     filters: list[Filter] = [],
-    start: datetime | None = None,
-    end: datetime | None = None,
     aggregation_datetime_format: str | None = None,
     additional_groupbys: list[str] = [],
 ) -> tuple[list[dict], int]:
-    # Start building the query
     query_text = f"FOR doc IN {collection_name}\n"
     bind_vars = {}
 
-    # Add date filters if provided
-    if start:
-        query_text += f"FILTER doc.created_at >= '{start.isoformat()}'\n"
-    if end:
-        query_text += f"FILTER doc.created_at <= '{end.isoformat()}'\n"
-
-    # Apply additional filters
-    for filter in filters:
-        query_text += (
-            f"FILTER doc.{filter.field} {filter.operator.value} {filter.value}\n"
-        )
+    for idx, filter in enumerate(filters):
+        if idx == 0:
+            query_text += (
+                f"FILTER doc.{filter.field} {filter.operator.value} '{filter.value}'\n"
+            )
+        else:
+            query_text += (
+                f"AND doc.{filter.field} {filter.operator.value} '{filter.value}'\n"
+            )
 
     if aggregation_datetime_format:
         date_string = "DATE_FORMAT(doc.created_at, @date_format)"

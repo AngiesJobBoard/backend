@@ -45,3 +45,4 @@ class AdminTimeseriesSearch(BaseModel):
     start: datetime | None = None
     end: datetime | None = None
     aggregation: Aggregation = Aggregation.RAW
+    filters: str | None = None

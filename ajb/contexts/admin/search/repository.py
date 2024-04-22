@@ -9,8 +9,10 @@ from ajb.base import (
     RepoFilterParams,
     Collection,
     Pagination,
+    QueryFilterParams
 )
 from ajb.vendor.arango.models import Filter, Operator
+from ajb.utils import get_datetime_from_string
 
 from .models import AdminSearch, Aggregation
 
@@ -71,7 +73,8 @@ class AdminSearchRepository:
     def _convert_timeseries_data(
         self, data: tuple[list[dict], int]
     ) -> dict[Literal["data"], dict[datetime, int]]:
-        return {"data": {row["date"]: row["count"] for row in data[0]}}
+        
+        return {"data": {get_datetime_from_string(row["date"]): row["count"] for row in data[0]}}
 
     def get_timeseries_data(
         self,
@@ -79,12 +82,29 @@ class AdminSearchRepository:
         start: datetime | None = None,
         end: datetime | None = None,
         aggregation: Aggregation | None = None,
+        filters: str | None = None
     ) -> dict[Literal["data"], dict[datetime, int]]:
+        repo_filters = QueryFilterParams(filters=filters).convert_to_repo_filters()
+        if start:
+            repo_filters.filters.append(
+                Filter(
+                    field="created_at",
+                    operator=Operator.GREATER_THAN_EQUAL,
+                    value=start.isoformat(),
+                )
+            )
+        if end:
+            repo_filters.filters.append(
+                Filter(
+                    field="created_at",
+                    operator=Operator.LESS_THAN_EQUAL,
+                    value=end.isoformat(),
+                )
+            )
         response = build_and_execute_timeseries_query(
             db=self.db,
             collection_name=collection.value,
-            start=start,
-            end=end,
+            filters=repo_filters.filters,
             aggregation_datetime_format=(
                 aggregation.get_datetime_format() if aggregation else None
             ),

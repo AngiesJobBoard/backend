@@ -164,7 +164,7 @@ def get_perecent(numerator: int, denominator: int) -> int:
     return round((numerator / denominator) * 100)
 
 
-def get_datetime_from_string(date_string: str) -> datetime | None:
+def get_datetime_from_string(date_string: str) -> datetime:
     if date_string.lower() == "present":
         return datetime.now()
     datetime_regex_map = {
@@ -178,7 +178,7 @@ def get_datetime_from_string(date_string: str) -> datetime | None:
             if match and format_label:
                 day, month, year = match.groups()
                 return datetime(int(year), int(month), int(day))
-    return None
+    raise ValueError(f"Could not parse date string: {date_string}")
 
 
 def get_miles_between_lat_long_pairs(
