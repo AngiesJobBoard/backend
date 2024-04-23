@@ -11,7 +11,6 @@ from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.usecase import CompaniesUseCase
 from ajb.exceptions import CompanyCreateException
 
-from api.vendors import mixpanel
 from api.exceptions import GenericHTTPException
 
 
@@ -32,9 +31,6 @@ def create_company(request: Request, company: UserCreateCompany):
     try:
         response = CompaniesUseCase(request.state.request_scope).user_create_company(
             company, request.state.request_scope.user_id
-        )
-        mixpanel.company_created(
-            request.state.request_scope.user_id, response.id, response.name
         )
         return response
     except CompanyCreateException as exc:

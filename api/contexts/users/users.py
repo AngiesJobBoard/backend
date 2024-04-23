@@ -105,7 +105,9 @@ def check_password_attempt_cache(user_id: str):
 
 
 @router.post("/change-password", response_model=bool)
-def change_password(request: Request, old_password: str = Body(...), new_password: str = Body(...)):
+def change_password(
+    request: Request, old_password: str = Body(...), new_password: str = Body(...)
+):
     user_id = request.state.request_scope.user_id
     correct_password = UserUseCase(request.state.request_scope).verify_password(
         user_id, old_password

@@ -1,7 +1,7 @@
 from typing import Literal
-from datetime import datetime
 from fastapi import APIRouter, Request, Depends
 
+from ajb.base import BaseTimeseriesData
 from ajb.contexts.admin.search.repository import AdminSearchRepository
 from ajb.contexts.admin.search.models import (
     AdminSearch,
@@ -43,14 +43,14 @@ def count(request: Request, query: AdminSearch = Depends()):
     return AdminSearchRepository(request.state.request_scope).admin_count(query)
 
 
-@router.get("/timeseries", response_model=dict[Literal["data"], list[dict]])
+@router.get("/timeseries", response_model=BaseTimeseriesData)
 def search_timeseries(request: Request, query: AdminTimeseriesSearch = Depends()):
     results = AdminSearchRepository(request.state.request_scope).get_timeseries_data(
         collection=query.collection,
         start=query.start,
         end=query.end,
         aggregation=query.aggregation,
-        filters=query.filters
+        filters=query.filters,
     )
     return results
 

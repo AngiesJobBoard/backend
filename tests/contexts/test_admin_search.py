@@ -227,7 +227,8 @@ def test_admin_timeseries_with_aggregation(
     # assert len(results) == 1
 
 
-def test_admin_global_search(admin_search_repo: AdminSearchRepository, example_user_data):
+def test_admin_global_search(
+    admin_search_repo: AdminSearchRepository, example_user_data
+):
     results = admin_search_repo.admin_global_text_search(text="a")
     assert 1 == 1
-

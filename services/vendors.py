@@ -2,7 +2,6 @@ from ajb.base import RequestScope
 from ajb.vendor.arango.repository import get_arango_db
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.vendor.sendgrid.repository import SendgridRepository
-from ajb.vendor.mixpanel import MixpanelDomainEvents
 from ajb.base.events import BaseKafkaMessage
 
 
@@ -11,7 +10,6 @@ print("Initializing vendor dependencies")
 db = get_arango_db()
 openai = OpenAIRepository()
 sendgrid = SendgridRepository()
-mixpanel = MixpanelDomainEvents()
 
 print("Vendor dependencies initialized")
 

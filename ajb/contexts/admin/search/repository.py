@@ -10,6 +10,7 @@ from ajb.base import (
     Collection,
     Pagination,
     QueryFilterParams,
+    BaseTimeseriesData,
 )
 from ajb.vendor.arango.models import Filter, Operator
 from ajb.utils import get_datetime_from_string
@@ -72,7 +73,7 @@ class AdminSearchRepository:
 
     def _convert_timeseries_data(
         self, data: tuple[list[dict], int]
-    ) -> dict[Literal["data"], dict[datetime, int]]:
+    ) -> dict[Literal["data"], list[dict]]:
 
         return {
             "data": [
@@ -88,7 +89,7 @@ class AdminSearchRepository:
         end: datetime | None = None,
         aggregation: Aggregation | None = None,
         filters: str | None = None,
-    ) -> dict[Literal["data"], dict[datetime, int]]:
+    ) -> BaseTimeseriesData:
         repo_filters = QueryFilterParams(filters=filters).convert_to_repo_filters()
         if start:
             repo_filters.filters.append(
@@ -114,7 +115,9 @@ class AdminSearchRepository:
                 aggregation.get_datetime_format() if aggregation else None
             ),
         )
-        return self._convert_timeseries_data(response)
+        return BaseTimeseriesData.model_validate(
+            self._convert_timeseries_data(response)
+        )
 
     def admin_global_text_search(self, text: str, page: int = 0, page_size=5):
         """Search multiple collections for a given text search"""

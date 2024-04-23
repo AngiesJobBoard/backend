@@ -9,6 +9,7 @@ class DeleteMultipleRecruitersMigration(BaseUseCase):
     """
     This checks for all jobs and applications of various states for all companies and updates the company counts accordingly
     """
+
     def get_all_companies(self) -> list[Company]:
         company_repo = self.get_repository(Collection.COMPANIES)
         return company_repo.get_all()

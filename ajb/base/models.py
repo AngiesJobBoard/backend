@@ -38,6 +38,15 @@ class BaseDataModel(BaseModel):
         return ["id", "created_at", "created_by", "updated_at", "updated_by"]
 
 
+class BaseTimeseriesPoint(BaseModel):
+    date: datetime
+    count: int
+
+
+class BaseTimeseriesData(BaseModel):
+    data: list[BaseTimeseriesPoint]
+
+
 CreateDataSchema = t.TypeVar("CreateDataSchema", bound=BaseModel)
 DataSchema = t.TypeVar("DataSchema", bound=BaseDataModel)
 

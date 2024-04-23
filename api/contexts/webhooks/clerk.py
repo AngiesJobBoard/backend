@@ -7,7 +7,7 @@ from ajb.vendor.clerk.models import (
     ClerkUserWebhookEvent,
 )
 
-from api.vendors import db, mixpanel
+from api.vendors import db
 
 
 WEBHOOK_REQUEST_SCOPE = RequestScope(user_id="clerk_webhook", db=db, company_id=None)
@@ -28,11 +28,5 @@ router = APIRouter(
 async def users_webhook_handler(payload: dict):
     created_user: User = WebhookUserUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
         ClerkUserWebhookEvent(**payload)
-    )
-    mixpanel.user_created(
-        created_user.id,
-        created_user.email,
-        created_user.first_name,
-        created_user.last_name,
     )
     return status.HTTP_204_NO_CONTENT

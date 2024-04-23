@@ -74,4 +74,3 @@ class StripeRepository:
             )
 
         return self.client.invoices.retrieve(draft_invoice.id)  # type: ignore
-
