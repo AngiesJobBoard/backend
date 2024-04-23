@@ -5,7 +5,6 @@ from ajb.contexts.companies.api_egress_webhooks.models import (
 )
 from ajb.contexts.applications.models import Application
 from ajb.contexts.webhooks.egress.webhook_egress import BaseWebhookEgress
-from ajb.vendor.mixpanel import MixpanelDomainEvents
 
 
 class CompanyApplicantsWebhookEgress(BaseWebhookEgress):
@@ -20,16 +19,12 @@ class CompanyApplicantsWebhookEgress(BaseWebhookEgress):
         application: Application = self.get_object(
             Collection.APPLICATIONS, application_id
         )
-        mixpanel = MixpanelDomainEvents()
         for record in all_egress_records:
             self.send_request(
                 data=application.model_dump(),
                 egress_record=record,
                 event=EVENT,
                 object_type=self.object_type,
-            )
-            mixpanel.application_forwarded_from_webhook(
-                company_id, application.job_id, application_id
             )
 
     def send_update_applicant_webhook(self, company_id: str, application_id: str):

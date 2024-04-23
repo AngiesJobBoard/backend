@@ -11,8 +11,6 @@ from ajb.contexts.companies.jobs.models import (
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.jobs.usecase import JobsUseCase
 
-from api.vendors import mixpanel
-
 
 router = APIRouter(tags=["Company Jobs"], prefix="/companies/{company_id}/jobs")
 
@@ -32,12 +30,6 @@ def get_all_jobs(
 @router.post("/", response_model=Job)
 def create_job(request: Request, company_id: str, job: UserCreateJob):
     response = JobsUseCase(request.state.request_scope).create_job(company_id, job)
-    mixpanel.job_created_from_portal(
-        request.state.request_scope.user_id,
-        company_id,
-        response.id,
-        response.position_title,
-    )
     return response
 
 

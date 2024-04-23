@@ -351,3 +351,30 @@ class ApplicationUseCase(BaseUseCase):
             },
         )
         return created_applications
+
+    def application_is_created_from_raw_text(
+        self, company_id: str, job_id: str, raw_text: str
+    ):
+        partial_application = CreateApplication(
+            company_id=company_id,
+            job_id=job_id,
+            name="-",
+            email="-",
+            resume_scan_status=ScanStatus.PENDING,
+            match_score_status=ScanStatus.PENDING,
+            extracted_resume_text=raw_text,
+        )
+        partial_application.application_questions = self._get_job_questions(job_id)
+        created_application = self.create_application(
+            company_id, job_id, partial_application, False
+        )
+
+        # Create kafka event for handling the match
+        ApplicationEventProducer(
+            self.request_scope, source_service=SourceServices.API
+        ).application_is_created(
+            company_id=company_id,
+            job_id=job_id,
+            application_id=created_application.id,
+        )
+        return created_application

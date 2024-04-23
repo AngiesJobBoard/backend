@@ -116,7 +116,7 @@ class ArangoMigrator:
                 unique=False,
                 name=f"{collection.value}_index",
                 in_background=True,
-                deduplicate=False
+                deduplicate=False,
             )
             print(f"Index established:", res)
 

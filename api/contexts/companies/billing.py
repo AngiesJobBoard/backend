@@ -28,7 +28,9 @@ def update_subscription(
 
 
 @router.get("/current-usage", response_model=MonthlyUsage)
-def get_current_usage(request: Request, company_id: str, billing_period: str | None = None):
+def get_current_usage(
+    request: Request, company_id: str, billing_period: str | None = None
+):
     return CompanyBillingUsecase(
         request.state.request_scope
     ).get_or_create_company_usage(company_id, billing_period)

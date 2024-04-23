@@ -18,8 +18,6 @@ from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.vendor.arango.models import Filter, Operator
 
-from api.vendors import mixpanel
-
 
 router = APIRouter(
     tags=["Company Applications"], prefix="/companies/{company_id}/applications"
@@ -157,9 +155,6 @@ def delete_company_application(request: Request, company_id: str, application_id
     response = ApplicationUseCase(
         request.state.request_scope
     ).delete_application_for_job(company_id, application_id)
-    mixpanel.application_is_deleted(
-        request.state.request_scope.user_id, company_id, response.job_id, response.id
-    )
     return response
 
 
@@ -175,16 +170,8 @@ def update_application_status(
     new_status: CreateApplicationStatusUpdate,
 ):
     """Updates an application status"""
-    response = ApplicationUseCase(
+    return ApplicationUseCase(
         request.state.request_scope
     ).recruiter_updates_application_status(
         company_id, job_id, application_id, new_status
     )
-    mixpanel.application_status_is_updated(
-        request.state.request_scope.user_id,
-        company_id,
-        job_id,
-        application_id,
-        new_status.application_status,
-    )
-    return response

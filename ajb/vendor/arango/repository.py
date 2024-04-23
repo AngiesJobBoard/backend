@@ -262,7 +262,9 @@ class ArangoDBRepository:
             if filter_obj.and_or_operator == "OR"
         ]
         if all_or_filters:
-            self.query_parts.append(self._build_or_filter_string(filter_index, all_or_filters))
+            self.query_parts.append(
+                self._build_or_filter_string(filter_index, all_or_filters)
+            )
 
     def _append_all_search_filters(self):
         if self.search_filters:

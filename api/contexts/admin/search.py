@@ -50,7 +50,7 @@ def search_timeseries(request: Request, query: AdminTimeseriesSearch = Depends()
         start=query.start,
         end=query.end,
         aggregation=query.aggregation,
-        filters=query.filters
+        filters=query.filters,
     )
     return results
 

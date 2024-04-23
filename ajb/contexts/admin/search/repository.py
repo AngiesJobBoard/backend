@@ -9,7 +9,7 @@ from ajb.base import (
     RepoFilterParams,
     Collection,
     Pagination,
-    QueryFilterParams
+    QueryFilterParams,
 )
 from ajb.vendor.arango.models import Filter, Operator
 from ajb.utils import get_datetime_from_string
@@ -73,8 +73,12 @@ class AdminSearchRepository:
     def _convert_timeseries_data(
         self, data: tuple[list[dict], int]
     ) -> dict[Literal["data"], dict[datetime, int]]:
-        
-        return {"data": {get_datetime_from_string(row["date"]): row["count"] for row in data[0]}}
+
+        return {
+            "data": {
+                get_datetime_from_string(row["date"]): row["count"] for row in data[0]
+            }
+        }
 
     def get_timeseries_data(
         self,
@@ -82,7 +86,7 @@ class AdminSearchRepository:
         start: datetime | None = None,
         end: datetime | None = None,
         aggregation: Aggregation | None = None,
-        filters: str | None = None
+        filters: str | None = None,
     ) -> dict[Literal["data"], dict[datetime, int]]:
         repo_filters = QueryFilterParams(filters=filters).convert_to_repo_filters()
         if start:

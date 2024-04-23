@@ -89,11 +89,6 @@ class AppSettings:
     DEFAULT_EXPIRY_HOURS: int = int(os.getenv("RECRUITER_INVITATION_SECRET", 100))
     RECRUITER_INVITATION_SECRET: str = os.getenv("RECRUITER_INVITATION_SECRET", "test")
 
-    # Mixpanel for product analytics
-    MIXPANEL_TOKEN: str = os.getenv(
-        "MIXPANEL_TOKEN", "38f552bd01fdd7399ad3a2aac8becdba"
-    )
-
     # Stripe for handling subscriptions and invoicing
     STRIPE_API_KEY: str = os.getenv("STRIPE_API_KEY", "")
 

@@ -3,7 +3,7 @@ from ajb.base.events import ApplicationEvent, BaseKafkaMessage
 from ajb.vendor.openai.repository import AsyncOpenAIRepository
 from services.resolvers.applications import ApplicationEventsResolver
 
-from services.vendors import make_request_scope, mixpanel
+from services.vendors import make_request_scope
 
 
 async def company_uploads_resume(message: BaseKafkaMessage):
@@ -14,11 +14,6 @@ async def company_uploads_resume(message: BaseKafkaMessage):
             async_openai=AsyncOpenAIRepository(session),
         )
         await repo.upload_resume()
-    mixpanel.resume_is_scanned(
-        message.requesting_user_id,
-        message.data["company_id"],
-        message.data["application_id"],
-    )
 
 
 async def application_is_submitted(message: BaseKafkaMessage):
@@ -29,12 +24,6 @@ async def application_is_submitted(message: BaseKafkaMessage):
             async_openai=AsyncOpenAIRepository(session, model_override="gpt-4-turbo"),
         )
         await repo.application_is_submitted()
-    mixpanel.application_is_submitted_and_enriched(
-        message.requesting_user_id,
-        message.data["company_id"],
-        message.data["job_id"],
-        message.data["application_id"],
-    )
 
 
 async def application_is_updated(message: BaseKafkaMessage):

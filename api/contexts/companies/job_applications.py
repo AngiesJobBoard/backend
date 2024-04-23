@@ -1,11 +1,11 @@
 from io import StringIO
-from fastapi import APIRouter, Request, UploadFile, File, HTTPException
+from fastapi import APIRouter, Request, UploadFile, File, HTTPException, Body
 import pandas as pd
 
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.resumes.models import UserCreateResume
 
-from api.vendors import storage, mixpanel
+from api.vendors import storage
 
 
 router = APIRouter(
@@ -42,14 +42,6 @@ async def upload_applications_from_csv(
             company_id, job_id, file, application_repo
         )  # type: ignore
         all_created_applications.extend(application)
-        for created_application_id in application:
-            mixpanel.application_created_from_portal(
-                request.state.request_scope.user_id,
-                company_id,
-                job_id,
-                created_application_id,
-                "csv",
-            )
     if not all_created_applications:
         raise HTTPException(status_code=400, detail="No valid applications found")
     return all_created_applications
@@ -74,14 +66,16 @@ async def upload_applications_from_resume(
             )
         )
         created_applications.append(created_application)
-        mixpanel.application_created_from_portal(
-            request.state.request_scope.user_id,
-            company_id,
-            job_id,
-            created_application.id,
-            "pdf",
-        )
         files_processed += 1
     if not files_processed:
         raise HTTPException(status_code=400, detail="No valid files found")
     return {"files_processed": files_processed, "applications": created_applications}
+
+
+@router.post("/raw")
+async def upload_application_from_text_dump(
+    request: Request, company_id: str, job_id: str, text: str = Body(...)
+):
+    return ApplicationUseCase(
+        request.state.request_scope
+    ).application_is_created_from_raw_text(company_id, job_id, text)
