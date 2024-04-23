@@ -43,7 +43,7 @@ def count(request: Request, query: AdminSearch = Depends()):
     return AdminSearchRepository(request.state.request_scope).admin_count(query)
 
 
-@router.get("/timeseries", response_model=dict[Literal["data"], dict[datetime, int]])
+@router.get("/timeseries", response_model=dict[Literal["data"], list[dict]])
 def search_timeseries(request: Request, query: AdminTimeseriesSearch = Depends()):
     results = AdminSearchRepository(request.state.request_scope).get_timeseries_data(
         collection=query.collection,
