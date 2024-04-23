@@ -38,7 +38,7 @@ async def jobs_api_webhook_handler(request: Request, payload: dict):
 async def applicants_api_webhook_handler(request: Request, payload: dict):
     ingress_record = WebhookValidator(request).validate_api_ingress_request()
     WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
-        ingress_record.company_id, payload
+        ingress_record, payload
     )
     return status.HTTP_204_NO_CONTENT
 

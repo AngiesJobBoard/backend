@@ -21,6 +21,7 @@ class CreateCompanyAPIIngress(UserCreateIngress):
     expected_jwt: str
     allowed_ips: list[str] = Field(default_factory=list)
     is_active: bool = False
+    last_message_received: datetime | None = None
 
     @classmethod
     def generate(cls, company_id: str, source: str, is_active: bool) -> "CreateCompanyAPIIngress":
@@ -40,7 +41,8 @@ class CreateCompanyAPIIngress(UserCreateIngress):
         )
 
 
-class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel): ...
+class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel):
+    ...
 
 
 @dataclass
