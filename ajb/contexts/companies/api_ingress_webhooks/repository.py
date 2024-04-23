@@ -11,14 +11,19 @@ which we can use to compare against the payload being sent
 
 """
 
-from ajb.base import Collection, SingleChildRepository, RepositoryRegistry, RequestScope
+from ajb.base import (
+    Collection,
+    MultipleChildrenRepository,
+    RepositoryRegistry,
+    RequestScope,
+)
 from ajb.vendor.jwt import decode_jwt
 
 from .models import CreateCompanyAPIIngress, CompanyAPIIngress, APIIngressJWTData
 
 
 class CompanyAPIIngressRepository(
-    SingleChildRepository[CreateCompanyAPIIngress, CompanyAPIIngress]
+    MultipleChildrenRepository[CreateCompanyAPIIngress, CompanyAPIIngress]
 ):
     collection = Collection.COMPANY_API_INGRESS_WEBHOOKS
     entity_model = CompanyAPIIngress

@@ -254,9 +254,17 @@ class WebhookValidator:
         if "Bearer " in authorization:
             authorization = authorization.split("Bearer")[1].strip()
         company_id, token = authorization.split(":")
-        company_ingress_record = CompanyAPIIngressRepository(
+
+        # How to determine which source the data is coming from?
+        # For now we will do the FILTHY option of pulling the first record if exists
+        all_company_ingresses = CompanyAPIIngressRepository(
             self.request.state.request_scope, company_id=company_id
-        ).get_sub_entity()
+        ).get_all(company_id=company_id)
+        print(all_company_ingresses)
+        if not all_company_ingresses:
+            raise Forbidden
+        
+        company_ingress_record = all_company_ingresses[0]
         if not company_ingress_record.is_active:
             raise Forbidden
 

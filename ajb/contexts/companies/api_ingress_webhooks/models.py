@@ -1,7 +1,8 @@
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
-from ajb.base import BaseDataModel
+from ajb.base import BaseDataModel, PaginatedResponse
 from ajb.utils import generate_random_long_code
 from ajb.vendor.jwt import encode_jwt
 
@@ -10,7 +11,11 @@ class APIIngressJWTData(BaseModel):
     company_id: str
 
 
-class CreateCompanyAPIIngress(BaseModel):
+class UserCreateIngress(BaseModel):
+    source: str
+
+
+class CreateCompanyAPIIngress(UserCreateIngress):
     company_id: str
     secret_key: str
     expected_jwt: str
@@ -18,7 +23,7 @@ class CreateCompanyAPIIngress(BaseModel):
     is_active: bool = False
 
     @classmethod
-    def generate(cls, company_id: str) -> "CreateCompanyAPIIngress":
+    def generate(cls, company_id: str, source: str, is_active: bool) -> "CreateCompanyAPIIngress":
         secret_key = generate_random_long_code()
         partial_expected_jwt = encode_jwt(
             data=APIIngressJWTData(company_id=company_id).model_dump(),
@@ -27,8 +32,17 @@ class CreateCompanyAPIIngress(BaseModel):
         )
         expected_jwt = f"{company_id}:{partial_expected_jwt}"
         return cls(
-            company_id=company_id, secret_key=secret_key, expected_jwt=expected_jwt
+            company_id=company_id,
+            secret_key=secret_key,
+            expected_jwt=expected_jwt,
+            source=source,
+            is_active=is_active,
         )
 
 
 class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel): ...
+
+
+@dataclass
+class PaginatedCompanyIngress(PaginatedResponse[CompanyAPIIngress]):
+    data: list[CompanyAPIIngress]

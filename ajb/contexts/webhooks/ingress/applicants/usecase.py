@@ -7,7 +7,9 @@ from .models import ApplicantsWebhook, CreateApplicantWebhook, ApplicantWebhookE
 
 class WebhookApplicantsUseCase(BaseUseCase):
 
-    def handle_webhook_event(self, company_id: str, event: ApplicantsWebhook):
+    def handle_webhook_event(self, company_id: str, event: dict):
+        print(f"\n\n{event}\n\n")
+        return
         if event.type == ApplicantWebhookEventType.CREATE:
             return self.create_applicant(
                 company_id, CreateApplicantWebhook(**event.data)

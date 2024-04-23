@@ -17,13 +17,9 @@ from ajb.contexts.companies.email_ingress_webhooks.models import (
     CreateCompanyEmailIngress,
     EmailIngressType,
 )
-from ajb.contexts.companies.api_ingress_webhooks.repository import (
-    CompanyAPIIngressRepository,
-)
 from ajb.contexts.companies.jobs.job_score.ai_job_score import AIJobScore
 from ajb.contexts.companies.jobs.repository import JobRepository, Job
 from ajb.contexts.companies.repository import CompanyRepository
-from ajb.contexts.companies.api_ingress_webhooks.models import CreateCompanyAPIIngress
 from ajb.contexts.users.repository import UserRepository
 from ajb.contexts.webhooks.egress.jobs.usecase import CompanyJobWebhookEgress
 from ajb.vendor.sendgrid.repository import SendgridRepository
@@ -55,11 +51,6 @@ class CompanyEventsResolver:
         # Create the email ingress subdomain relationships
         CompanyEmailIngressRepository(self.request_scope, company_id).create(
             CreateCompanyEmailIngress.generate(company_id, EmailIngressType.CREATE_JOB)
-        )
-
-        # Create the API ingress JWT relationship
-        CompanyAPIIngressRepository(self.request_scope, company_id).set_sub_entity(
-            CreateCompanyAPIIngress.generate(company_id)
         )
 
     async def company_is_created(self) -> None:

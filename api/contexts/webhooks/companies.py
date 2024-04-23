@@ -26,16 +26,16 @@ router = APIRouter(
 
 
 @router.post("/api-ingress/jobs", status_code=status.HTTP_204_NO_CONTENT)
-async def jobs_api_webhook_handler(request: Request, payload: JobsWebhook):
+async def jobs_api_webhook_handler(request: Request, payload: dict):
     ingress_record = WebhookValidator(request).validate_api_ingress_request()
     WebhookJobsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
-        ingress_record.company_id, payload
+        ingress_record.company_id, payload  # type: ignore
     )
     return status.HTTP_204_NO_CONTENT
 
 
 @router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
-async def applicants_api_webhook_handler(request: Request, payload: ApplicantsWebhook):
+async def applicants_api_webhook_handler(request: Request, payload: dict):
     ingress_record = WebhookValidator(request).validate_api_ingress_request()
     WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
         ingress_record.company_id, payload
