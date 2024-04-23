@@ -260,7 +260,6 @@ class WebhookValidator:
         all_company_ingresses = CompanyAPIIngressRepository(
             self.request.state.request_scope, company_id=company_id
         ).get_all(company_id=company_id)
-        print(all_company_ingresses)
         if not all_company_ingresses:
             raise Forbidden
         
@@ -269,9 +268,13 @@ class WebhookValidator:
             raise Forbidden
 
         # AJBTODO Other checks on allowed ip address or etc...
-        token_data = APIIngressJWTData(
-            **decode_jwt(token, company_ingress_record.secret_key)
-        )
+        try:
+            token_data = APIIngressJWTData(
+                **decode_jwt(token, company_ingress_record.secret_key)
+            )
+        except Exception as e:
+            print(e)
+            raise Forbidden
         assert token_data.company_id == company_id
         return company_ingress_record
 
