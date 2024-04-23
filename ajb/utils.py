@@ -164,11 +164,14 @@ def get_perecent(numerator: int, denominator: int) -> int:
     return round((numerator / denominator) * 100)
 
 
+from datetime import datetime, timedelta
+
 def get_datetime_from_string(date_string: str) -> datetime:
     if date_string.lower() == "present":
         return datetime.now()
     datetime_regex_map = {
         "DD-MM-YYYY": re.compile(r"^(\d{2})-(\d{2})-(\d{4})$"),
+        "YYYY-Www": re.compile(r"^(\d{4})-W(\d{2})$"),
     }
     try:
         return dateutil.parser.parse(date_string)
@@ -176,8 +179,12 @@ def get_datetime_from_string(date_string: str) -> datetime:
         for format_label, regex in datetime_regex_map.items():
             match = regex.match(date_string)
             if match and format_label:
-                day, month, year = match.groups()
-                return datetime(int(year), int(month), int(day))
+                if format_label == "DD-MM-YYYY":
+                    day, month, year = match.groups()
+                    return datetime(int(year), int(month), int(day))
+                elif format_label == "YYYY-Www":
+                    year, week = match.groups()
+                    return datetime.strptime(f'{year} {week} 1', "%Y %W %w")
     raise ValueError(f"Could not parse date string: {date_string}")
 
 
