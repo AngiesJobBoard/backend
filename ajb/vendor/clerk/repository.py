@@ -73,3 +73,15 @@ class ClerkAPIRepository:
     def set_and_verify_new_email_address(self, user_id: str, new_email: str) -> bool:
         resp = self.client.set_and_verify_new_email_address(user_id, new_email)
         return resp.status_code == 200
+
+    def ban_user(self, user_id: str) -> bool:
+        resp = self.client.ban_user(user_id)
+        return resp.status_code == 200
+
+    def unban_user(self, user_id: str) -> bool:
+        resp = self.client.unban_user(user_id)
+        return resp.status_code == 200
+
+    def create_actor_token(self, admin_user_id: str, app_user_id: str) -> SignInToken:
+        resp = self.client.create_actor_token(admin_user_id, app_user_id)
+        return self._format_response_to_model(resp, SignInToken)  # type: ignore

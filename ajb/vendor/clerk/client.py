@@ -95,3 +95,19 @@ class ClerkClient:
                 "verified": True,
             },
         )
+
+    def ban_user(self, user_id: str):
+        endpoint = f"/v1/users/{user_id}/ban"
+        return self._make_request("POST", endpoint)
+
+    def unban_user(self, user_id: str):
+        endpoint = f"/v1/users/{user_id}/unban"
+        return self._make_request("POST", endpoint)
+
+    def create_actor_token(self, admin_user_id: str, app_user_id: str):
+        endpoint = "/v1/actor_tokens"
+        return self._make_request(
+            "POST",
+            endpoint,
+            payload={"user_id": admin_user_id, "actor": {"sub": app_user_id}},
+        )

@@ -63,6 +63,16 @@ class UserUseCase(BaseUseCase):
         if not isinstance(response, User):
             raise AdminCreateUserException
         return response
+    
+    def admin_ban_user(self, user_id: str, is_banned: bool) -> bool:
+        clerk_repo = ClerkAPIRepository()
+        if is_banned:
+            return clerk_repo.ban_user(user_id)
+        return clerk_repo.unban_user(user_id)
+    
+    def get_actor_token(self, user_id: str):
+        clerk_repo = ClerkAPIRepository()
+        return clerk_repo.create_actor_token(self.request_scope.user_id, user_id)
 
     def admin_adds_user_to_company(
         self, user_id: str, company_id: str, role: RecruiterRole
