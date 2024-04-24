@@ -38,7 +38,7 @@ def create_company_egress_webhook(
     request: Request, company_id: str, webhook: UserCreateIngress
 ):
     return CompanyAPIIngressRepository(request.state.request_scope, company_id).create(
-        CreateCompanyAPIIngress.generate(company_id, webhook.source, is_active=True)
+        CreateCompanyAPIIngress.generate(company_id, webhook.integration_name, webhook.source, is_active=True)
     )
 
 

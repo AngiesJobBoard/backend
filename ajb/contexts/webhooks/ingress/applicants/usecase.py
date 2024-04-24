@@ -1,19 +1,28 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from ajb.base import BaseUseCase, Collection
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.applications.models import CreateApplication
 from ajb.contexts.companies.jobs.models import Job
-from ajb.contexts.companies.api_ingress_webhooks.models import CompanyAPIIngress
-from ajb.contexts.companies.api_ingress_webhooks.repository import CompanyAPIIngressRepository
-from .models import ApplicantsWebhook, CreateApplicantWebhook, ApplicantWebhookEventType
+from ajb.contexts.companies.api_ingress_webhooks.models import CompanyAPIIngress, UpdateIngress
+from ajb.contexts.companies.api_ingress_webhooks.repository import (
+    CompanyAPIIngressRepository,
+)
+from .models import CreateApplicantWebhook, ApplicantWebhookEventType
 
 
 class WebhookApplicantsUseCase(BaseUseCase):
 
     def handle_webhook_event(self, ingress_record: CompanyAPIIngress, event: dict):
         print(f"\n\n{event}\n\n")
-        CompanyAPIIngressRepository(self.request_scope, ingress_record.company_id).update_fields(
-            id=ingress_record.id, last_message_received=datetime.now(timezone.utc).isoformat()
+        CompanyAPIIngressRepository(
+            self.request_scope, ingress_record.company_id
+        ).update(
+            id=ingress_record.id,
+            data=UpdateIngress(
+                last_message_received=datetime.now(),
+                last_message=event,
+            ),
+            merge=False
         )
         return
         if event.type == ApplicantWebhookEventType.CREATE:

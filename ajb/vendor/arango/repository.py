@@ -70,9 +70,9 @@ class ArangoDBRepository:
             upsert_dicts, overwrite=True
         )
 
-    def update(self, update_dict: dict):
+    def update(self, update_dict: dict, merge: bool = True):
         return self.db[self.collection_view_or_graph].update(
-            update_dict, return_new=True, merge=True
+            update_dict, return_new=True, merge=merge
         )
 
     def update_many(self, update_dicts: list[dict]):

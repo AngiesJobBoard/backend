@@ -211,8 +211,8 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
     ) -> DataSchema:
         create_dict = {
             **data.model_dump(mode="json"),
-            BaseConstants.CREATED_AT: datetime.now(timezone.utc).isoformat(),
-            BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
+            BaseConstants.CREATED_AT: datetime.now().isoformat(),
+            BaseConstants.UPDATED_AT: datetime.now().isoformat(),
             BaseConstants.CREATED_BY: self.request_scope.user_id,
             BaseConstants.UPDATED_BY: self.request_scope.user_id,
         }
@@ -228,15 +228,15 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             t.cast(dict, results)[BaseConstants.NEW], self.entity_model
         )
 
-    def update(self, id: str, data: BaseModel) -> DataSchema:
+    def update(self, id: str, data: BaseModel, merge: bool = True) -> DataSchema:
         update_dict = {
             **data.model_dump(exclude_none=True, mode="json"),
-            BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
+            BaseConstants.UPDATED_AT: datetime.now().isoformat(),
             BaseConstants.UPDATED_BY: self.request_scope.user_id,
             BaseConstants.KEY: id,
         }
         try:
-            results = self.db.update(update_dict)
+            results = self.db.update(update_dict, merge)
         except DocumentUpdateError:
             raise EntityNotFound(collection=self.collection.value, entity_id=id)
         return format_to_schema(
@@ -246,7 +246,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
     def update_fields(self, id: str, **kwargs) -> DataSchema:
         update_dict = {
             **kwargs,
-            BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
+            BaseConstants.UPDATED_AT: datetime.now().isoformat(),
             BaseConstants.UPDATED_BY: self.request_scope.user_id,
             BaseConstants.KEY: id,
         }
@@ -267,8 +267,8 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
     ) -> DataSchema:
         create_dict = {
             **data.model_dump(mode="json"),
-            BaseConstants.CREATED_AT: datetime.now(timezone.utc).isoformat(),
-            BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
+            BaseConstants.CREATED_AT: datetime.now().isoformat(),
+            BaseConstants.UPDATED_AT: datetime.now().isoformat(),
             BaseConstants.CREATED_BY: self.request_scope.user_id,
             BaseConstants.UPDATED_BY: self.request_scope.user_id,
         }
@@ -291,8 +291,8 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         create_docs = [
             {
                 **create_data.model_dump(mode="json"),
-                BaseConstants.CREATED_AT: datetime.now(timezone.utc).isoformat(),
-                BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
+                BaseConstants.CREATED_AT: datetime.now().isoformat(),
+                BaseConstants.UPDATED_AT: datetime.now().isoformat(),
                 BaseConstants.CREATED_BY: self.request_scope.user_id,
                 BaseConstants.UPDATED_BY: self.request_scope.user_id,
             }
@@ -459,8 +459,8 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         create_docs = [
             {
                 **create_data.model_dump(mode="json"),
-                BaseConstants.CREATED_AT: datetime.now(timezone.utc).isoformat(),
-                BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
+                BaseConstants.CREATED_AT: datetime.now().isoformat(),
+                BaseConstants.UPDATED_AT: datetime.now().isoformat(),
                 BaseConstants.CREATED_BY: self.request_scope.user_id,
                 BaseConstants.UPDATED_BY: self.request_scope.user_id,
             }
@@ -490,7 +490,7 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         update_docs = [
             {
                 **update_data,
-                BaseConstants.UPDATED_AT: datetime.now(timezone.utc).isoformat(),
+                BaseConstants.UPDATED_AT: datetime.now().isoformat(),
                 BaseConstants.UPDATED_BY: self.request_scope.user_id,
                 BaseConstants.KEY: key,
             }

@@ -12,7 +12,16 @@ class APIIngressJWTData(BaseModel):
 
 
 class UserCreateIngress(BaseModel):
+    integration_name: str
     source: str
+
+
+class UpdateIngress(BaseModel):
+    integration_name: str | None = None
+    allowed_ips: list[str] | None = None
+    is_active: bool | None = None
+    last_message_received: datetime | None = None
+    last_message: dict | None = None
 
 
 class CreateCompanyAPIIngress(UserCreateIngress):
@@ -22,9 +31,12 @@ class CreateCompanyAPIIngress(UserCreateIngress):
     allowed_ips: list[str] = Field(default_factory=list)
     is_active: bool = False
     last_message_received: datetime | None = None
+    last_message: dict | None = None
 
     @classmethod
-    def generate(cls, company_id: str, source: str, is_active: bool) -> "CreateCompanyAPIIngress":
+    def generate(
+        cls, company_id: str, integration_name: str, source: str, is_active: bool
+    ) -> "CreateCompanyAPIIngress":
         secret_key = generate_random_long_code()
         partial_expected_jwt = encode_jwt(
             data=APIIngressJWTData(company_id=company_id).model_dump(),
@@ -34,6 +46,7 @@ class CreateCompanyAPIIngress(UserCreateIngress):
         expected_jwt = f"{company_id}:{partial_expected_jwt}"
         return cls(
             company_id=company_id,
+            integration_name=integration_name,
             secret_key=secret_key,
             expected_jwt=expected_jwt,
             source=source,
@@ -41,8 +54,7 @@ class CreateCompanyAPIIngress(UserCreateIngress):
         )
 
 
-class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel):
-    ...
+class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel): ...
 
 
 @dataclass

@@ -292,4 +292,4 @@ class BaseDeepLinkData(BaseModel):
 
 class BaseAction(BaseModel):
     action: Enum
-    created_at: datetime = datetime.now(timezone.utc)
+    created_at: datetime = datetime.now()

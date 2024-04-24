@@ -29,7 +29,7 @@ def test_decode_jwt_expired():
         token = generate_jwt(
             "test",
             "test",
-            expire_datetime=datetime.now(timezone.utc) - timedelta(seconds=60),
+            expire_datetime=datetime.now() - timedelta(seconds=60),
         )
         decode_jwt(token, "test")
 

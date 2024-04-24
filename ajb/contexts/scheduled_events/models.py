@@ -19,7 +19,7 @@ class CreateScheduledEvent(BaseModel):
     is_active: bool = True
 
     def calculate_next_invocation(self):
-        cron = croniter(self.cron, datetime.now(timezone.utc))
+        cron = croniter(self.cron, datetime.now())
         return cron.get_next(datetime)
 
 
