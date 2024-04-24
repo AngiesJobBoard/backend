@@ -213,6 +213,14 @@ class ApplicationUseCase(BaseUseCase):
                 1,
                 False,
             )
+        if application.application_status is None:
+            self.update_application_counts(
+                company_id,
+                application.job_id,
+                ApplicationConstants.NEW_APPLICANTS,
+                1,
+                False,
+            )
         ApplicationEventProducer(
             self.request_scope, SourceServices.API
         ).application_is_deleted(company_id, application.job_id, application_id)
