@@ -48,13 +48,6 @@ def update_current_user(request: Request, user: UpdateUser):
 
 @router.get("/companies/{company_id}/recruiter")
 def get_me_as_a_recruiter(request: Request, company_id: str):
-    print(request.state.request_scope.user_id)
-    print(company_id)
-    recruiters = RecruiterRepository(request.state.request_scope).query(
-        user_id=request.state.request_scope.user_id, company_id=company_id
-    )
-    print(recruiters)
-    return True
     return RecruiterRepository(request.state.request_scope, company_id).get_one(
         user_id=request.state.request_scope.user_id, company_id=company_id
     )
