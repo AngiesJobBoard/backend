@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel, Field
 
 from ajb.base.models import BaseDataModel, PaginatedResponse
+from ajb.common.models import Location
 
 from .enumerations import NumEmployeesEnum
 
@@ -61,7 +62,7 @@ class CompanySettings(BaseModel):
     application_statuses: list[ApplicationStatuses] = Field(
         default_factory=default_statuses
     )
-    default_zip_code: str | None = None
+    default_location: Location | None = None
 
 
 class UpdateCompany(BaseModel):

@@ -178,4 +178,4 @@ class CompaniesUseCase(BaseUseCase):
                 self._update_job_applications_by_email(
                     company_id, updates.settings.enable_all_email_ingress
                 )
-        return company_repo.update(company_id, updates)
+        return company_repo.update(company_id, updates, merge=False)
