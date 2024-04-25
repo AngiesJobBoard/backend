@@ -2,86 +2,67 @@ from ajb.common.models import PreferredTone
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.contexts.companies.jobs.models import UserCreateJob
 
+from .models import GenerateQualifications, GenerateQuestions
+
 
 class AIJobGenerator:
     def __init__(self, openai: OpenAIRepository | None = None):
-        self.openai = openai or OpenAIRepository()
-
-    def _convert_ai_response_to_job(self, response: dict) -> UserCreateJob:
-        skills = []
-        if response.get("required_job_skills"):
-            skills = (
-                response.get("required_job_skills", "").split(",")
-                if isinstance(response.get("required_job_skills"), str)
-                else response.get("required_job_skills")
-            )
-
-        licenses = []
-        if response.get("license_requirements"):
-            licenses = (
-                response.get("license_requirements", "").split(",")
-                if isinstance(response.get("license_requirements"), str)
-                else response.get("license_requirements")
-            )
-
-        certifications = []
-        if response.get("certification_requirements"):
-            certifications = (
-                response.get("certification_requirements", "").split(",")
-                if isinstance(response.get("certification_requirements"), str)
-                else response.get("certification_requirements")
-            )
-
-        created_job = UserCreateJob(
-            position_title=response.get("position_title", "").title(),
-            description=response.get("description"),
-            required_job_skills=skills,
-            industry_category=response.get("industry_category", ""),
-            industry_subcategories=response.get("industry_subcategories"),
-            license_requirements=licenses,
-            certification_requirements=certifications,
-        )
-        return created_job
+        self.openai = openai or OpenAIRepository(model_override="gpt-4-turbo")
+        self.generate_job_keys = [
+            "position_title",
+            "industry_category",
+            "industry_subcategories",
+            "description",
+            "experience_required",
+            "schedule",
+        ]
 
     def generate_job_from_description(
         self,
         description: str,
-    ) -> UserCreateJob:
-        job_keys = [
-            "position_title",
-            "industry_category",
-            "industry_subcategories",
-            "required_job_skills",
-            "description",
-            "license_requirements",
-            "certification_requirements",
-        ]
-        response = self.openai.json_prompt(
+    ):
+        return self.openai.structured_prompt(
             prompt=f"""
+            You are writing a job posting for a company. Given the following job 
             You are an expert at defining jobs. Given the following job description, create a job with the following keys.
             Do your best to provide some answer for each key. Respond only in JSON format.
-            Keys: {job_keys}.
+            Only include the following Keys in your response: {self.generate_job_keys}.
             Job Description: {description}.
             """,
             max_tokens=4096,
+            response_model=UserCreateJob,
         )
-        return self._convert_ai_response_to_job(response)
+
+    def recommend_qualifications(self, job_data: UserCreateJob):
+        return self.openai.structured_prompt(
+            prompt=f"""
+            Given the following details describing a job, recommend qualifications for the job.
+            Return skills, licenses, and qualifications that are relevant to the job.
+            Try to recommend up to 3 qualifications for each type and duplicate the 2 most important qualifications in both the selected and recommended lists.
+            Job Details: {job_data.model_dump()}
+            """,
+            max_tokens=4096,
+            response_model=GenerateQualifications,
+        )
+
+    def recommend_questions_for_applicants(self, job_data: UserCreateJob):
+        return self.openai.structured_prompt(
+            prompt=f"""
+            Given the following job details, recommend questions that could be answered by looking only at an applicant's resume.
+            These questions should be relevant to the job and help a recruiter understand the applicant's qualifications.
+            Try to recommend up to 5 questions and duplicate the 2 most important questions in both the selected and recommended lists.
+            All questions must have a yes or no answer. If a question can not be answered with yes or no, it should not be included.
+            Job Details: {job_data.model_dump()}
+            """,
+            max_tokens=4096,
+            response_model=GenerateQuestions,
+        )
 
     def generate_description_from_job_details(
         self, job: UserCreateJob, tone: PreferredTone
     ) -> str:
-        job_as_dict = {
-            "position_title": job.position_title,
-            "industry_category": job.industry_category,
-            "industry_subcategories": job.industry_subcategories,
-            "experience_required": (
-                job.experience_required.value if job.experience_required else None
-            ),
-            "required_job_skills": job.required_job_skills,
-            "location_type": job.location_type.value if job.location_type else None,
-        }
         # Remove null values from dict
-        job_as_dict = {k: v for k, v in job_as_dict.items() if v is not None}
+        job_as_dict = {k: v for k, v in job.model_dump().items() if v is not None}
         return self.openai.text_prompt(
             prompt=f"""
             Given the following job details,
@@ -101,44 +82,26 @@ class AIJobGenerator:
             max_tokens=4096,
         )
 
-    def generate_job_from_url(self, url: str) -> UserCreateJob:
-        job_keys = [
-            "position_title",
-            "industry_category",
-            "industry_subcategories",
-            "required_job_skills",
-            "description",
-            "license_requirements",
-            "certification_requirements",
-        ]
-        response = self.openai.json_prompt(
+    def generate_job_from_url(self, url: str):
+        return self.openai.structured_prompt(
             prompt=f"""
             Given the following URL which represents a job post, create a job with the following keys.
             Do your best to provide some answer for each key. Respond only in JSON format.
-            Keys: {job_keys}.
+            Only include the following Keys: {self.generate_job_keys}.
             URL: {url}.
             """,
             max_tokens=4096,
+            response_model=UserCreateJob,
         )
-        return self._convert_ai_response_to_job(response)
 
-    def generate_job_from_extracted_text(self, text: str) -> UserCreateJob:
-        job_keys = [
-            "position_title",
-            "industry_category",
-            "industry_subcategories",
-            "required_job_skills",
-            "description",
-            "license_requirements",
-            "certification_requirements",
-        ]
-        response = self.openai.json_prompt(
+    def generate_job_from_extracted_text(self, text: str):
+        return self.openai.structured_prompt(
             prompt=f"""
             Given the following text which represents a job post, create a job with the following keys.
             Do your best to provide some answer for each key. Respond only in JSON format.
-            Keys: {job_keys}.
+            Only include the following Keys: {self.generate_job_keys}.
             Text: {text}.
             """,
             max_tokens=4096,
+            response_model=UserCreateJob,
         )
-        return self._convert_ai_response_to_job(response)

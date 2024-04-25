@@ -17,10 +17,6 @@ from ajb.contexts.companies.jobs.models import (
     ExperienceLevel,
     JobLocationType,
     Location,
-    WeeklyScheduleType,
-    ShiftType,
-    Pay,
-    PayType,
     Job,
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
@@ -86,16 +82,7 @@ class CompanyFixture:
                 ),
                 required_job_skills=["Python", "Another Fancy Skill"],
                 on_job_training_offered=True,
-                weekly_day_range=[WeeklyScheduleType.monday_to_friday],
-                shift_type=[ShiftType.day],
-                pay=Pay(
-                    pay_type=PayType.YEARLY,
-                    pay_min=100000,
-                    pay_max=200000,
-                ),
                 language_requirements=["English"],
-                background_check_required=True,
-                drug_test_required=True,
                 felons_accepted=False,
                 disability_accepted=True,
             )

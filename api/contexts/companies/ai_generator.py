@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Request, Body, UploadFile, File
-from pydantic import BaseModel
+from fastapi import APIRouter, Body, UploadFile, File
 
 from ajb.contexts.companies.job_generator.ai_generator import (
     AIJobGenerator,
+)
+from ajb.contexts.companies.job_generator.models import (
+    GenerateQualifications,
+    GenerateQuestions,
 )
 from ajb.contexts.companies.jobs.models import UserCreateJob
 from ajb.common.models import PreferredTone
@@ -56,3 +59,13 @@ def generate_improved_job_description(
     return AIJobGenerator(openai).generate_improved_job_description_from_draft(
         description, tone
     )
+
+
+@router.post("/recommend-qualifications", response_model=GenerateQualifications)
+def recommend_qualifications(job: UserCreateJob):
+    return AIJobGenerator().recommend_qualifications(job)
+
+
+@router.post("/recommend-questions", response_model=GenerateQuestions)
+def recommend_questions_for_applicants(job: UserCreateJob):
+    return AIJobGenerator(openai).recommend_questions_for_applicants(job)
