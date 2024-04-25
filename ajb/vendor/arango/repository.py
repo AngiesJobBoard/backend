@@ -316,6 +316,7 @@ class ArangoDBRepository:
 
     def execute(self) -> tuple[list[dict[str, t.Any]], int]:
         query = self.build_query()
+        print(f"\n\n{query}\n\n")
         cursor = t.cast(
             Cursor,
             self.db.aql.execute(query, bind_vars=self.bind_vars, full_count=True),

@@ -15,7 +15,7 @@ from ajb.base import (
 from ajb.vendor.arango.models import Filter, Operator
 from ajb.utils import get_datetime_from_string
 
-from .models import AdminSearch, Aggregation
+from .models import AdminSearch, Aggregation, AdminSearchWithJoins
 
 
 class AdminSearchRepository:
@@ -27,7 +27,7 @@ class AdminSearchRepository:
     def __init__(self, request_scope: RequestScope):
         self.db = request_scope.db
 
-    def _get_repo_params(self, search: AdminSearch):
+    def _get_repo_params(self, search: AdminSearch | AdminSearchWithJoins):
         repo_params = search.convert_to_repo_filters()
 
         if search.start:
@@ -56,6 +56,15 @@ class AdminSearchRepository:
             db=self.db,
             collection_name=search.collection.value,
             repo_filters=self._get_repo_params(search),
+        )
+        return cast(tuple[list[dict], int], response)
+
+    def admin_search_with_joins(self, search: AdminSearchWithJoins):
+        response = build_and_execute_query(
+            db=self.db,
+            collection_name=search.collection.value,
+            repo_filters=self._get_repo_params(search),
+            joins=search.joins,
         )
         return cast(tuple[list[dict], int], response)
 

@@ -1,9 +1,10 @@
 from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ajb.base import Collection, QueryFilterParams, PaginatedResponse
+from ajb.vendor.arango.models import Join
 from ajb.common.models import DataReducedUser
 
 
@@ -12,6 +13,14 @@ class AdminSearch(QueryFilterParams):
     start: datetime | None = None
     end: datetime | None = None
     page_size: int = 10000
+
+
+class AdminSearchWithJoins(QueryFilterParams):
+    collection: Collection
+    start: datetime | None = None
+    end: datetime | None = None
+    page_size: int = 50
+    joins: list[Join] = Field(default_factory=list)
 
 
 @dataclass

@@ -1,4 +1,3 @@
-from typing import Literal
 from fastapi import APIRouter, Request, Depends
 
 from ajb.base import BaseTimeseriesData
@@ -6,6 +5,7 @@ from ajb.contexts.admin.search.repository import AdminSearchRepository
 from ajb.contexts.admin.search.models import (
     AdminSearch,
     AdminTimeseriesSearch,
+    AdminSearchWithJoins
 )
 from ajb.contexts.users.models import PaginatedUsers
 from ajb.contexts.users.repository import UserRepository
@@ -33,6 +33,17 @@ router = APIRouter(tags=["Admin Search"], prefix="/admin")
 @router.get("/search", response_model=PaginatedResponse)
 def search(request: Request, query: AdminSearch = Depends()):
     results = AdminSearchRepository(request.state.request_scope).admin_search(query)
+    return build_pagination_response(
+        results, query.page, query.page_size, request.url._url
+    )
+
+
+
+@router.post("/search", response_model=PaginatedResponse)
+def search_with_joins(request: Request, query: AdminSearchWithJoins):
+    results = AdminSearchRepository(request.state.request_scope).admin_search_with_joins(
+        query
+    )
     return build_pagination_response(
         results, query.page, query.page_size, request.url._url
     )
