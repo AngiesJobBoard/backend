@@ -477,3 +477,21 @@ class DataReducedApplication(BaseDataModel):
 @dataclass
 class PaginatedDataReducedApplication(PaginatedResponse[DataReducedApplication]):
     data: list[DataReducedApplication]
+
+
+class CompanyApplicationStatistics(BaseModel):
+    statuses: dict[str | None, int]
+    match_scores: dict[str | None, int]
+
+    @classmethod
+    def from_arango_query(cls, results: list) -> "CompanyApplicationStatistics":
+        return cls(
+            statuses={
+                status_stat["application_status"]: status_stat["statusCount"]
+                for status_stat in results[0]["statusCounts"]
+            },
+            match_scores={
+                range_stat["range"]: range_stat["rangeCount"]
+                for range_stat in results[0]["scoreBuckets"]
+            }
+        )

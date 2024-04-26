@@ -2,7 +2,12 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from email.message import Message
 
-from ajb.base import BaseUseCase, Collection, RepoFilterParams, RequestScope
+from ajb.base import (
+    BaseUseCase,
+    Collection,
+    RepoFilterParams,
+    RequestScope,
+)
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 from ajb.base.events import SourceServices
 from ajb.common.models import ApplicationQuestion
@@ -25,12 +30,18 @@ from ajb.contexts.billing.usecase import (
     CompanyBillingUsecase,
     UsageType,
 )
+from ajb.vendor.arango.repository import ArangoDBRepository
 from ajb.vendor.arango.models import Filter
 from ajb.utils import random_salt
 from ajb.config.settings import SETTINGS
 
-from .models import CreateApplication, Application, ScanStatus
-from .constants import ApplicationConstants
+from ajb.contexts.applications.models import (
+    CreateApplication,
+    Application,
+    ScanStatus,
+    CompanyApplicationStatistics,
+)
+from ajb.contexts.applications.constants import ApplicationConstants
 
 
 class ApplicationUseCase(BaseUseCase):
@@ -386,3 +397,55 @@ class ApplicationUseCase(BaseUseCase):
             application_id=created_application.id,
         )
         return created_application
+
+    def _get_filter_string(self, job_id: str | None = None):
+        filter_string = "FILTER doc.company_id == @_BIND_VAR_0\n"
+        if job_id:
+            filter_string += " AND doc.job_id == @_BIND_VAR_1\n"
+        return filter_string
+
+    def _format_status_summary_query(self, job_id: str | None = None):
+        query_string = f"""
+        LET statusCounts = (
+            FOR doc IN applications
+            {self._get_filter_string(job_id)}
+            COLLECT application_status = doc.application_status WITH COUNT INTO statusCount
+        """
+        query_string += "RETURN {application_status, statusCount}\n)"
+        return query_string
+
+    def _format_match_score_summary_query(self, job_id: str | None = None):
+        query_string = f"""
+        LET scoreBuckets = (
+            FOR doc IN applications
+            {self._get_filter_string(job_id)}
+            LET scoreRange = (
+                doc.application_match_score <= 30 ? '0-30' :
+                doc.application_match_score > 30 && doc.application_match_score <= 70 ? '30-70' :
+                doc.application_match_score > 70 ? '70+' :
+                'Unknown' // Optional
+            )
+            COLLECT range = scoreRange WITH COUNT INTO rangeCount
+        """
+        query_string += "RETURN {range, rangeCount}\n)"
+        return query_string
+
+    def get_application_statistics(
+        self,
+        company_id: str,
+        job_id: str | None = None,
+    ):
+        status_query = self._format_status_summary_query(job_id)
+        match_score_query = self._format_match_score_summary_query(job_id)
+
+        full_query_string = ""
+        full_query_string += status_query
+        full_query_string += match_score_query
+        full_query_string += "\nRETURN {statusCounts, scoreBuckets}"
+        bind_vars = {"_BIND_VAR_0": company_id}
+        if job_id:
+            bind_vars["_BIND_VAR_1"] = job_id
+
+        repo = ArangoDBRepository(self.request_scope.db, Collection.APPLICATIONS)
+        res = repo.execute_custom_statement(full_query_string, bind_vars)
+        return CompanyApplicationStatistics.from_arango_query(res)
