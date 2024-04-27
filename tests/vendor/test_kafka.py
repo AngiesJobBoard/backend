@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import pytest
 
 from ajb.vendor.kafka.repository import (

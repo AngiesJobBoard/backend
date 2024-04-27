@@ -14,7 +14,7 @@ class Seeder:
     def __init__(self):
         client = ArangoClientFactory.get_client()
         db = client.db(SETTINGS.ARANGO_DB_NAME)
-        self.request_scope = RequestScope(user_id="db_seed", db=db, company_id=None)
+        self.request_scope = RequestScope(user_id="db_seed", db=db, kafka=None)
 
     def seed_applications(self):
         ApplicationFixture(self.request_scope).create_all_application_data()

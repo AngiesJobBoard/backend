@@ -493,5 +493,5 @@ class CompanyApplicationStatistics(BaseModel):
             match_scores={
                 range_stat["range"]: range_stat["rangeCount"]
                 for range_stat in results[0]["scoreBuckets"]
-            }
+            },
         )

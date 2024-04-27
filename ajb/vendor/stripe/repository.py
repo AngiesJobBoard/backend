@@ -1,16 +1,15 @@
 """
-The purpose of this integration is to have a manual at first then automated way to take a company's usage data and create a Stripe invoice for that usage data.
+The purpose of this integration is to have a manual at first then automated
+way to take a company's usage data and create a Stripe invoice for that usage data.
 
 """
 
 import typing as t
 from stripe import StripeClient
+from pydantic import BaseModel
 
 from ajb.vendor.stripe.client_factory import StripeClientFactory
 from ajb.utils import generate_random_short_code
-
-
-from pydantic import BaseModel
 
 
 def generate_invoice_number(customer_id: str, billing_period: str):

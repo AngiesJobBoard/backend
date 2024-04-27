@@ -230,8 +230,7 @@ class ArangoDBRepository:
 
         if filter_index == 0:
             return "FILTER (\n" + "\nOR ".join(filter_strings) + "\n)"
-        else:
-            return "AND (\n" + "\nOR ".join(filter_strings) + "\n)"
+        return "AND (\n" + "\nOR ".join(filter_strings) + "\n)"
 
     def _append_all_filters(self):
         all_and_filters = [
@@ -239,6 +238,7 @@ class ArangoDBRepository:
             for filter_obj in self.filters
             if filter_obj.and_or_operator == "AND"
         ]
+        filter_index = 0
         for filter_index, filter_obj in enumerate(all_and_filters):
             if filter_obj.operator.is_text_search():
                 self._append_text_search_filter(filter_index, filter_obj)

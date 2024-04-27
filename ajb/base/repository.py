@@ -8,7 +8,7 @@ They are the main connection point between the application and the database.
 
 import typing as t
 from warnings import warn
-from datetime import datetime, timezone
+from datetime import datetime
 from pydantic import BaseModel
 from arango.database import StandardDatabase, TransactionDatabase
 from arango.exceptions import (

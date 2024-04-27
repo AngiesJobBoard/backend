@@ -6,6 +6,5 @@ from ajb.vendor.kafka.repository import KafkaProducerFactory
 MIGRATION_REQUEST_SCOPE = RequestScope(
     user_id="migration",
     db=get_arango_db(),
-    kafka_producer=KafkaProducerFactory.get_client(),
-    company_id=None,
+    kafka=KafkaProducerFactory.get_client(),
 )

@@ -6,14 +6,6 @@ from ajb.base.models import (
 )
 
 
-def test_create_anonymous_scope(request_scope):
-    anon_user = RequestScope.create_anonymous_user_scope(
-        ip_address="test",
-        db=request_scope.db,
-    )
-    assert anon_user.user_is_anonymous is True
-
-
 def test_cannot_start_transaction_inside_transaction(request_scope: RequestScope):
     with request_scope.start_transaction(
         read_collections=[], write_collections=[]

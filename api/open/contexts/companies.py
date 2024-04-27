@@ -1,0 +1,57 @@
+from fastapi import APIRouter, status, Request, Form
+from email import message_from_string
+
+from ajb.base import RequestScope
+from ajb.contexts.applications.usecase import ApplicationUseCase
+from ajb.contexts.webhooks.ingress.jobs.usecase import WebhookJobsUseCase
+from ajb.contexts.webhooks.ingress.applicants.usecase import WebhookApplicantsUseCase
+from api.vendors import db, storage, kafka_producer
+
+from api.open.middleware import OpenRequestValidator
+from api.middleware import scope
+
+
+WEBHOOK_REQUEST_SCOPE = RequestScope(
+    user_id="companies_webhook", db=db, kafka=kafka_producer
+)
+
+
+router = APIRouter(
+    tags=["Webhooks"],
+    prefix="/webhooks/companies",
+)
+
+
+@router.post("/api-ingress/jobs", status_code=status.HTTP_204_NO_CONTENT)
+async def jobs_api_webhook_handler(request: Request, payload: dict):
+    ingress_record = OpenRequestValidator(request).validate_api_ingress_request()
+    WebhookJobsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
+        ingress_record.company_id, payload  # type: ignore
+    )
+    return status.HTTP_204_NO_CONTENT
+
+
+@router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
+async def applicants_api_webhook_handler(request: Request, payload: dict):
+    ingress_record = OpenRequestValidator(request).validate_api_ingress_request()
+    WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
+        ingress_record, payload
+    )
+    return status.HTTP_204_NO_CONTENT
+
+
+@router.post("/email-ingress", status_code=status.HTTP_204_NO_CONTENT)
+async def jobs_email_webhook_handler(
+    request: Request,
+    envelope: str = Form(...),
+    email: str = Form(...),
+):
+    # AJBTODO there is only handling for applicants coming in through email but jobs are technically also supported...
+    ingress_record = OpenRequestValidator(request).validate_email_ingress_request(
+        envelope
+    )
+    ingress_email = message_from_string(email)
+    ApplicationUseCase(scope(request), storage).process_email_application_ingress(
+        ingress_email, ingress_record
+    )
+    return status.HTTP_204_NO_CONTENT

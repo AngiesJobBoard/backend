@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import pytest
 
 from ajb.vendor.jwt import generate_jwt, encode_jwt, decode_jwt
@@ -23,9 +23,7 @@ def test_encode_decode_jwt():
 
 
 def test_jwt_exceptions():
-    expired_jwt = generate_jwt(
-        "test", "test", datetime.now() - timedelta(days=1)
-    )
+    expired_jwt = generate_jwt("test", "test", datetime.now() - timedelta(days=1))
     with pytest.raises(ExpiredTokenException):
         decode_jwt(expired_jwt, "test")
     with pytest.raises(InvalidTokenException):

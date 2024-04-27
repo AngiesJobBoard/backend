@@ -160,7 +160,6 @@ class ApplicationEventsResolver:
             job_id=data.job_id,
         )[0]
 
-        self.request_scope.company_id = data.company_id
         event_producer = ApplicationEventProducer(
             self.request_scope, SourceServices.API
         )
@@ -225,11 +224,10 @@ class ApplicationEventsResolver:
                     resume_scan_attempts=application.resume_scan_attempts + 1,
                 )
                 # Async wait 3 seconds then create a new event to try again
-                self.request_scope.company_id = data.company_id
                 ApplicationEventProducer(
                     self.request_scope, SourceServices.SERVICES
                 ).company_uploads_resume(
-                    data.resume_id, data.application_id, data.job_id
+                    data.company_id, data.resume_id, data.application_id, data.job_id
                 )
             raise e
 

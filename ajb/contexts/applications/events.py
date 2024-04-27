@@ -23,11 +23,6 @@ class ApplicantAndCompany(BaseModel):
 
 
 class ApplicationEventProducer(BaseEventProducer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.request_scope.company_id is None:
-            raise RequestScopeWithoutCompanyException
-
     def _application_event(self, data: dict, event: ApplicationEvent):
         self.send(
             CreateKafkaMessage(
@@ -38,9 +33,11 @@ class ApplicationEventProducer(BaseEventProducer):
             event_type=event,
         )
 
-    def company_uploads_resume(self, resume_id: str, application_id: str, job_id: str):
+    def company_uploads_resume(
+        self, company_id: str, resume_id: str, application_id: str, job_id: str
+    ):
         data = ResumeAndApplication(
-            company_id=str(self.request_scope.company_id),
+            company_id=company_id,
             job_id=job_id,
             application_id=application_id,
             resume_id=resume_id,

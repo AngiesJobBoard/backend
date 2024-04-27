@@ -29,5 +29,8 @@ class AdminUserRepository(ParentRepository[CreateAdminUser, AdminUser]):
             return_model=AdminAndUser,
         )
 
+    def get_admin_user_by_auth_id(self, auth_id: str):
+        return self.get_one(user_id=auth_id)
+
 
 RepositoryRegistry.register(AdminUserRepository)

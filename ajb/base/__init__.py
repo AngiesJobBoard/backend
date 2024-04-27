@@ -8,7 +8,7 @@ from ajb.base.models import (
     build_pagination_response,
     BaseDeepLinkData,
     BaseAction,
-    BaseTimeseriesData
+    BaseTimeseriesData,
 )
 from ajb.base.schema import Collection, View, VIEW_DEFINITIONS
 from ajb.base.repository import (
@@ -45,5 +45,5 @@ __all__ = [
     "BaseUseCase",
     "BaseDeepLinkData",
     "BaseAction",
-    "BaseTimeseriesData"
+    "BaseTimeseriesData",
 ]

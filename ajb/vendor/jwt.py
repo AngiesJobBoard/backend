@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import jwt
 
 from ajb.config.settings import SETTINGS

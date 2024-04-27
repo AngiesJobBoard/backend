@@ -5,7 +5,7 @@ This module contains the base models that are used throughout the application.
 import typing as t
 from enum import Enum
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
 from arango.database import StandardDatabase, TransactionDatabase
@@ -32,11 +32,6 @@ class BaseDataModel(BaseModel):
         data[BaseConstants.ID] = data.pop(BaseConstants.KEY)
         return cls.model_validate(data)
 
-    @classmethod
-    def get_list_fields(cls) -> list[str]:
-        # AJBTODO implement later to reduce the fields returned in the list views
-        return ["id", "created_at", "created_by", "updated_at", "updated_by"]
-
 
 class BaseTimeseriesPoint(BaseModel):
     date: datetime
@@ -60,28 +55,10 @@ class RequestScope(BaseModel):
 
     user_id: str
     db: StandardDatabase | TransactionDatabase
-    user_is_anonymous: bool = False
-    kafka_producer: KafkaProducer | None = None
-    company_id: str | None  # The company currently being assumed by the user
+    kafka: KafkaProducer | None
 
     class Config:
         arbitrary_types_allowed = True
-
-    @classmethod
-    def create_anonymous_user_scope(
-        cls,
-        ip_address: str,
-        db: StandardDatabase | TransactionDatabase,
-        kafka_producer: KafkaProducer | None = None,
-    ):
-        anonymous_id = ip_address
-        return cls(
-            user_id=anonymous_id,
-            db=db,
-            user_is_anonymous=True,
-            kafka_producer=kafka_producer,
-            company_id=None,
-        )
 
     @contextmanager
     def start_transaction(
@@ -101,7 +78,7 @@ class RequestScope(BaseModel):
             read=read_collections, write=write_collections
         )
         new_scope = RequestScope(
-            user_id=self.user_id, db=transaction_db, company_id=self.company_id
+            user_id=self.user_id, db=transaction_db, kafka=self.kafka
         )
 
         try:

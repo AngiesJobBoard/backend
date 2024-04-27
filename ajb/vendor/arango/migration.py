@@ -43,7 +43,7 @@ class ArangoMigrator:
             username=SETTINGS.ARANGO_USERNAME,
             password=SETTINGS.ARANGO_PASSWORD,
         )
-        self.request_scope = RequestScope(user_id="SYSTEM", db=self.db, company_id=None)
+        self.request_scope = RequestScope(user_id="SYSTEM", db=self.db, kafka=None)
 
     def create_collections(self):
         for collection in self.collections:
@@ -118,7 +118,7 @@ class ArangoMigrator:
                 in_background=True,
                 deduplicate=False,
             )
-            print(f"Index established:", res)
+            print("Index established:", res)
 
     def execute(self):
         self.create_collections()

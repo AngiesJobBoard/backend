@@ -88,7 +88,7 @@ class BaseEventProducer:
     ):
         self.request_scope = request_scope
         self.source_service = source_service
-        self.producer = KafkaProducerRepository(request_scope.kafka_producer)
+        self.producer = KafkaProducerRepository(request_scope.kafka)
 
     def send(
         self,

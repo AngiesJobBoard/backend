@@ -3,7 +3,10 @@ from ajb.base import BaseUseCase, Collection
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.applications.models import CreateApplication
 from ajb.contexts.companies.jobs.models import Job
-from ajb.contexts.companies.api_ingress_webhooks.models import CompanyAPIIngress, UpdateIngress
+from ajb.contexts.companies.api_ingress_webhooks.models import (
+    CompanyAPIIngress,
+    UpdateIngress,
+)
 from ajb.contexts.companies.api_ingress_webhooks.repository import (
     CompanyAPIIngressRepository,
 )
@@ -22,7 +25,7 @@ class WebhookApplicantsUseCase(BaseUseCase):
                 last_message_received=datetime.now(),
                 last_message=event,
             ),
-            merge=False
+            merge=False,
         )
         return
         if event.type == ApplicantWebhookEventType.CREATE:

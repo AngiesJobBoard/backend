@@ -39,6 +39,5 @@ def request_scope(db: StandardDatabase):
     yield RequestScope(
         user_id="test",
         db=db,
-        kafka_producer=KafkaProducerFactory._return_mock(),
-        company_id=None,
+        kafka=KafkaProducerFactory._return_mock(),
     )

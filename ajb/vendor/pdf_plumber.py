@@ -76,14 +76,13 @@ async def extract_text(file: UploadFile):
     """
     Extracts text from a file based on its type.
     """
-    file_extension = str(file.filename).split(".")[-1]
+    file_extension = str(file.filename).rsplit(".", maxsplit=1)[-1]
 
     if file_extension == "pdf":
         return await extract_pdf_text_by_file(file)
     if file_extension == "txt":
         return await extract_text_file(file)
-    else:
-        try:
-            return await extract_docx_text_by_file(file)
-        except Exception:
-            raise BadFileTypeException
+    try:
+        return await extract_docx_text_by_file(file)
+    except Exception:
+        raise BadFileTypeException

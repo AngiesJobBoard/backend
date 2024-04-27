@@ -193,6 +193,7 @@ class ApplicationUseCase(BaseUseCase):
         ApplicationEventProducer(
             self.request_scope, source_service=SourceServices.API
         ).company_uploads_resume(
+            company_id=resume.company_id,
             job_id=resume.job_id,
             resume_id=resume.id,
             application_id=created_application.id,
@@ -342,7 +343,6 @@ class ApplicationUseCase(BaseUseCase):
         ingress_email: Message,
         ingress_record: CompanyEmailIngress,
     ) -> list[Application]:
-        self.request_scope.company_id = ingress_record.company_id
         created_applications = []
         if not ingress_email.is_multipart():
             raise ValueError("Email is not multipart")
@@ -434,7 +434,7 @@ class ApplicationUseCase(BaseUseCase):
         self,
         company_id: str,
         job_id: str | None = None,
-    ):
+    ) -> CompanyApplicationStatistics:
         status_query = self._format_status_summary_query(job_id)
         match_score_query = self._format_match_score_summary_query(job_id)
 

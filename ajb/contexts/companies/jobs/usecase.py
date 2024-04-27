@@ -42,10 +42,9 @@ class JobsUseCase(BaseUseCase):
         )
 
         # Create event
-        self.request_scope.company_id = company_id
         CompanyEventProducer(
             self.request_scope, SourceServices.API
-        ).company_creates_job(job_id=created_job.id)
+        ).company_creates_job(company_id=company_id, job_id=created_job.id)
         return created_job
 
     def create_many_jobs(self, company_id: str, jobs: list[UserCreateJob]) -> list[str]:
@@ -60,10 +59,11 @@ class JobsUseCase(BaseUseCase):
         company_repo.increment_field(company_id, "total_jobs", len(jobs))
 
         # Create even for each job
-        self.request_scope.company_id = company_id
         event_producer = CompanyEventProducer(self.request_scope, SourceServices.API)
         for created_job_id in created_jobs:
-            event_producer.company_creates_job(job_id=created_job_id)
+            event_producer.company_creates_job(
+                company_id=company_id, job_id=created_job_id
+            )
         return created_jobs
 
     def delete_job(self, company_id: str, job_id: str):
@@ -105,7 +105,7 @@ class JobsUseCase(BaseUseCase):
 
         CompanyEventProducer(
             self.request_scope, SourceServices.API
-        ).company_deletes_job(job_id=job_id)
+        ).company_deletes_job(company_id=company_id, job_id=job_id)
         return True
 
     def update_job(self, company_id: str, job_id: str, job: UserCreateJob) -> Job:
@@ -114,5 +114,5 @@ class JobsUseCase(BaseUseCase):
         updated_job = job_repo.update(job_id, job_to_update)
         CompanyEventProducer(
             self.request_scope, SourceServices.API
-        ).company_updates_job(job_id=job_id)
+        ).company_updates_job(company_id=company_id, job_id=job_id)
         return updated_job

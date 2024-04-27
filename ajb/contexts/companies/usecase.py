@@ -69,9 +69,6 @@ class CompaniesUseCase(BaseUseCase):
                 overridden_id=data.slug or None,
             )
 
-            # Add created company to request scope
-            self.request_scope.company_id = created_company.id
-
             # Set creating user as an owner
             self.get_repository(
                 Collection.COMPANY_RECRUITERS, transaction_scope, created_company.id

@@ -167,10 +167,9 @@ def test_admin_timeseries(admin_search_repo: AdminSearchRepository, example_user
 def test_admin_timeseries_with_aggregation(
     admin_search_repo: AdminSearchRepository, example_user_data
 ):
-    results = admin_search_repo.get_timeseries_data(
+    admin_search_repo.get_timeseries_data(
         collection=Collection.USERS, aggregation=Aggregation.DAILY
     )
-    assert 1 == 1
     # assert results[0]["count"] == 5
 
     # results, count = admin_search_repo.get_timeseries_data(
@@ -230,5 +229,4 @@ def test_admin_timeseries_with_aggregation(
 def test_admin_global_search(
     admin_search_repo: AdminSearchRepository, example_user_data
 ):
-    results = admin_search_repo.admin_global_text_search(text="a")
-    assert 1 == 1
+    admin_search_repo.admin_global_text_search(text="a")

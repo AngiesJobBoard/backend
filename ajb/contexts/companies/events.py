@@ -16,11 +16,6 @@ class CompanyAndJob(BaseModel):
 
 
 class CompanyEventProducer(BaseEventProducer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.request_scope.company_id is None:
-            raise RequestScopeWithoutCompanyException
-
     def _company_event(self, data: dict, event: CompanyEvent):
         self.send(
             CreateKafkaMessage(
@@ -37,28 +32,22 @@ class CompanyEventProducer(BaseEventProducer):
             event=CompanyEvent.COMPANY_IS_CREATED,
         )
 
-    def company_creates_job(self, job_id: str):
-        data = CompanyAndJob(
-            company_id=str(self.request_scope.company_id), job_id=job_id
-        ).model_dump()
+    def company_creates_job(self, company_id: str, job_id: str):
+        data = CompanyAndJob(company_id=company_id, job_id=job_id).model_dump()
         self._company_event(
             data=data,
             event=CompanyEvent.COMPANY_CREATES_JOB,
         )
 
-    def company_updates_job(self, job_id: str):
-        data = CompanyAndJob(
-            company_id=str(self.request_scope.company_id), job_id=job_id
-        ).model_dump()
+    def company_updates_job(self, company_id: str, job_id: str):
+        data = CompanyAndJob(company_id=company_id, job_id=job_id).model_dump()
         self._company_event(
             data=data,
             event=CompanyEvent.COMPANY_UPDATES_JOB,
         )
 
-    def company_deletes_job(self, job_id: str):
-        data = CompanyAndJob(
-            company_id=str(self.request_scope.company_id), job_id=job_id
-        ).model_dump()
+    def company_deletes_job(self, company_id: str, job_id: str):
+        data = CompanyAndJob(company_id=company_id, job_id=job_id).model_dump()
         self._company_event(
             data=data,
             event=CompanyEvent.COMPANY_DELETES_JOB,

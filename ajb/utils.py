@@ -164,8 +164,6 @@ def get_perecent(numerator: int, denominator: int) -> int:
     return round((numerator / denominator) * 100)
 
 
-from datetime import datetime, timedelta
-
 def get_datetime_from_string(date_string: str) -> datetime:
     if date_string.lower() == "present":
         return datetime.now()
@@ -182,9 +180,9 @@ def get_datetime_from_string(date_string: str) -> datetime:
                 if format_label == "DD-MM-YYYY":
                     day, month, year = match.groups()
                     return datetime(int(year), int(month), int(day))
-                elif format_label == "YYYY-Www":
+                if format_label == "YYYY-Www":
                     year, week = match.groups()
-                    return datetime.strptime(f'{year} {week} 1', "%Y %W %w")
+                    return datetime.strptime(f"{year} {week} 1", "%Y %W %w")
     raise ValueError(f"Could not parse date string: {date_string}")
 
 
