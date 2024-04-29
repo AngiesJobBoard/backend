@@ -47,7 +47,7 @@ def get_all_company_applications(
         new_only,
         resume_text_contains,
         has_required_skill,
-        status_filter,
+        status_filter.split(",") if status_filter else None,
     )
     return build_pagination_response(
         results,

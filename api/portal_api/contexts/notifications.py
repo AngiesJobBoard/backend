@@ -26,7 +26,7 @@ def get_notifications(
         scope(request),
     ).get_recruiter_notifications(
         company_id,
-        request.state.user.id,
+        scope(request).user_id,
         notification_type=notification_type,
         page=page,
         page_size=page_size,

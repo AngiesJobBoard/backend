@@ -41,7 +41,7 @@ class CompanyApplicationRepository(ApplicationRepository):
         new_only: bool = False,
         resume_text_contains: str | None = None,
         has_required_skill: str | None = None,
-        status_filter: str | None = None,
+        status_filter: list[str] | None = None,
     ):
         if isinstance(query, QueryFilterParams):
             repo_filters = query.convert_to_repo_filters()
@@ -84,12 +84,14 @@ class CompanyApplicationRepository(ApplicationRepository):
                 )
             )
         if status_filter:
-            repo_filters.filters.append(
-                Filter(
-                    field="application_status",
-                    value=status_filter,
+            for status in status_filter:
+                repo_filters.filters.append(
+                    Filter(
+                        field="application_status",
+                        value=status,
+                        and_or_operator="OR"
+                    )
                 )
-            )
         return self.query_with_joins(
             joins=[
                 Join(
