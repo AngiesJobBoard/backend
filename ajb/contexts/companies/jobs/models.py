@@ -14,7 +14,6 @@ from ajb.common.models import (
     JobLocationType,
 )
 from ajb.common.models import Location, Location
-from ajb.exceptions import MissingJobFieldsException
 from ajb.vendor.arango.models import Filter, Operator, Sort
 
 from ..enumerations import (

@@ -1,13 +1,14 @@
 from kafka import KafkaProducer, KafkaConsumer
 from ajb.config.settings import SETTINGS
 
+from .mock import MockKafkaProducer, MockKafkaConsumer
 from ..vendor_client_factory import VendorClientFactory
 
 
 class KafkaProducerFactory(VendorClientFactory[KafkaProducer]):
     @staticmethod
     def _return_mock():
-        return KafkaProducer(bootstrap_servers=["localhost:9092"])
+        return MockKafkaProducer()
 
     @staticmethod
     def _return_client():
@@ -28,7 +29,7 @@ class KafkaConsumerFactory(VendorClientFactory[KafkaConsumer]):
 
     @staticmethod
     def _return_mock():
-        return KafkaConsumer(bootstrap_servers=["localhost:9092"])
+        return MockKafkaConsumer()
 
     # pylint: disable=arguments-differ
     @staticmethod

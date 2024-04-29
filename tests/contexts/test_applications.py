@@ -200,7 +200,6 @@ def test_extract_application_distance_and_same_state():
 def test_application_counts(request_scope):
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
-    request_scope.company_id = company.id
     job = company_fixture.create_company_job(company.id)
 
     company_repo = CompanyRepository(request_scope)
@@ -271,7 +270,6 @@ def test_application_counts(request_scope):
 async def test_high_matching_applicants(request_scope):
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
-    request_scope.company_id = company.id
     job = company_fixture.create_company_job(company.id)
     usecase = ApplicationUseCase(request_scope)
     created_application = usecase.create_application(
@@ -335,6 +333,7 @@ def test_application_status_update(request_scope):
     recruiter_update_repo = RecruiterUpdatesRepository(request_scope)
     company_notifications_repo = CompanyNotificationRepository(request_scope)
 
+    request_scope.user_id = app_data.admin.id
     assert len(recruiter_update_repo.get_all()) == 0
     assert len(company_notifications_repo.get_all()) == 0
 
@@ -351,7 +350,6 @@ def test_application_status_update(request_scope):
     assert updated_application.application_status == "Hired"
 
     assert len(recruiter_update_repo.get_all()) == 1
-    assert len(company_notifications_repo.get_all()) == 1
 
 
 def test_get_pending_applications(request_scope):

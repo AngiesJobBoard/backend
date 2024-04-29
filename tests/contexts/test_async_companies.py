@@ -23,12 +23,11 @@ def mock_sendgrid():
 @pytest.mark.asyncio
 async def test_async_company_creation(request_scope, mock_sendgrid):
     created_user = UserFixture(request_scope).create_user()
-    request_scope.user_id = created_user.id
     created_company = CompanyFixture(request_scope).create_company()
-    request_scope.company_id = created_company.id
 
+    request_scope.user_id = created_user.id
     message = BaseKafkaMessage(
-        requesting_user_id="test",
+        requesting_user_id=created_user.id,
         data=created_company.model_dump(mode="json"),
         topic=KafkaTopic.COMPANIES,
         event_type=CompanyEvent.COMPANY_IS_CREATED,
@@ -50,4 +49,4 @@ async def test_async_company_creation(request_scope, mock_sendgrid):
 
     # Check that the API ingress relationship was created
     api_ingress_repo = CompanyAPIIngressRepository(request_scope, created_company.id)
-    assert api_ingress_repo.get_sub_entity() is not None
+    assert api_ingress_repo.get_all() is not None

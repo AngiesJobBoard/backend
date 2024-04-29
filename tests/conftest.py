@@ -8,6 +8,8 @@ from ajb.vendor.arango.client_factory import ArangoClientFactory
 from ajb.vendor.arango.migration import ArangoMigrator
 from ajb.vendor.arango.constants import Constants
 from ajb.vendor.kafka.client_factory import KafkaProducerFactory
+from ajb.vendor.openai.mock import MockOpenAI
+from ajb.vendor.openai.repository import OpenAIRepository
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -41,3 +43,8 @@ def request_scope(db: StandardDatabase):
         db=db,
         kafka=KafkaProducerFactory._return_mock(),
     )
+
+
+@pytest.fixture(scope="function")
+def mock_openai():
+    yield OpenAIRepository(MockOpenAI())

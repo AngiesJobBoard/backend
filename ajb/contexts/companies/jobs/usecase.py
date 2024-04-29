@@ -1,15 +1,7 @@
 from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.base.events import SourceServices
-from ajb.contexts.companies.models import Company
 from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.contexts.companies.jobs.models import Job
-from ajb.contexts.companies.email_ingress_webhooks.repository import (
-    CompanyEmailIngressRepository,
-)
-from ajb.contexts.companies.email_ingress_webhooks.models import (
-    CreateCompanyEmailIngress,
-    EmailIngressType,
-)
 from ajb.contexts.applications.models import Application
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.config.settings import SETTINGS
@@ -22,7 +14,6 @@ from .models import (
 
 
 class JobsUseCase(BaseUseCase):
-
     def __init__(
         self,
         request_scope: RequestScope,

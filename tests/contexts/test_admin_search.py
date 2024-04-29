@@ -23,6 +23,8 @@ def admin_search_repo(request_scope):
 @pytest.fixture(scope="function")
 def example_user_data(request_scope):
     user_repo = UserRepository(request_scope)
+    all_users = user_repo.get_all()
+    user_repo.delete_many([user.id for user in all_users])
     for suffix in ["one", "two", "three", "four", "five"]:
         user_repo.create(
             CreateUser(
@@ -56,8 +58,8 @@ def test_admin_search(
     results, count = admin_search_repo.admin_search(
         search=AdminSearch(collection=Collection.USERS)
     )
-    assert count == 6
-    assert len(results) == 6
+    assert count == 5
+    assert len(results) == 5
 
     results, count = admin_search_repo.admin_search(
         search=AdminSearch(
@@ -139,29 +141,25 @@ def test_admin_count_large_data(
     assert count == 10000
 
 
-# AJBTODO: Fix this test
 def test_admin_timeseries(admin_search_repo: AdminSearchRepository, example_user_data):
-    results, count = admin_search_repo.get_timeseries_data(
+    results = admin_search_repo.get_timeseries_data(
         collection=Collection.USERS,
     )
-    assert count == 6
-    assert len(results) == 5
+    assert len(results.data) == 5
 
-    results, count = admin_search_repo.get_timeseries_data(
+    results = admin_search_repo.get_timeseries_data(
         collection=Collection.USERS,
         start=datetime(2020, 1, 1),
         end=datetime(2020, 1, 1),
     )
-    assert count == 0
-    assert len(results) == 0
+    assert len(results.data) == 0
 
-    results, count = admin_search_repo.get_timeseries_data(
+    results = admin_search_repo.get_timeseries_data(
         collection=Collection.USERS,
         start=datetime(2020, 1, 1),
         end=datetime(3020, 1, 1),
     )
-    assert count == 5
-    assert len(results) == 5
+    assert len(results.data) == 5
 
 
 def test_admin_timeseries_with_aggregation(

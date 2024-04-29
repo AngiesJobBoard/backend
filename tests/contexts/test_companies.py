@@ -35,11 +35,14 @@ def test_create_company_usecase(request_scope):
 def test_company_with_existing_slug(request_scope):
     user = UserFixture(request_scope).create_user()
     use_case = CompaniesUseCase(request_scope)
-    use_case.user_create_company(
+    company_1 = use_case.user_create_company(
         data=UserCreateCompany(name="testy", slug="test"), creating_user_id=user.id
     )
 
-    with pytest.raises(CompanyCreateException):
-        use_case.user_create_company(
-            data=UserCreateCompany(name="testy", slug="test"), creating_user_id=user.id
-        )
+    company_2 = use_case.user_create_company(
+        data=UserCreateCompany(name="testy", slug="test"), creating_user_id=user.id
+    )
+
+    assert company_1.name == company_2.name
+    assert company_1.slug != company_2.slug
+    assert company_1.id != company_2.id

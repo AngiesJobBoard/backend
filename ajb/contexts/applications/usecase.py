@@ -315,27 +315,6 @@ class ApplicationUseCase(BaseUseCase):
             self._update_company_count_for_new_applications(
                 original_application, response
             )
-            notification_message = f"{response.name} has been moved to status {new_status.application_status} for job {response.job.position_title}."
-            CompanyNotificationUsecase(transaction_scope).create_company_notification(
-                company_id=company_id,
-                data=SystemCreateCompanyNotification(
-                    company_id=company_id,
-                    notification_type=NotificationType.APPLICATION_STATUS_CHANGE,
-                    title=f"Updated Application for Job {response.job.position_title}",
-                    message=notification_message,
-                    application_id=application_id,
-                    job_id=job_id,
-                    metadata={
-                        "applicant_name": response.name,
-                        "application_email": response.email,
-                        "job_name": response.job.position_title,
-                        "new_application_status": new_status.application_status,
-                        "old_application_status": original_application.application_status,
-                        "update_reason": new_status.update_reason,
-                    },
-                ),
-                all_but_current_recruiter=True,
-            )
             return response
 
     def process_email_application_ingress(

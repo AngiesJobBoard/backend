@@ -1,3 +1,4 @@
+from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 
@@ -30,6 +31,7 @@ class MockChat:
         self.completions = MockCompletions(return_content)
 
 
-class MockOpenAI:
-    def __init__(self, return_content):
-        self.chat = MockChat(return_content)
+class MockOpenAI(OpenAI):
+    def __init__(self, return_content=None):
+        self.chat = MockChat(return_content)  # type: ignore
+        self.base_url = ""
