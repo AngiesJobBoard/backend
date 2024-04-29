@@ -126,7 +126,7 @@ def build_and_execute_timeseries_query(
     additional_groupbys: list[str] = [],
 ) -> tuple[list[dict], int]:
     query_text = f"FOR doc IN {collection_name}\n"
-    bind_vars = {}
+    bind_vars: t.MutableMapping[str, str] = {}
 
     for idx, filter in enumerate(filters):
         if idx == 0:
@@ -159,7 +159,7 @@ def build_and_execute_timeseries_query(
     query_text += return_object
 
     # Execute the query
-    cursor = t.cast(Cursor, db.aql.execute(query_text, bind_vars=bind_vars))
+    cursor = t.cast(Cursor, db.aql.execute(query_text, bind_vars=bind_vars))  # type: ignore
     stats = cursor.statistics()
     count = stats["scanned_full"] - stats["filtered"] if stats else 0
     return list(cursor), count
@@ -647,7 +647,7 @@ class MultipleChildrenRepository(BaseRepository[CreateDataSchema, DataSchema]):
 
     # pylint: disable=arguments-differ
     def create(
-        self, data: CreateDataSchema, overridden_id: str | None = None
+        self, data: CreateDataSchema, overridden_id: str | None = None, **kwargs
     ) -> DataSchema:
         return super().create(
             data, overridden_id, self.parent_collection, self.parent_id

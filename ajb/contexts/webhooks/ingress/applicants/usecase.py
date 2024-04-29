@@ -10,7 +10,7 @@ from ajb.contexts.companies.api_ingress_webhooks.models import (
 from ajb.contexts.companies.api_ingress_webhooks.repository import (
     CompanyAPIIngressRepository,
 )
-from .models import CreateApplicantWebhook, ApplicantWebhookEventType
+from .models import CreateApplicantWebhook
 
 
 class WebhookApplicantsUseCase(BaseUseCase):
@@ -28,12 +28,6 @@ class WebhookApplicantsUseCase(BaseUseCase):
             merge=False,
         )
         return
-        if event.type == ApplicantWebhookEventType.CREATE:
-            return self.create_applicant(
-                company_id, CreateApplicantWebhook(**event.data)
-            )
-
-        raise NotImplementedError(f"Event type {event.type} is not yet supported")
 
     def create_applicant(self, company_id: str, data: CreateApplicantWebhook):
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)

@@ -1,4 +1,3 @@
-from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.jobs.usecase import JobsUseCase
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.jobs.models import UserCreateJob

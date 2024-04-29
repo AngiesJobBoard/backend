@@ -1,10 +1,7 @@
-import pytest
-
 from ajb.contexts.companies.usecase import CompaniesUseCase, UserCreateCompany
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.recruiters.repository import RecruiterRepository
 from ajb.contexts.companies.recruiters.models import RecruiterRole
-from ajb.exceptions import CompanyCreateException
 
 from ajb.fixtures.users import UserFixture
 

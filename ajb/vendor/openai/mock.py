@@ -32,6 +32,7 @@ class MockChat:
 
 
 class MockOpenAI(OpenAI):
+    # pylint: disable=super-init-not-called
     def __init__(self, return_content=None):
         self.chat = MockChat(return_content)  # type: ignore
         self.base_url = ""

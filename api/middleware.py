@@ -29,7 +29,6 @@ def decode_user_token(token: str) -> SessionData:
             algorithms=["RS256"],
             leeway=SETTINGS.CLERK_TOKEN_LEEWAY,
         )
-        print(decoded_token)
         return SessionData(**decoded_token)
     except jwt.DecodeError:
         raise InvalidToken

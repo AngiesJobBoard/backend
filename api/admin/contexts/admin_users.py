@@ -26,6 +26,11 @@ def get_all_admin_users(request: Request, query: QueryFilterParams = Depends()):
     )
 
 
+@router.get("/me", response_model=AdminUser)
+def get_me_as_admin_user(request: Request):
+    return AdminUserRepository(scope(request)).get_one(user_id=scope(request).user_id)
+
+
 @router.get("/{id}", response_model=AdminUser)
 def get_admin_user_by_id(id: str, request: Request):
     return AdminUserRepository(scope(request)).get(id)

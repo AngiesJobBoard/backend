@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import pytest
 from arango.database import StandardDatabase
+from fastapi.testclient import TestClient
 
 from ajb.base import Collection, RequestScope
 from ajb.config.settings import SETTINGS
@@ -10,6 +11,8 @@ from ajb.vendor.arango.constants import Constants
 from ajb.vendor.kafka.client_factory import KafkaProducerFactory
 from ajb.vendor.openai.mock import MockOpenAI
 from ajb.vendor.openai.repository import OpenAIRepository
+
+from api.app import app
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -48,3 +51,8 @@ def request_scope(db: StandardDatabase):
 @pytest.fixture(scope="function")
 def mock_openai():
     yield OpenAIRepository(MockOpenAI())
+
+
+@pytest.fixture
+def api():
+    yield TestClient(app)

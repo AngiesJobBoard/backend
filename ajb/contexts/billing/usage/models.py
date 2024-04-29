@@ -37,8 +37,9 @@ class CreateMonthlyUsage(BaseModel):
             usage_detail = usage_cost_details[usage_type]
             if usage_count > usage_detail.free_tier_limit_per_month:
                 total_cost += (
-                    usage_count - usage_detail.free_tier_limit_per_month
-                ) * usage_detail.cost_usd_per_transaction
+                    int(usage_count - usage_detail.free_tier_limit_per_month)
+                    * usage_detail.cost_usd_per_transaction
+                )
 
         self.total_usage_usd = total_cost
 

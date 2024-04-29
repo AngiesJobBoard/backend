@@ -1,3 +1,4 @@
+from cachetools import TTLCache, cached
 from ajb.base import (
     ParentRepository,
     RepositoryRegistry,
@@ -8,6 +9,9 @@ from ajb.base import (
 from ajb.vendor.arango.models import Join
 
 from .models import AdminUser, CreateAdminUser, AdminAndUser
+
+
+ADMIN_USER_CACHE: TTLCache[str, AdminUser] = TTLCache(maxsize=1024, ttl=300)
 
 
 class AdminUserRepository(ParentRepository[CreateAdminUser, AdminUser]):
@@ -29,6 +33,7 @@ class AdminUserRepository(ParentRepository[CreateAdminUser, AdminUser]):
             return_model=AdminAndUser,
         )
 
+    @cached(cache=ADMIN_USER_CACHE)
     def get_admin_user_by_auth_id(self, auth_id: str):
         return self.get_one(user_id=auth_id)
 

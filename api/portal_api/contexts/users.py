@@ -15,7 +15,7 @@ from api.middleware import scope
 
 
 router = APIRouter(tags=["Users"], prefix="/me")
-verify_password_attempt_cache = TTLCache(maxsize=1000, ttl=60)
+verify_password_attempt_cache: TTLCache[str, int] = TTLCache(maxsize=1000, ttl=60)
 
 
 @router.get("/state")
