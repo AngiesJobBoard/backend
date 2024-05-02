@@ -87,9 +87,7 @@ class CompanyApplicationRepository(ApplicationRepository):
             for status in status_filter:
                 repo_filters.filters.append(
                     Filter(
-                        field="application_status",
-                        value=status,
-                        and_or_operator="OR"
+                        field="application_status", value=status, and_or_operator="OR"
                     )
                 )
         return self.query_with_joins(
