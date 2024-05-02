@@ -32,6 +32,7 @@ class ApplicationUpdateRecruiterModel(BaseModel):
     first_name: str
     last_name: str
     email: str
+    image_url: str
 
 
 class CompanyApplicationUpdateView(CreateApplicationUpdate, BaseDataModel):

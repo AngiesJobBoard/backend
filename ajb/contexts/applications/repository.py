@@ -9,6 +9,7 @@ from ajb.base import (
 )
 from ajb.exceptions import EntityNotFound
 from ajb.vendor.arango.models import Filter, Operator, Join
+from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 
 from .models import (
     CompanyApplicationView,
@@ -17,12 +18,59 @@ from .models import (
     AdminApplicationView,
     ApplicantAndJob,
     ScanStatus,
+    UpdateApplication,
+    Qualifications,
+    WorkHistory,
+    Location,
 )
 
 
 class ApplicationRepository(ParentRepository[CreateApplication, Application]):
     collection = Collection.APPLICATIONS
     entity_model = Application
+
+    def update_application_with_parsed_information(
+        self,
+        *,
+        application_id: str,
+        resume_url: str | None,
+        raw_resume_text: str,
+        resume_information: ExtractedResume,
+    ) -> Application:
+        return self.update(
+            application_id,
+            UpdateApplication(
+                name=f"{resume_information.first_name} {resume_information.last_name}".title(),
+                email=resume_information.email,
+                phone=resume_information.phone_number,
+                extracted_resume_text=raw_resume_text,
+                resume_url=resume_url,
+                qualifications=Qualifications(
+                    most_recent_job=(
+                        WorkHistory(
+                            job_title=resume_information.most_recent_job_title,
+                            company_name=resume_information.most_recent_job_company,
+                        )
+                        if resume_information.most_recent_job_title
+                        and resume_information.most_recent_job_company
+                        else None
+                    ),
+                    work_history=resume_information.work_experience or [],
+                    education=resume_information.education or [],
+                    skills=resume_information.skills or [],
+                    licenses=resume_information.licenses or [],
+                    certifications=resume_information.certifications or [],
+                    language_proficiencies=resume_information.languages or [],
+                ),
+                user_location=(
+                    Location(
+                        city=resume_information.city, state=resume_information.state
+                    )
+                    if resume_information.city and resume_information.state
+                    else None
+                ),
+            ),
+        )
 
 
 class CompanyApplicationRepository(ApplicationRepository):
@@ -87,9 +135,7 @@ class CompanyApplicationRepository(ApplicationRepository):
             for status in status_filter:
                 repo_filters.filters.append(
                     Filter(
-                        field="application_status",
-                        value=status,
-                        and_or_operator="OR"
+                        field="application_status", value=status, and_or_operator="OR"
                     )
                 )
         return self.query_with_joins(
@@ -126,11 +172,6 @@ class CompanyApplicationRepository(ApplicationRepository):
                 Filter(
                     field="resume_scan_status",
                     value=ScanStatus.STARTED.value,
-                    and_or_operator="OR",
-                ),
-                Filter(
-                    field="match_score_status",
-                    value=ScanStatus.PENDING.value,
                     and_or_operator="OR",
                 ),
                 Filter(
@@ -195,7 +236,7 @@ class CompanyApplicationRepository(ApplicationRepository):
             other_applications = []
         return CompanyApplicationView(
             **casted_result.model_dump(exclude={"other_applications"}),
-            other_applications=other_applications
+            other_applications=other_applications,
         )
 
     def get_admin_application_view(

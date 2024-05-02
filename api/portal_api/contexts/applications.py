@@ -6,6 +6,7 @@ from ajb.base import (
     build_pagination_response,
     Pagination,
 )
+from ajb.base.events import SourceServices
 from ajb.contexts.applications.models import (
     CompanyApplicationView,
     PaginatedDataReducedApplication,
@@ -15,11 +16,19 @@ from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
     CompanyApplicationStatistics,
 )
-from ajb.contexts.applications.repository import CompanyApplicationRepository
+from ajb.contexts.applications.repository import (
+    CompanyApplicationRepository,
+    ApplicationRepository,
+)
 from ajb.contexts.applications.usecase import ApplicationUseCase
+from ajb.contexts.applications.events import ApplicationEventProducer
+from ajb.contexts.applications.extract_data.ai_extractor import (
+    SyncronousAIResumeExtractor,
+)
 from ajb.vendor.arango.models import Filter, Operator
-from api.middleware import scope
 
+from api.middleware import scope
+from api.exceptions import GenericHTTPException
 
 router = APIRouter(
     tags=["Company Applications"], prefix="/companies/{company_id}/applications"
@@ -163,6 +172,74 @@ def delete_company_application(request: Request, company_id: str, application_id
         company_id, application_id
     )
     return response
+
+
+@router.post("/{application_id}/rerun-resume-scan", response_model=bool)
+def rerun_resume_scan(
+    request: Request, company_id: str, application_id: str
+):
+    application = ApplicationRepository(scope(request)).get(application_id)
+    if application.company_id != company_id:
+        raise GenericHTTPException(status_code=400, detail="Application does not exist")
+    if application.resume_id is None:
+        raise GenericHTTPException(
+            status_code=400, detail="Application does not have a resume"
+        )
+    ApplicationEventProducer(
+        scope(request), source_service=SourceServices.API
+    ).company_uploads_resume(
+        company_id=application.company_id,
+        job_id=application.job_id,
+        resume_id=application.resume_id,
+        application_id=application.id,
+    )
+    return True
+
+
+@router.post("/{application_id}/rerun-match-score", response_model=bool)
+def rerun_match_score(
+    request: Request, company_id: str, application_id: str
+):
+    application = ApplicationRepository(scope(request)).get(application_id)
+    if application.company_id != company_id:
+        raise GenericHTTPException(status_code=400, detail="Application does not exist")
+    ApplicationEventProducer(
+        scope(request), source_service=SourceServices.API
+    ).application_is_submitted(application.company_id, application.job_id, application.id)
+    return True
+
+
+@router.post("/update-resume-scan-text", response_model=bool)
+async def update_resume_scan_text(
+    request: Request,
+    company_id: str,
+    application_id: str,
+    new_text: str = Body(...),
+    rerun_match: bool = Body(...),
+):
+    app_repo = ApplicationRepository(scope(request))
+    original_application = app_repo.get(application_id)
+    if original_application.company_id != company_id:
+        raise GenericHTTPException(status_code=400, detail="Application does not exist")
+
+    resume_information = (
+        SyncronousAIResumeExtractor().get_candidate_profile_from_resume_text(new_text)
+    )
+    app_repo.update_application_with_parsed_information(
+        application_id=original_application.id,
+        resume_url=original_application.resume_url,
+        raw_resume_text=new_text,
+        resume_information=resume_information,  # type: ignore
+    )
+    if rerun_match:
+        ApplicationEventProducer(
+            scope(request), source_service=SourceServices.ADMIN
+        ).application_is_submitted(
+            original_application.company_id,
+            original_application.job_id,
+            original_application.id,
+        )
+    return True
 
 
 @router.post(

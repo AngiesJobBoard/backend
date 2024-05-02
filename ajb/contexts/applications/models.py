@@ -78,7 +78,6 @@ class AdditionalFilterInformation(BaseModel):
     job_title_list: list[str] | None = None
     miles_between_job_and_applicant: int | None = None
     in_same_state_as_location: bool | None = None
-    has_college_degree: bool | None = None
 
 
 class UserCreatedApplication(BaseModel):
@@ -262,7 +261,9 @@ class Application(CreateApplication, BaseDataModel):
                     job_duration_tuples[i + 1].start_date,
                     job_duration_tuples[i].end_date,
                 )
-                gaps.append(gap.years * 12 + gap.months + gap.days / 30.0)
+                # Only append the duration if it is not negative
+                if gap.years >= 0 and gap.months >= 0 and gap.days >= 0:
+                    gaps.append(gap.years * 12 + gap.months + gap.days / 30.0)
         if not gaps:
             return 0
         return int(sum(gaps) / len(gaps))
@@ -290,30 +291,6 @@ class Application(CreateApplication, BaseDataModel):
             if job_duration.start_date and job_duration.end_date:
                 total_days += (job_duration.end_date - job_duration.start_date).days
         return int(total_days / 365)
-
-    def has_college_degree(self):
-        """
-        Loops through education array looking for any reference to a college degree
-        """
-        if not self.qualifications or not self.qualifications.education:
-            return False
-
-        for education in self.qualifications.education:
-            if not education.level_of_education:
-                continue
-            if any(
-                word in education.level_of_education.lower()
-                for word in [
-                    "bachelor",
-                    "master",
-                    "doctor",
-                    "phd",
-                    "college",
-                    "university",
-                ]
-            ):
-                return True
-        return False
 
     def get_job_title_list(self) -> list[str]:
         all_job_titles = []
@@ -405,7 +382,6 @@ class Application(CreateApplication, BaseDataModel):
             in_same_state_as_location=self.applicant_is_in_same_state_as_job(
                 job_lat, job_lon
             ),
-            has_college_degree=self.has_college_degree(),
         )
 
 
