@@ -61,50 +61,6 @@ class ApplicationEventsResolver:
         self.openai = openai
         self.async_openai = async_openai
 
-    def _update_application_with_parsed_information(
-        self,
-        *,
-        application_id: str,
-        resume_url: str,
-        raw_resume_text: str,
-        resume_information: ExtractedResume,
-        application_repository: ApplicationRepository,
-    ):
-        application_repository.update(
-            application_id,
-            UpdateApplication(
-                name=f"{resume_information.first_name} {resume_information.last_name}".title(),
-                email=resume_information.email,
-                phone=resume_information.phone_number,
-                extracted_resume_text=raw_resume_text,
-                resume_url=resume_url,
-                qualifications=Qualifications(
-                    most_recent_job=(
-                        WorkHistory(
-                            job_title=resume_information.most_recent_job_title,
-                            company_name=resume_information.most_recent_job_company,
-                        )
-                        if resume_information.most_recent_job_title
-                        and resume_information.most_recent_job_company
-                        else None
-                    ),
-                    work_history=resume_information.work_experience or [],
-                    education=resume_information.education or [],
-                    skills=resume_information.skills or [],
-                    licenses=resume_information.licenses or [],
-                    certifications=resume_information.certifications or [],
-                    language_proficiencies=resume_information.languages or [],
-                ),
-                user_location=(
-                    Location(
-                        city=resume_information.city, state=resume_information.state
-                    )
-                    if resume_information.city and resume_information.state
-                    else None
-                ),
-            ),
-        )
-
     def _handle_if_existing_applicant_matches_email(
         self,
         existing_applicants_that_match_email: list[Application],
@@ -116,14 +72,13 @@ class ApplicationEventsResolver:
         data: ResumeAndApplication,
     ):
         for matched_application in existing_applicants_that_match_email:
-            self._update_application_with_parsed_information(
+            application_repository.update_application_with_parsed_information(
                 application_id=matched_application.id,
                 resume_url=resume_url,
                 raw_resume_text=raw_text,
                 resume_information=resume_information,
-                application_repository=application_repository,
             )
-            event_producer.application_is_created(
+            event_producer.application_is_submitted(
                 matched_application.company_id,
                 matched_application.job_id,
                 matched_application.id,
@@ -174,14 +129,13 @@ class ApplicationEventsResolver:
                 data,
             )
 
-        self._update_application_with_parsed_information(
+        application_repository.update_application_with_parsed_information(
             application_id=data.application_id,
             resume_url=resume_url,
             raw_resume_text=raw_text,
             resume_information=resume_information,
-            application_repository=application_repository,
         )
-        event_producer.application_is_created(
+        event_producer.application_is_submitted(
             data.company_id, data.job_id, data.application_id
         )
         original_application_deleted = False

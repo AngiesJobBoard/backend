@@ -36,6 +36,8 @@ class ResumeExtractorUseCase(BaseUseCase):
         raise ValueError("File type not supported")
 
     async def extract_resume_information(self, resume_text: str) -> ExtractedResume:
+        if resume_text == "":
+            raise Exception("Resume text is empty")
         return await AIResumeExtractor(
             self.openai
         ).get_candidate_profile_from_resume_text(resume_text)

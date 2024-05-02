@@ -17,18 +17,17 @@ from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
     CompanyApplicationView,
 )
+from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.recruiter_updates.usecase import RecruiterUpdatesUseCase
-from ajb.contexts.companies.notifications.usecase import CompanyNotificationUsecase
-from ajb.contexts.companies.notifications.models import (
-    NotificationType,
-    SystemCreateCompanyNotification,
-)
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
 from ajb.contexts.billing.usecase import (
     CompanyBillingUsecase,
     UsageType,
+)
+from ajb.contexts.applications.extract_data.ai_extractor import (
+    SyncronousAIResumeExtractor,
 )
 from ajb.vendor.arango.repository import ArangoDBRepository
 from ajb.vendor.arango.models import Filter
@@ -104,7 +103,7 @@ class ApplicationUseCase(BaseUseCase):
         if produce_submission_event:
             ApplicationEventProducer(
                 self.request_scope, source_service=SourceServices.API
-            ).application_is_created(
+            ).application_is_submitted(
                 created_application.company_id,
                 created_application.job_id,
                 created_application.id,
@@ -147,7 +146,7 @@ class ApplicationUseCase(BaseUseCase):
                 self.request_scope, SourceServices.API
             )
             for application in created_applications:
-                event_producer.application_is_created(company_id, job_id, application)
+                event_producer.application_is_submitted(company_id, job_id, application)
         return created_applications
 
     def create_applications_from_csv(
@@ -358,22 +357,34 @@ class ApplicationUseCase(BaseUseCase):
             job_id=job_id,
             name="-",
             email="-",
-            resume_scan_status=ScanStatus.PENDING,
-            match_score_status=ScanStatus.PENDING,
+            match_score_status=ScanStatus.STARTED,
             extracted_resume_text=raw_text,
         )
         partial_application.application_questions = self._get_job_questions(job_id)
         created_application = self.create_application(
             company_id, job_id, partial_application, False
         )
+        resume_information = (
+            SyncronousAIResumeExtractor().get_candidate_profile_from_resume_text(
+                raw_text
+            )
+        )
+        application_repo: ApplicationRepository = self.get_repository(Collection.APPLICATIONS)  # type: ignore
+        application_repo.update_application_with_parsed_information(
+            application_id=created_application.id,
+            resume_url=created_application.resume_url,
+            raw_resume_text=raw_text,
+            resume_information=resume_information,  # type: ignore
+        )
 
         # Create kafka event for handling the match
         ApplicationEventProducer(
             self.request_scope, source_service=SourceServices.API
-        ).application_is_created(
+        ).application_is_submitted(
             company_id=company_id,
             job_id=job_id,
             application_id=created_application.id,
+            extract_from_resume=False,
         )
         return created_application
 

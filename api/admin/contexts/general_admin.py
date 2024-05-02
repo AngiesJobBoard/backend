@@ -15,6 +15,9 @@ from ajb.contexts.companies.recruiters.models import (
 )
 from ajb.contexts.applications.models import ScanStatus
 from ajb.contexts.applications.events import ApplicationEventProducer
+from ajb.contexts.applications.extract_data.ai_extractor import (
+    SyncronousAIResumeExtractor,
+)
 from api.exceptions import GenericHTTPException
 from api.middleware import scope
 
@@ -52,27 +55,36 @@ def rerun_application_submission(request: Request, application_id: str = Body(..
     application = ApplicationRepository(scope(request)).get(application_id)
     ApplicationEventProducer(
         scope(request), source_service=SourceServices.ADMIN
-    ).application_is_created(application.company_id, application.job_id, application.id)
+    ).application_is_submitted(application.company_id, application.job_id, application.id)
     return True
 
 
 @router.post("/update-resume-scan-text", response_model=bool)
-def update_resume_scan_text(
+async def update_resume_scan_text(
     request: Request,
     application_id: str = Body(...),
     new_text: str = Body(...),
     rerun_match: bool = Body(...),
 ):
     app_repo = ApplicationRepository(scope(request))
-    application = app_repo.update_fields(
-        id=application_id,
-        extracted_resume_text=new_text,
+    original_application = app_repo.get(application_id)
+
+    resume_information = (
+        SyncronousAIResumeExtractor().get_candidate_profile_from_resume_text(new_text)
+    )
+    app_repo.update_application_with_parsed_information(
+        application_id=original_application.id,
+        resume_url=original_application.resume_url,
+        raw_resume_text=new_text,
+        resume_information=resume_information,  # type: ignore
     )
     if rerun_match:
         ApplicationEventProducer(
             scope(request), source_service=SourceServices.ADMIN
-        ).application_is_created(
-            application.company_id, application.job_id, application.id
+        ).application_is_submitted(
+            original_application.company_id,
+            original_application.job_id,
+            original_application.id,
         )
     return True
 

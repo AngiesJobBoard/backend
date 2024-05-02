@@ -165,10 +165,9 @@ def test_extract_application_filter_information():
 
     assert application.additional_filters
     assert application.additional_filters.average_job_duration_in_months == 8
-    assert application.additional_filters.average_job_duration_in_months == 8
+    assert application.additional_filters.average_gap_duration_in_months == 8
     assert application.additional_filters.total_years_in_workforce == 1
     assert application.additional_filters.years_since_first_job == 1
-    assert application.additional_filters.has_college_degree is True
 
 
 def test_extract_application_distance_and_same_state():

@@ -20,6 +20,7 @@ class ApplicantAndCompany(BaseModel):
     company_id: str
     job_id: str
     application_id: str
+    extract_from_resume: bool = True
 
 
 class ApplicationEventProducer(BaseEventProducer):
@@ -47,10 +48,10 @@ class ApplicationEventProducer(BaseEventProducer):
             event=ApplicationEvent.UPLOAD_RESUME,
         )
 
-    def application_is_created(self, company_id: str, job_id: str, application_id: str):
+    def application_is_submitted(self, company_id: str, job_id: str, application_id: str, extract_from_resume: bool = True):
         self._application_event(
             data=ApplicantAndCompany(
-                company_id=company_id, job_id=job_id, application_id=application_id
+                company_id=company_id, job_id=job_id, application_id=application_id, extract_from_resume=extract_from_resume
             ).model_dump(),
             event=ApplicationEvent.APPLICATION_IS_SUBMITTED,
         )
