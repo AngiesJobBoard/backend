@@ -1,3 +1,4 @@
+import time
 from unittest.mock import patch
 import pytest
 from pydantic import BaseModel
@@ -31,18 +32,18 @@ class TestModel(BaseDataModel, CreateTestModel): ...
 
 
 class TestRepository(ParentRepository[CreateTestModel, TestModel]):
-    collection = Collection.ADMIN_USERS
+    collection = Collection.APPLICATIONS
     entity_model = TestModel
 
 
 class BasicSearchTestRepository(ParentRepository[CreateTestModel, TestModel]):
-    collection = Collection.ADMIN_USERS
+    collection = Collection.APPLICATIONS
     entity_model = TestModel
     search_fields = ("name",)
 
 
 class ManySearchTestRepository(ParentRepository[CreateTestModel, TestModel]):
-    collection = Collection.ADMIN_USERS
+    collection = Collection.APPLICATIONS
     entity_model = TestModel
     search_fields = ("name", "text_one", "text_two", "text_three")
 
@@ -419,8 +420,8 @@ def test_create_many_with_equal_override_id_list(request_scope):
 
 
 class TestSingleChildRepository(SingleChildRepository[CreateTestModel, TestModel]):
-    parent_collection = Collection.ADMIN_USERS
-    collection = Collection.ADMIN_USERS
+    parent_collection = Collection.APPLICATIONS
+    collection = Collection.APPLICATIONS
     entity_model = TestModel
 
     def __init__(self, request_scope: RequestScope, parent_id: str):
@@ -443,8 +444,8 @@ def test_single_child_repository(request_scope):
 class TestMultipleChildRepository(
     MultipleChildrenRepository[CreateTestModel, TestModel]
 ):
-    parent_collection = Collection.ADMIN_USERS
-    collection = Collection.ADMIN_USERS
+    parent_collection = Collection.APPLICATIONS
+    collection = Collection.APPLICATIONS
     entity_model = TestModel
 
     def __init__(self, request_scope: RequestScope, parent_id: str):
@@ -554,7 +555,6 @@ def test_upsert_many(request_scope):
 
 def test_query_with_pagination_still_returns_full_count(request_scope):
     parent_repo = TestRepository(request_scope)
-    # Make sure repo is empty (tech debt :) yay non-idempotent tests)
     all_items = parent_repo.get_all()
     parent_repo.delete_many([item.id for item in all_items if item])
 
@@ -566,3 +566,44 @@ def test_query_with_pagination_still_returns_full_count(request_scope):
     results, count = parent_repo.query(repo_filters=filter_params)
     assert count == 3
     assert len(results) == 2
+
+
+def test_get_most_recent_and_oldest(request_scope):
+    parent_repo = TestRepository(request_scope)
+    parent_repo.create(CreateTestModel(name="test1"))
+    time.sleep(0.1)
+    parent_repo.create(CreateTestModel(name="test2"))
+    time.sleep(0.1)
+    parent_repo.create(CreateTestModel(name="test3"))
+
+    # Expect test3 to be most recent
+    recent = parent_repo.get_most_recent()
+    assert recent.name == "test3"
+
+    # Expect test1 to be most oldest
+    oldest = parent_repo.get_oldest()
+    assert oldest.name == "test1"
+
+
+def test_recent_and_oldest_with_filters(request_scope):
+    parent_repo = TestRepository(request_scope)
+    parent_repo.create(CreateTestModel(name="test1", age=1, is_cool=True))
+    time.sleep(0.1)
+    parent_repo.create(CreateTestModel(name="test2", age=5, is_cool=False))
+    time.sleep(0.1)
+    parent_repo.create(CreateTestModel(name="test3", age=10, is_cool=True))
+
+    most_recent_cool = parent_repo.get_most_recent(is_cool=True)
+    assert most_recent_cool.name == "test3"
+
+    most_recent_not_cool = parent_repo.get_most_recent(is_cool=False)
+    assert most_recent_not_cool.name == "test2"
+
+    oldest_cool = parent_repo.get_oldest(is_cool=True)
+    assert oldest_cool.name == "test1"
+
+    most_recent_age_1 = parent_repo.get_most_recent(age=1)
+    assert most_recent_age_1.name == "test1"
+
+    with pytest.raises(EntityNotFound):
+        parent_repo.get_most_recent(age=100)

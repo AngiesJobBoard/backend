@@ -26,7 +26,6 @@ class WebhookApplicantsUseCase(BaseUseCase):
             id=ingress_record.id,
             data=UpdateIngress(
                 last_message_received=datetime.now(),
-                last_message=event,
             ),
             merge=False,
         )

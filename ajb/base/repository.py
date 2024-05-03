@@ -23,6 +23,7 @@ from ajb.vendor.arango.models import (
     Filter,
     Operator,
     Join,
+    Sort
 )
 from ajb.vendor.arango.repository import ArangoDBRepository, CreateManyInsertError
 from ajb.exceptions import EntityNotFound, MultipleEntitiesReturned, FailedToCreate
@@ -34,6 +35,7 @@ from ajb.base.models import (
     RepoFilterParams,
     QueryFilterParams,
     BaseDataModel,
+    Pagination
 )
 from ajb.base.schema import Collection, View
 from ajb.base.constants import BaseConstants
@@ -544,6 +546,34 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             self.request_scope.db, self.collection.value
         ).execute_custom_statement(statement, bind_vars)
         return format_to_schema(results[0], self.entity_model)
+    
+    def get_most_recent(self, **kwargs) -> DataSchema:
+        repo_filters = RepoFilterParams(
+            pagination=Pagination(page=0, page_size=1),
+            sorts=[Sort(
+                collection_alias="doc",
+                field=BaseConstants.CREATED_AT,
+                direction="DESC"
+            )]
+        )
+        results, _ = self.query(repo_filters=repo_filters, **kwargs)
+        if len(results) == 0:
+            raise EntityNotFound(collection=self.collection.value)
+        return results[0]
+    
+    def get_oldest(self, **kwargs) -> DataSchema:
+        repo_filters = RepoFilterParams(
+            pagination=Pagination(page=0, page_size=1),
+            sorts=[Sort(
+                collection_alias="doc",
+                field=BaseConstants.CREATED_AT,
+                direction="ASC"
+            )]
+        )
+        results, _ = self.query(repo_filters=repo_filters, **kwargs)
+        if len(results) == 0:
+            raise EntityNotFound(collection=self.collection.value)
+        return results[0]
 
     def get_sub_entity(self) -> DataSchema:
         raise NotImplementedError("This method is only used by the single child repo")

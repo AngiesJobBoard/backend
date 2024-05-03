@@ -14,7 +14,7 @@ from ajb.contexts.companies.email_ingress_webhooks.repository import (
     CompanyEmailIngress,
 )
 from ajb.vendor.jwt import decode_jwt
-
+from api.middleware import scope
 from api.vendors import db, kafka_producer
 from api.exceptions import Forbidden
 
@@ -38,38 +38,56 @@ class OpenRequestValidator:
     def __init__(self, request: Request):
         self.request = request
 
+    def _get_company_ingress_record(
+        self, authorization: str
+    ) -> tuple[CompanyAPIIngress, str]:
+        auth_parts = authorization.split(":")
+        if len(auth_parts) == 2:
+            # Temporary! This should be removed after our initial user has updated their webhook token
+            company_id, token = auth_parts
+            salt = "eaogqduqkq"
+        elif len(auth_parts) == 3:
+            company_id, token, salt = auth_parts
+        else:
+            raise Forbidden
+
+        ingress_repo = CompanyAPIIngressRepository(
+            scope(self.request), company_id=company_id
+        )
+        return ingress_repo.get_one(company_id=company_id, salt=salt), token
+
+    def _validate_token_against_secret_key(
+        self, token: str, company_id: str, secret_key: str
+    ):
+        token_data = APIIngressJWTData(**decode_jwt(token, secret_key))
+        assert token_data.company_id == company_id
+
+    def _validate_ip_addresses(self, ingress_record: CompanyAPIIngress):
+        """
+        incoming_ip_address = self.request.client.host if self.request.client else None
+        assert incoming_ip_address in ingress_record.allowed_ips
+        """
+        pass
+
+    def _run_all_validations(
+        self, token: str, ingress_record: CompanyAPIIngress
+    ) -> None:
+        assert ingress_record.is_active
+        self._validate_token_against_secret_key(
+            token, ingress_record.company_id, ingress_record.secret_key
+        )
+        self._validate_ip_addresses(ingress_record)
+
     def validate_api_ingress_request(self) -> CompanyAPIIngress:
         authorization = self.request.headers["Authorization"]
-        if "Bearer " in authorization:
+        if "Bearer" in authorization:
             authorization = authorization.split("Bearer")[1].strip()
-        company_id, token = authorization.split(":")
 
-        # How to determine which source the data is coming from?
-        # For now we will do the FILTHY option of pulling the first record if exists
+        company_ingress_record, token = self._get_company_ingress_record(authorization)
         try:
-            all_company_ingresses = CompanyAPIIngressRepository(
-                self.request.state.request_scope, company_id=company_id
-            ).get_all(company_id=company_id)
-        except Exception as e:
-            print(e)
+            self._run_all_validations(token, company_ingress_record)
+        except Exception:
             raise Forbidden
-
-        if not all_company_ingresses:
-            raise Forbidden
-
-        company_ingress_record = all_company_ingresses[0]
-        if not company_ingress_record.is_active:
-            raise Forbidden
-
-        # AJBTODO Other checks on allowed ip address or etc...
-        try:
-            token_data = APIIngressJWTData(
-                **decode_jwt(token, company_ingress_record.secret_key)
-            )
-        except Exception as e:
-            print(e)
-            raise Forbidden
-        assert token_data.company_id == company_id
         return company_ingress_record
 
     def validate_email_ingress_request(
@@ -79,7 +97,7 @@ class OpenRequestValidator:
         json_loaded_envelope = json.loads(envelope)
         to_subdomain = json_loaded_envelope["to"][0].split("@")[0]
         company_ingress_record = CompanyEmailIngressRepository(
-            self.request.state.request_scope
+            scope(self.request)
         ).get_one(subdomain=to_subdomain)
         if not company_ingress_record.is_active:
             raise Forbidden

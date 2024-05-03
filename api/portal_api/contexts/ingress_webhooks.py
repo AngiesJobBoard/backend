@@ -40,7 +40,11 @@ def create_company_egress_webhook(
 ):
     return CompanyAPIIngressRepository(scope(request), company_id).create(
         CreateCompanyAPIIngress.generate(
-            company_id, webhook.integration_name, webhook.source, is_active=True
+            company_id,
+            webhook.integration_name,
+            webhook.source_type,
+            webhook.source,
+            is_active=True
         )
     )
 
