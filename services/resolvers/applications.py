@@ -8,15 +8,12 @@ import asyncio
 
 from ajb.base import RequestScope
 from ajb.base.events import BaseKafkaMessage, SourceServices
-from ajb.common.models import Location
 from ajb.contexts.applications.events import (
     ResumeAndApplication,
     ApplicantAndCompany,
 )
 from ajb.contexts.applications.models import (
     ScanStatus,
-    Qualifications,
-    WorkHistory,
     UpdateApplication,
     Application,
 )
@@ -46,6 +43,11 @@ class CouldNotParseResumeText(Exception):
     pass
 
 
+class MissingAsyncOpenAIRepository(RepositoryNotProvided):
+    def __init__(self):
+        super().__init__("Async OpenAI Repository")
+
+
 class ApplicationEventsResolver:
     def __init__(
         self,
@@ -64,7 +66,7 @@ class ApplicationEventsResolver:
     def _handle_if_existing_applicant_matches_email(
         self,
         existing_applicants_that_match_email: list[Application],
-        resume_url: str,
+        resume_url: str | None,
         raw_text: str,
         resume_information: ExtractedResume,
         application_repository: ApplicationRepository,
@@ -96,10 +98,18 @@ class ApplicationEventsResolver:
         self, data: ResumeAndApplication, application_repository: ApplicationRepository
     ) -> bool:
         if not self.async_openai:
-            raise RepositoryNotProvided("Async OpenaI Repository")
+            raise MissingAsyncOpenAIRepository
 
-        extractor = ResumeExtractorUseCase(self.request_scope, self.async_openai)
-        raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
+        if data.parse_resume:
+            extractor = ResumeExtractorUseCase(self.request_scope, self.async_openai)
+            if data.resume_id is None:
+                raise CouldNotParseResumeText
+            raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
+        else:
+            application = application_repository.get(data.application_id)
+            raw_text = application.extracted_resume_text
+            resume_url = application.resume_url
+
         if not raw_text or len(raw_text) == 0:
             raise CouldNotParseResumeText
         resume_information = await extractor.extract_resume_information(raw_text)
@@ -181,13 +191,17 @@ class ApplicationEventsResolver:
                 ApplicationEventProducer(
                     self.request_scope, SourceServices.SERVICES
                 ).company_uploads_resume(
-                    data.company_id, data.resume_id, data.application_id, data.job_id
+                    data.company_id,
+                    data.resume_id,
+                    data.application_id,
+                    data.job_id,
+                    data.parse_resume,
                 )
             raise e
 
     async def calculate_match_score(self) -> None:
         if not self.async_openai:
-            raise RepositoryNotProvided("Async OpenaI Repository")
+            raise MissingAsyncOpenAIRepository
         data = ApplicantAndCompany.model_validate(self.message.data)
         await ApplicantMatchUsecase(
             self.request_scope, self.async_openai
@@ -214,7 +228,7 @@ class ApplicationEventsResolver:
 
     async def answer_application_questions(self) -> None:
         if not self.async_openai:
-            raise RepositoryNotProvided("Async OpenaI Repository")
+            raise MissingAsyncOpenAIRepository
         data = ApplicantAndCompany.model_validate(self.message.data)
         question_usecase = ApplicantQuestionsUsecase(
             self.request_scope, self.async_openai

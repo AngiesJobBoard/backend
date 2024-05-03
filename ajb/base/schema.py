@@ -27,6 +27,8 @@ class Collection(str, Enum):
     COMPANY_NOTIFICATIONS = "company_notifications"
     COMPANY_EMAIL_INGRESS_WEBHOOKS = "company_email_ingress_webhooks"
     COMPANY_API_INGRESS_WEBHOOKS = "company_api_ingress_webhooks"
+    RAW_INGRESS_APPLICATIONS = "raw_ingress_applications"
+
     COMPANY_API_EGRESS_WEBHOOKS = "company_api_egress_webhooks"
 
     # Billing

@@ -15,9 +15,7 @@ from ajb.contexts.companies.recruiters.models import (
 )
 from ajb.contexts.applications.models import ScanStatus
 from ajb.contexts.applications.events import ApplicationEventProducer
-from ajb.contexts.applications.extract_data.ai_extractor import (
-    SyncronousAIResumeExtractor,
-)
+
 from api.exceptions import GenericHTTPException
 from api.middleware import scope
 
@@ -46,6 +44,7 @@ def rerun_resume_scan(request: Request, application_id: str = Body(...)):
         job_id=application.job_id,
         resume_id=application.resume_id,
         application_id=application.id,
+        parse_resume=True
     )
     return True
 
@@ -67,25 +66,17 @@ async def update_resume_scan_text(
     rerun_match: bool = Body(...),
 ):
     app_repo = ApplicationRepository(scope(request))
-    original_application = app_repo.get(application_id)
-
-    resume_information = (
-        SyncronousAIResumeExtractor().get_candidate_profile_from_resume_text(new_text)
+    application = app_repo.get(application_id)
+    app_repo.update_fields(id=application.id, extracted_resume_text=new_text)
+    ApplicationEventProducer(
+        scope(request), source_service=SourceServices.API
+    ).company_uploads_resume(
+        company_id=application.company_id,
+        job_id=application.job_id,
+        resume_id=application.resume_id,
+        application_id=application.id,
+        parse_resume=False,
     )
-    app_repo.update_application_with_parsed_information(
-        application_id=original_application.id,
-        resume_url=original_application.resume_url,
-        raw_resume_text=new_text,
-        resume_information=resume_information,  # type: ignore
-    )
-    if rerun_match:
-        ApplicationEventProducer(
-            scope(request), source_service=SourceServices.ADMIN
-        ).application_is_submitted(
-            original_application.company_id,
-            original_application.job_id,
-            original_application.id,
-        )
     return True
 
 

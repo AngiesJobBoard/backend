@@ -22,9 +22,6 @@ from ajb.contexts.applications.repository import (
 )
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.applications.events import ApplicationEventProducer
-from ajb.contexts.applications.extract_data.ai_extractor import (
-    SyncronousAIResumeExtractor,
-)
 from ajb.vendor.arango.models import Filter, Operator
 
 from api.middleware import scope
@@ -33,6 +30,11 @@ from api.exceptions import GenericHTTPException
 router = APIRouter(
     tags=["Company Applications"], prefix="/companies/{company_id}/applications"
 )
+
+
+class ApplicationNotExist(GenericHTTPException):
+    def __init__(self):
+        super().__init__(status_code=404, detail="Application does not exist")
 
 
 @router.get("/", response_model=PaginatedDataReducedApplication)
@@ -175,12 +177,10 @@ def delete_company_application(request: Request, company_id: str, application_id
 
 
 @router.post("/{application_id}/rerun-resume-scan", response_model=bool)
-def rerun_resume_scan(
-    request: Request, company_id: str, application_id: str
-):
+def rerun_resume_scan(request: Request, company_id: str, application_id: str):
     application = ApplicationRepository(scope(request)).get(application_id)
     if application.company_id != company_id:
-        raise GenericHTTPException(status_code=400, detail="Application does not exist")
+        raise ApplicationNotExist
     if application.resume_id is None:
         raise GenericHTTPException(
             status_code=400, detail="Application does not have a resume"
@@ -192,20 +192,21 @@ def rerun_resume_scan(
         job_id=application.job_id,
         resume_id=application.resume_id,
         application_id=application.id,
+        parse_resume=True,
     )
     return True
 
 
 @router.post("/{application_id}/rerun-match-score", response_model=bool)
-def rerun_match_score(
-    request: Request, company_id: str, application_id: str
-):
+def rerun_match_score(request: Request, company_id: str, application_id: str):
     application = ApplicationRepository(scope(request)).get(application_id)
     if application.company_id != company_id:
-        raise GenericHTTPException(status_code=400, detail="Application does not exist")
+        raise ApplicationNotExist
     ApplicationEventProducer(
         scope(request), source_service=SourceServices.API
-    ).application_is_submitted(application.company_id, application.job_id, application.id)
+    ).application_is_submitted(
+        application.company_id, application.job_id, application.id
+    )
     return True
 
 
@@ -215,30 +216,22 @@ async def update_resume_scan_text(
     company_id: str,
     application_id: str,
     new_text: str = Body(...),
-    rerun_match: bool = Body(...),
 ):
     app_repo = ApplicationRepository(scope(request))
-    original_application = app_repo.get(application_id)
-    if original_application.company_id != company_id:
-        raise GenericHTTPException(status_code=400, detail="Application does not exist")
+    application = app_repo.get(application_id)
+    if application.company_id != company_id:
+        raise ApplicationNotExist
 
-    resume_information = (
-        SyncronousAIResumeExtractor().get_candidate_profile_from_resume_text(new_text)
+    app_repo.update_fields(id=application.id, extracted_resume_text=new_text)
+    ApplicationEventProducer(
+        scope(request), source_service=SourceServices.API
+    ).company_uploads_resume(
+        company_id=application.company_id,
+        job_id=application.job_id,
+        resume_id=application.resume_id,
+        application_id=application.id,
+        parse_resume=False,
     )
-    app_repo.update_application_with_parsed_information(
-        application_id=original_application.id,
-        resume_url=original_application.resume_url,
-        raw_resume_text=new_text,
-        resume_information=resume_information,  # type: ignore
-    )
-    if rerun_match:
-        ApplicationEventProducer(
-            scope(request), source_service=SourceServices.ADMIN
-        ).application_is_submitted(
-            original_application.company_id,
-            original_application.job_id,
-            original_application.id,
-        )
     return True
 
 

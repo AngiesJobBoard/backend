@@ -196,6 +196,7 @@ class ApplicationUseCase(BaseUseCase):
             job_id=resume.job_id,
             resume_id=resume.id,
             application_id=created_application.id,
+            parse_resume=True
         )
         return created_application
 
@@ -384,7 +385,6 @@ class ApplicationUseCase(BaseUseCase):
             company_id=company_id,
             job_id=job_id,
             application_id=created_application.id,
-            extract_from_resume=False,
         )
         return created_application
 

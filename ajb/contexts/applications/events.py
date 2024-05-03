@@ -6,21 +6,20 @@ from ajb.base.events import (
     ApplicationEvent,
 )
 
-from ajb.exceptions import RequestScopeWithoutCompanyException
 
 
 class ResumeAndApplication(BaseModel):
     company_id: str
     job_id: str
     application_id: str
-    resume_id: str
+    resume_id: str | None
+    parse_resume: bool
 
 
 class ApplicantAndCompany(BaseModel):
     company_id: str
     job_id: str
     application_id: str
-    extract_from_resume: bool = True
 
 
 class ApplicationEventProducer(BaseEventProducer):
@@ -35,23 +34,24 @@ class ApplicationEventProducer(BaseEventProducer):
         )
 
     def company_uploads_resume(
-        self, company_id: str, resume_id: str, application_id: str, job_id: str
+        self, company_id: str, resume_id: str | None, application_id: str, job_id: str, parse_resume: bool
     ):
         data = ResumeAndApplication(
             company_id=company_id,
             job_id=job_id,
             application_id=application_id,
             resume_id=resume_id,
+            parse_resume=parse_resume,
         ).model_dump()
         self._application_event(
             data=data,
             event=ApplicationEvent.UPLOAD_RESUME,
         )
 
-    def application_is_submitted(self, company_id: str, job_id: str, application_id: str, extract_from_resume: bool = True):
+    def application_is_submitted(self, company_id: str, job_id: str, application_id: str):
         self._application_event(
             data=ApplicantAndCompany(
-                company_id=company_id, job_id=job_id, application_id=application_id, extract_from_resume=extract_from_resume
+                company_id=company_id, job_id=job_id, application_id=application_id
             ).model_dump(),
             event=ApplicationEvent.APPLICATION_IS_SUBMITTED,
         )

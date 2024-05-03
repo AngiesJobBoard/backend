@@ -13,11 +13,19 @@ from ajb.contexts.companies.recruiters.models import (
     RecruiterRole,
     Recruiter,
 )
+from ajb.contexts.companies.models import CreateCompany, Company
+from ajb.contexts.companies.recruiters.models import CreateRecruiter, RecruiterRole
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 from ajb.utils import random_salt
+from ajb.static.example_data.example_jobs import create_example_jobs
+from ajb.static.example_data.example_applications import create_example_applications
 from ajb.exceptions import AdminCreateUserException, RepositoryNotProvided
 
 from .models import User
+
+
+class FailedToCreateDemoCompany(Exception):
+    pass
 
 
 class UserUseCase(BaseUseCase):
@@ -122,3 +130,43 @@ class UserUseCase(BaseUseCase):
             user_repo = self.get_repository(Collection.USERS)
             user_repo.update_fields(user_id, email=new_email)
         return True
+
+    def create_demo_company_for_user(self, user_id: str) -> Company:
+        # Check if user already in more than 1 company, if so then reject
+        recruiter_repository = self.get_repository(Collection.COMPANY_RECRUITERS)
+        recruiter_results = recruiter_repository.get_count(user_id=user_id)
+        # if recruiter_results > 1:
+            # raise FailedToCreateDemoCompany
+
+        # Create the new demo company
+        user: User = self.get_object(Collection.USERS, user_id)
+        company_repository = self.get_repository(Collection.COMPANIES)
+        created_company: Company = company_repository.create(
+            CreateCompany(
+                name="Demo",
+                created_by_user=user_id,
+                owner_email=user.email,
+                company_has_created_first_job=True,
+                company_has_imported_first_application=True,
+                total_jobs=2,
+                total_applicants=2,
+                new_applicants=2,
+                high_matching_applicants=1
+            )
+        )
+
+        # Add user as owner
+        recruiter_repository.create(
+            CreateRecruiter(
+                user_id=user_id,
+                company_id=created_company.id,
+                role=RecruiterRole.OWNER
+            )
+        )
+
+        # Add in demo jobs and applications
+        job_1, job_2 = create_example_jobs(created_company.id, self.request_scope)
+        create_example_applications(
+            created_company.id, job_1.id, job_2.id, self.request_scope
+        )
+        return created_company

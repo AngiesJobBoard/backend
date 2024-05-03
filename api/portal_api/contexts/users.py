@@ -8,6 +8,7 @@ from ajb.contexts.users.usecase import UserUseCase
 from ajb.contexts.users.models import UpdateUser, User, UserProfileUpload
 from ajb.contexts.companies.recruiters.repository import RecruiterRepository
 from ajb.contexts.companies.recruiters.models import UserUpdateRecruiter, Recruiter
+from ajb.contexts.companies.models import Company
 
 from api.exceptions import NotFound, GenericHTTPException
 from api.vendors import storage
@@ -109,3 +110,10 @@ def change_password(
 @router.post("/change-email", response_model=bool)
 def change_email(request: Request, new_email: str = Body(...)):
     return UserUseCase(scope(request)).change_email(scope(request).user_id, new_email)
+
+
+@router.post("/create-demo-company", response_model=Company)
+def add_demo_company_to_user(request: Request):
+    return UserUseCase(scope(request)).create_demo_company_for_user(
+        scope(request).user_id
+    )

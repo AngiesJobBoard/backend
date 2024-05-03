@@ -10,13 +10,16 @@ from ajb.contexts.companies.api_ingress_webhooks.models import (
 from ajb.contexts.companies.api_ingress_webhooks.repository import (
     CompanyAPIIngressRepository,
 )
+from ajb.contexts.webhooks.ingress.applicants.application_raw_storage.repository import (
+    CreateRawIngressApplication,
+    RawIngressApplicationRepository,
+)
 from .models import CreateApplicantWebhook
 
 
 class WebhookApplicantsUseCase(BaseUseCase):
 
     def handle_webhook_event(self, ingress_record: CompanyAPIIngress, event: dict):
-        print(f"\n\n{event}\n\n")
         CompanyAPIIngressRepository(
             self.request_scope, ingress_record.company_id
         ).update(
@@ -27,7 +30,14 @@ class WebhookApplicantsUseCase(BaseUseCase):
             ),
             merge=False,
         )
-        return
+        RawIngressApplicationRepository(self.request_scope).create(
+            CreateRawIngressApplication(
+                company_id=ingress_record.company_id,
+                application_id="still_testing",
+                ingress_id=ingress_record.id,
+                data=event,
+            )
+        )
 
     def create_applicant(self, company_id: str, data: CreateApplicantWebhook):
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
