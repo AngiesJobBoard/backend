@@ -22,11 +22,6 @@ from api.exceptions import Forbidden
 async def verify_open_request(
     request: Request,
 ):
-    # authorization = request.headers["Authorization"]
-    # if "Bearer " in authorization:
-    #     authorization = authorization.split("Bearer")[1].strip()
-    # if not authorization:
-    #     raise Forbidden
     request.state.request_scope = RequestScope(
         user_id="webhook",
         db=db,

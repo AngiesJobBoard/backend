@@ -15,48 +15,48 @@ class FullName(BaseModel):
 
 class ContactInformation(BaseModel):
     job_name: str
-    name: str
+    name: str| None = None
     full_name: FullName
-    first_name: str
-    last_name: str
+    first_name: str| None = None
+    last_name: str| None = None
     email: str
-    phone: str
-    phone_alt: str | None
-    address: str
+    phone: str | None = None
+    phone_alt: str | None = None
+    address: str | None = None
     city: str
     state: str
     zip: str
-    full_address: str
-    position_discovered: str
-    position_referral: str
-    seen_billboard: str | None
-    date_available: str
-    wage_amount: str
-    wage_frequency: str
-    age_18: str
-    currently_employed: str
-    us_work_authorized: str
-    smoker: str
-    drug_screening: str
-    drug_test: str
-    prior_application: str
+    full_address: str | None = None
+    position_discovered: str | None = None
+    position_referral: str | None = None
+    seen_billboard: str | None = None
+    date_available: str | None = None
+    wage_amount: str | None = None
+    wage_frequency: str | None = None
+    age_18: str | None = None
+    currently_employed: str | None = None
+    us_work_authorized: str | None = None
+    smoker: str | None = None
+    drug_screening: str | None = None
+    drug_test: str | None = None
+    prior_application: str | None = None
     prior_application_details: str | None
-    transportation: str
-    transportation_details: str
-    conviction: str
+    transportation: str | None = None
+    transportation_details: str | None = None
+    conviction: str | None = None
     conviction_details: str | None
     terminated: str | None
     terminated_details: str | None
     drivers_license_num: str | None
     drivers_license_state: str | None
     drivers_license_issued: str | None
-    signed_consent_refereces: str
-    signed_consent_testing: str
-    signed_consent_drug_testing: str
-    signed_consent_bg_check: str
-    signed_auth_investigation: str
-    signed_answers_true: str
-    digital_signature: str
+    signed_consent_refereces: str | None = None
+    signed_consent_testing: str | None = None
+    signed_consent_drug_testing: str | None = None
+    signed_consent_bg_check: str | None = None
+    signed_auth_investigation: str | None = None
+    signed_answers_true: str | None = None
+    digital_signature: str | None = None
 
 
 class PostCardManiaRawData(BaseModel):

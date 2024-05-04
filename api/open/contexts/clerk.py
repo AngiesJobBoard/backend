@@ -28,7 +28,7 @@ router = APIRouter(
 
 @router.post("/users", status_code=status.HTTP_204_NO_CONTENT)
 async def users_webhook_handler(payload: dict):
-    created_user: User = WebhookUserUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
+    WebhookUserUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
         ClerkUserWebhookEvent(**payload)
     )
     return status.HTTP_204_NO_CONTENT

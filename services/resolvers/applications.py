@@ -65,37 +65,6 @@ class ApplicationEventsResolver:
         self.openai = openai
         self.async_openai = async_openai
 
-    def _handle_if_existing_applicant_matches_email(
-        self,
-        existing_applicants_that_match_email: list[Application],
-        resume_url: str | None,
-        raw_text: str,
-        resume_information: ExtractedResume,
-        application_repository: ApplicationRepository,
-        event_producer: ApplicationEventProducer,
-        data: ResumeAndApplication,
-    ):
-        for matched_application in existing_applicants_that_match_email:
-            application_repository.update_application_with_parsed_information(
-                application_id=matched_application.id,
-                resume_url=resume_url,
-                raw_resume_text=raw_text,
-                resume_information=resume_information,
-            )
-            event_producer.application_is_submitted(
-                matched_application.company_id,
-                matched_application.job_id,
-                matched_application.id,
-            )
-
-        # Delete the original application
-        ApplicationUseCase(self.request_scope).delete_application_for_job(
-            company_id=data.company_id,
-            application_id=data.application_id,
-        )
-        original_application_deleted = True
-        return original_application_deleted
-
     async def _extract_and_update_application(
         self, data: ResumeAndApplication, application_repository: ApplicationRepository
     ) -> bool:
@@ -120,27 +89,9 @@ class ApplicationEventsResolver:
             company_id=data.company_id, incremental_usages={UsageType.RESUME_SCANS: 1}
         )
 
-        original_application_deleted = False
-
-        existing_applicants_that_match_email = application_repository.query(
-            email=resume_information.email,
-            job_id=data.job_id,
-        )[0]
-
         event_producer = ApplicationEventProducer(
             self.request_scope, SourceServices.API
         )
-        if existing_applicants_that_match_email:
-            self._handle_if_existing_applicant_matches_email(
-                existing_applicants_that_match_email,
-                resume_url,
-                raw_text,
-                resume_information,
-                application_repository,
-                event_producer,
-                data,
-            )
-
         application_repository.update_application_with_parsed_information(
             application_id=data.application_id,
             resume_url=resume_url,
