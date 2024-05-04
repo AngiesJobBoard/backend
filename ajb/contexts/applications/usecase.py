@@ -11,7 +11,7 @@ from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 from ajb.base.events import SourceServices
 from ajb.common.models import ApplicationQuestion
 from ajb.contexts.resumes.usecase import ResumeUseCase
-from ajb.contexts.resumes.models import  UserCreateResume
+from ajb.contexts.resumes.models import UserCreateResume
 from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,

@@ -7,10 +7,10 @@ from ajb.base import RequestScope, RepoFilterParams
 from ajb.contexts.webhooks.ingress.applicants.application_raw_storage.models import (
     RawIngressApplication,
 )
-from ajb.contexts.webhooks.ingress.applicants.application_raw_storage.repository import RawIngressApplicationRepository
+from ajb.contexts.webhooks.ingress.applicants.application_raw_storage.repository import (
+    RawIngressApplicationRepository,
+)
 from ajb.contexts.applications.models import CreateApplication, Application
-from ajb.contexts.resumes.usecase import ResumeUseCase
-from ajb.contexts.resumes.models import Resume
 from ajb.contexts.companies.jobs.repository import JobRepository, Job
 from ajb.vendor.arango.models import Filter
 
@@ -70,8 +70,7 @@ class BaseIncomingTransformer(ABC, t.Generic[T]):
 
     def update_raw_record(self, application_id: str) -> None:
         RawIngressApplicationRepository(self.request_scope).update_fields(
-            self.raw_data.id,
-            application_id=application_id
+            self.raw_data.id, application_id=application_id
         )
 
     def run(self) -> None:

@@ -136,7 +136,7 @@ class UserUseCase(BaseUseCase):
         recruiter_repository = self.get_repository(Collection.COMPANY_RECRUITERS)
         recruiter_results = recruiter_repository.get_count(user_id=user_id)
         # if recruiter_results > 1:
-            # raise FailedToCreateDemoCompany
+        # raise FailedToCreateDemoCompany
 
         # Create the new demo company
         user: User = self.get_object(Collection.USERS, user_id)
@@ -151,16 +151,14 @@ class UserUseCase(BaseUseCase):
                 total_jobs=2,
                 total_applicants=2,
                 new_applicants=2,
-                high_matching_applicants=1
+                high_matching_applicants=1,
             )
         )
 
         # Add user as owner
         recruiter_repository.create(
             CreateRecruiter(
-                user_id=user_id,
-                company_id=created_company.id,
-                role=RecruiterRole.OWNER
+                user_id=user_id, company_id=created_company.id, role=RecruiterRole.OWNER
             )
         )
 

@@ -46,7 +46,10 @@ class ResumeUseCase(BaseUseCase):
         resume_repo = self.get_repository(Collection.RESUMES)
         resume: Resume = resume_repo.get(resume_id)
         self.storage_repo.upload_bytes(
-            data.resume_data, data.file_type, resume.remote_file_path, publicly_accessible=True
+            data.resume_data,
+            data.file_type,
+            resume.remote_file_path,
+            publicly_accessible=True,
         )
         return resume_repo.update(
             resume_id,

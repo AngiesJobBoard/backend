@@ -11,7 +11,7 @@ from ajb.base.events import BaseKafkaMessage, SourceServices
 from ajb.contexts.applications.events import (
     ResumeAndApplication,
     ApplicantAndCompany,
-    IngressEvent
+    IngressEvent,
 )
 from ajb.contexts.applications.models import (
     ScanStatus,

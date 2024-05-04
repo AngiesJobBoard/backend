@@ -10,8 +10,7 @@ class CreateRawIngressApplication(BaseModel):
     data: dict
 
 
-class RawIngressApplication(CreateRawIngressApplication, BaseDataModel):
-    ...
+class RawIngressApplication(CreateRawIngressApplication, BaseDataModel): ...
 
 
 @dataclass

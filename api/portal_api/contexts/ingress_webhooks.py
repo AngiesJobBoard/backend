@@ -44,7 +44,7 @@ def create_company_egress_webhook(
             webhook.integration_name,
             webhook.source_type,
             webhook.source,
-            is_active=True
+            is_active=True,
         )
     )
 

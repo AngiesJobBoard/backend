@@ -9,7 +9,8 @@ from ajb.vendor.jwt import encode_jwt
 
 
 class IngressSourceType(str, Enum):
-    """ May 3 2024 - Currently only the company website is used for PCM but more are to be added"""
+    """May 3 2024 - Currently only the company website is used for PCM but more are to be added"""
+
     COMPANY_WEBSITE = "company_website"
 
 

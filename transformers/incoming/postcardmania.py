@@ -85,7 +85,7 @@ class IncomingPostCardManiaTransformer(BaseIncomingTransformer[PostCardManiaRawD
                 city=self.data.contact_information.city,
                 state=self.data.contact_information.state,
                 zipcode=self.data.contact_information.zip,
-            )
+            ),
         )
 
     def create_application_from_resume(self):
@@ -108,7 +108,7 @@ class IncomingPostCardManiaTransformer(BaseIncomingTransformer[PostCardManiaRawD
         return ApplicationUseCase(self.request_scope).create_application(
             company_id=self.raw_data.company_id,
             job_id=self.job_id,
-            partial_application=self.transform_to_application_model()
+            partial_application=self.transform_to_application_model(),
         )
 
     def create_application(self):
