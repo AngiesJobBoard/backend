@@ -142,4 +142,5 @@ COLLECTION_INDEXES = {
     Collection.APPLICATION_RECRUITER_UPDATES: ["company_id", "application_id"],
     Collection.RESUMES: ["user_id", "company_id"],
     Collection.COMPANY_NOTIFICATIONS: ["company_id"],
+    Collection.RAW_INGRESS_APPLICATIONS: ["company_id", "ingress_id"],
 }

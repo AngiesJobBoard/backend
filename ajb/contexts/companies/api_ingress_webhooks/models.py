@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
 from ajb.base import BaseDataModel, PaginatedResponse
-from ajb.utils import generate_random_long_code, generate_random_short_code
+from ajb.utils import generate_random_long_code, random_salt
 from ajb.vendor.jwt import encode_jwt
 
 
@@ -49,7 +49,7 @@ class CreateCompanyAPIIngress(UserCreateIngress):
         is_active: bool,
     ) -> "CreateCompanyAPIIngress":
         secret_key = generate_random_long_code()
-        salt = generate_random_short_code()
+        salt = random_salt()
         partial_expected_jwt = encode_jwt(
             data=APIIngressJWTData(company_id=company_id).model_dump(),
             secret=secret_key,

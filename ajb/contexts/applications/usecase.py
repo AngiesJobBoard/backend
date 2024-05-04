@@ -1,4 +1,3 @@
-from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from email.message import Message
 
@@ -11,7 +10,8 @@ from ajb.base import (
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 from ajb.base.events import SourceServices
 from ajb.common.models import ApplicationQuestion
-from ajb.contexts.resumes.models import Resume, UserCreateResume, CreateResume
+from ajb.contexts.resumes.usecase import ResumeUseCase
+from ajb.contexts.resumes.models import  UserCreateResume
 from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
@@ -31,7 +31,6 @@ from ajb.contexts.applications.extract_data.ai_extractor import (
 )
 from ajb.vendor.arango.repository import ArangoDBRepository
 from ajb.vendor.arango.models import Filter
-from ajb.utils import random_salt
 from ajb.config.settings import SETTINGS
 
 from ajb.contexts.applications.models import (
@@ -51,9 +50,6 @@ class ApplicationUseCase(BaseUseCase):
     ):
         self.request_scope = request_scope
         self.storage_repo = storage or FirebaseStorageRepository()
-
-    def _create_resume_file_path(self, company_id: str, job_id: str):
-        return f"{company_id}/{job_id}/resumes/{int(datetime.now().timestamp())}-{random_salt()}"
 
     def _get_job_questions(self, job_id):
         job: Job = self.get_object(Collection.JOBS, job_id)
@@ -160,18 +156,7 @@ class ApplicationUseCase(BaseUseCase):
 
     def create_application_from_resume(self, data: UserCreateResume) -> Application:
         # Create an application for this resume
-        resume_repo = self.get_repository(Collection.RESUMES)
-        remote_file_path = self._create_resume_file_path(data.company_id, data.job_id)
-        resume_url = self.storage_repo.upload_bytes(
-            data.resume_data, data.file_type, remote_file_path, True
-        )
-        resume: Resume = resume_repo.create(
-            CreateResume(
-                resume_url=resume_url,
-                remote_file_path=remote_file_path,
-                **data.model_dump(),
-            )
-        )
+        resume = ResumeUseCase(self.request_scope).create_resume(data)
         partial_application = CreateApplication(
             company_id=resume.company_id,
             job_id=resume.job_id,
@@ -196,7 +181,7 @@ class ApplicationUseCase(BaseUseCase):
             job_id=resume.job_id,
             resume_id=resume.id,
             application_id=created_application.id,
-            parse_resume=True
+            parse_resume=True,
         )
         return created_application
 

@@ -47,6 +47,7 @@ class ApplicationEvent(str, Enum):
     APPLICATION_IS_UPDATED = "application_is_updated"
     APPLICATION_IS_DELETED = "application_is_deleted"
     UPLOAD_RESUME = "upload_resume"
+    INGRESS_EVENT = "ingress_event"
 
 
 class UserEvent(str, Enum):
@@ -78,6 +79,7 @@ class SourceServices(str, Enum):
     API = "api"  # Created based on an API request
     SERVICES = "services"  # Created based on a service request
     ADMIN = "admin"  # Created based on an admin request
+    WEBHOOK = "webhook"  # Created based on a webhook request
 
 
 class BaseEventProducer:

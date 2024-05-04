@@ -11,6 +11,7 @@ from ajb.base.events import BaseKafkaMessage, SourceServices
 from ajb.contexts.applications.events import (
     ResumeAndApplication,
     ApplicantAndCompany,
+    IngressEvent
 )
 from ajb.contexts.applications.models import (
     ScanStatus,
@@ -37,6 +38,7 @@ from ajb.contexts.billing.usecase import (
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 from ajb.exceptions import RepositoryNotProvided
+from transformers.router import route_transformer_request
 
 
 class CouldNotParseResumeText(Exception):
@@ -270,3 +272,7 @@ class ApplicationEventsResolver:
         CompanyApplicantsWebhookEgress(
             self.request_scope
         ).send_delete_applicant_webhook(data.company_id, data.application_id)
+
+    async def handle_ingress_event(self) -> None:
+        data = IngressEvent.model_validate(self.message.data)
+        route_transformer_request(self.request_scope, data)

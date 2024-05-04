@@ -42,9 +42,18 @@ async def application_is_deleted(message: BaseKafkaMessage):
     await repo.application_is_deleted()
 
 
+async def handle_ingress_event(message: BaseKafkaMessage):
+    repo = ApplicationEventsResolver(
+        message,
+        make_request_scope(message),
+    )
+    await repo.handle_ingress_event()
+
+
 ROUTER = {
     ApplicationEvent.UPLOAD_RESUME.value: company_uploads_resume,
     ApplicationEvent.APPLICATION_IS_SUBMITTED.value: application_is_submitted,
     ApplicationEvent.APPLICATION_IS_UPDATED.value: application_is_updated,
     ApplicationEvent.APPLICATION_IS_DELETED.value: application_is_deleted,
+    ApplicationEvent.INGRESS_EVENT.value: handle_ingress_event,
 }
