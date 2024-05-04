@@ -50,6 +50,6 @@ test = "bash -c \"coverage run --source=ajb -m pytest -v --disable-warnings test
 migrate = "python -m ajb.migrate"
 seed = "python -m ajb.seed"
 localapi = "uvicorn api.app:app --reload --port 8000 --host 0.0.0.0"
-api = "uvicorn api.app:app --workers 4 --port $PORT --host 0.0.0.0"
+api = "uvicorn api.app:app --port $PORT --host 0.0.0.0"
 services = "python -m services.main"
 dead = "deadcode . --exclude=tests"
