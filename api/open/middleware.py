@@ -42,11 +42,7 @@ class OpenRequestValidator:
         self, authorization: str
     ) -> tuple[CompanyAPIIngress, str]:
         auth_parts = authorization.split(":")
-        if len(auth_parts) == 2:
-            # Temporary! This should be removed after our initial user has updated their webhook token
-            company_id, token = auth_parts
-            salt = "eaogqduqkq"
-        elif len(auth_parts) == 3:
+        if len(auth_parts) == 3:
             company_id, token, salt = auth_parts
         else:
             raise Forbidden
