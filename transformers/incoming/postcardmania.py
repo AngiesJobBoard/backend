@@ -8,17 +8,17 @@ from transformers.incoming.base import BaseIncomingTransformer, CouldNotInferJob
 
 
 class FullName(BaseModel):
-    first_name: str
-    middle_name: str
-    last_name: str
+    first_name: str | None = None
+    middle_name: str | None = None
+    last_name: str | None = None
 
 
 class ContactInformation(BaseModel):
     job_name: str
-    name: str| None = None
+    name: str | None = None
     full_name: FullName
-    first_name: str| None = None
-    last_name: str| None = None
+    first_name: str | None = None
+    last_name: str | None = None
     email: str
     phone: str | None = None
     phone_alt: str | None = None
