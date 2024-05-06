@@ -16,7 +16,11 @@ class ReRunApplicationUngressMigration(BaseUseCase):
     def get_all_raw_ingress_without_applications(self):
         return RawIngressApplicationRepository(self.request_scope).query(
             repo_filters=RepoFilterParams(
-                filters=[Filter(field="application_id", operator=Operator.IS_NULL, value=None)]
+                filters=[
+                    Filter(
+                        field="application_id", operator=Operator.IS_NULL, value=None
+                    )
+                ]
             )
         )
 
