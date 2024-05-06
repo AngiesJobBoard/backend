@@ -166,9 +166,6 @@ class ApplicationUseCase(BaseUseCase):
             resume_scan_status=ScanStatus.PENDING,
             match_score_status=ScanStatus.PENDING,
         )
-        partial_application.application_questions = self._get_job_questions(
-            resume.job_id
-        )
         created_application = self.create_application(
             resume.company_id, resume.job_id, partial_application, False
         )

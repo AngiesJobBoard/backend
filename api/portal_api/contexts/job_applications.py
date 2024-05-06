@@ -1,5 +1,5 @@
 from io import StringIO
-from fastapi import APIRouter, Request, UploadFile, File, HTTPException, Body
+from fastapi import APIRouter, Request, UploadFile, File, HTTPException, Body, BackgroundTasks
 import pandas as pd
 
 from ajb.contexts.applications.usecase import ApplicationUseCase
@@ -50,27 +50,45 @@ async def upload_applications_from_csv(
 
 @router.post("/resume")
 async def upload_applications_from_resume(
-    request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)
+    background_tasks: BackgroundTasks, 
+    request: Request, 
+    company_id: str, 
+    job_id: str, 
+    files: list[UploadFile] = File(...)
 ):
-    files_processed = 0
-    created_applications = []
     application_usecase = ApplicationUseCase(scope(request), storage)
+    files_processed = 0
+
     for file in files:
-        file_end = file.filename.split(".")[-1]  # type: ignore
+        data = await file.read()  # Read file data in the main function
+        background_tasks.add_task(
+            process_resume_file, 
+            application_usecase, 
+            file.filename, 
+            file.content_type,
+            data, 
+            company_id, 
+            job_id
+        )
+        files_processed += 1
+
+    return {"message": "Files are being processed", "files_processed": files_processed}
+
+def process_resume_file(application_usecase, filename, content_type, data, company_id, job_id):
+    file_end = filename.split('.')[-1]
+    try:
         created_application = application_usecase.create_application_from_resume(
             UserCreateResume(
-                file_type=file.content_type or file_end,
-                file_name=file.filename or f"resume.{file_end}",
-                resume_data=file.file.read(),
+                file_type=content_type or file_end,
+                file_name=filename or f"resume.{file_end}",
+                resume_data=data,
                 company_id=company_id,
-                job_id=job_id,
+                job_id=job_id
             )
         )
-        created_applications.append(created_application)
-        files_processed += 1
-    if not files_processed:
-        raise HTTPException(status_code=400, detail="No valid files found")
-    return {"files_processed": files_processed, "applications": created_applications}
+        return created_application
+    except Exception as e:
+        print(f"Failed to process file {filename}: {str(e)}")
 
 
 @router.post("/raw")
