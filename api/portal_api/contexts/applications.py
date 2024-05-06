@@ -166,16 +166,6 @@ def get_company_application(request: Request, company_id: str, application_id: s
     )
 
 
-@router.delete("/{application_id}")
-def delete_company_application(request: Request, company_id: str, application_id: str):
-    """Deletes an application"""
-    # First make sure that the application exists for this company
-    response = ApplicationUseCase(scope(request)).delete_application_for_job(
-        company_id, application_id
-    )
-    return response
-
-
 @router.post("/{application_id}/rerun-resume-scan", response_model=bool)
 def rerun_resume_scan(request: Request, company_id: str, application_id: str):
     application = ApplicationRepository(scope(request)).get(application_id)

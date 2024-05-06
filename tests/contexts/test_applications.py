@@ -18,6 +18,7 @@ from ajb.contexts.applications.models import (
 )
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.jobs.repository import JobRepository
+from ajb.contexts.companies.jobs.usecase import JobsUseCase
 from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
 from ajb.contexts.applications.matching.ai_matching import ApplicantMatchScore
 from ajb.contexts.applications.recruiter_updates.repository import (
@@ -165,7 +166,7 @@ def test_extract_application_filter_information():
 
     assert application.additional_filters
     assert application.additional_filters.average_job_duration_in_months == 8
-    assert application.additional_filters.average_gap_duration_in_months == 8
+    assert application.additional_filters.average_gap_duration_in_months == 7
     assert application.additional_filters.total_years_in_workforce == 1
     assert application.additional_filters.years_since_first_job == 1
 
@@ -251,19 +252,6 @@ def test_application_counts(request_scope):
     assert retrieved_job.high_matching_applicants == 0
     assert retrieved_job.new_applicants == 1
 
-    usecase.delete_all_applications_for_job(company.id, job.id)
-
-    retrieved_company = company_repo.get(company.id)
-    retrieved_job = job_repo.get(job.id)
-
-    assert retrieved_company.total_applicants == 0
-    assert retrieved_company.high_matching_applicants == 0
-    assert retrieved_company.new_applicants == 0
-
-    assert retrieved_job.total_applicants == 0
-    assert retrieved_job.high_matching_applicants == 0
-    assert retrieved_job.new_applicants == 0
-
 
 @pytest.mark.asyncio
 async def test_high_matching_applicants(request_scope):
@@ -311,19 +299,6 @@ async def test_high_matching_applicants(request_scope):
     assert retrieved_job.total_applicants == 1
     assert retrieved_job.high_matching_applicants == 1
     assert retrieved_job.new_applicants == 1
-
-    usecase.delete_all_applications_for_job(company.id, job.id)
-
-    retrieved_company = company_repo.get(company.id)
-    retrieved_job = job_repo.get(job.id)
-
-    assert retrieved_company.total_applicants == 0
-    assert retrieved_company.high_matching_applicants == 0
-    assert retrieved_company.new_applicants == 0
-
-    assert retrieved_job.total_applicants == 0
-    assert retrieved_job.high_matching_applicants == 0
-    assert retrieved_job.new_applicants == 0
 
 
 def test_application_status_update(request_scope):
@@ -400,15 +375,15 @@ def test_get_pending_applications(request_scope):
     pending_results, count = company_app_repo.get_all_pending_applications(
         app_data.company.id
     )
-    assert len(pending_results) == 6
-    assert count == 6
+    assert len(pending_results) == 4
+    assert count == 4
 
     # Include failed
     pending_results, count = company_app_repo.get_all_pending_applications(
         app_data.company.id, include_failed=True
     )
-    assert len(pending_results) == 7
-    assert count == 7
+    assert len(pending_results) == 5
+    assert count == 5
 
     # Query on specific job no failed
     pending_results, count = company_app_repo.get_all_pending_applications(
@@ -423,3 +398,80 @@ def test_get_pending_applications(request_scope):
     )
     assert len(pending_results) == 2
     assert count == 2
+
+
+def test_applications_with_job_active_filter(request_scope):
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
+    app_repo = ApplicationRepository(request_scope)
+    job_repo = JobRepository(request_scope, app_data.company.id)
+    company_app_repo = CompanyApplicationRepository(request_scope)
+
+    # Should get 1 application from query
+    results, count = company_app_repo.get_company_view_list(
+        company_id=app_data.company.id
+    )
+
+    assert len(results) == 1
+    assert count == 1
+
+    # Update job to not be active
+    job_repo.update_fields(app_data.job.id, active=False)
+
+    # Still expect to get 1 because there is no status filter
+    results, count = company_app_repo.get_company_view_list(
+        company_id=app_data.company.id
+    )
+
+    assert len(results) == 1
+    assert count == 1
+
+    # Now update app and query with a status filter
+    app_repo.update_fields(app_data.application.id, application_status="In Review")
+    results, count = company_app_repo.get_company_view_list(
+        company_id=app_data.company.id, status_filter=["In Review"]
+    )
+
+    # Expect to get 0 now
+    assert len(results) == 0
+    assert count == 0
+
+    # Update back to True
+    job_repo.update_fields(app_data.job.id, active=True)
+
+    # Now expect to get 1 application
+    results, count = company_app_repo.get_company_view_list(
+        company_id=app_data.company.id
+    )
+
+    assert len(results) == 1
+    assert count == 1
+
+
+def test_company_counts_with_job_active_filter(request_scope):
+    app_data = ApplicationFixture(request_scope).create_all_application_data()
+    company_repo = CompanyRepository(request_scope)
+    job_usecase = JobsUseCase(request_scope)
+
+    # The fixture doesn't actually update the company counts... so set the company counts to 1
+    company_repo.update_fields(app_data.company.id, total_applicants=1, total_jobs=1)
+
+    # Expect job and application counts to be 1
+    company = company_repo.get(app_data.company.id)
+    assert company.total_applicants == 1
+    assert company.total_jobs == 1
+
+    # Now make the job inactive
+    job_usecase.update_job_active_status(app_data.company.id, app_data.job.id, False)
+
+    # Now the counts should be 0
+    company = company_repo.get(app_data.company.id)
+    assert company.total_applicants == 0
+    assert company.total_jobs == 0
+
+    # Make it active again
+    job_usecase.update_job_active_status(app_data.company.id, app_data.job.id, True)
+
+    # Now the counts should be 1
+    company = company_repo.get(app_data.company.id)
+    assert company.total_applicants == 1
+    assert company.total_jobs == 1

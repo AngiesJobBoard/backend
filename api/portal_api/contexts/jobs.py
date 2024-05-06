@@ -18,10 +18,13 @@ router = APIRouter(tags=["Company Jobs"], prefix="/companies/{company_id}/jobs")
 
 @router.get("/", response_model=PaginatedJob)
 def get_all_jobs(
-    request: Request, company_id: str, query: QueryFilterParams = Depends()
+    request: Request,
+    company_id: str,
+    job_is_active_status: bool | None = None,
+    query: QueryFilterParams = Depends(),
 ):
     response = JobRepository(scope(request), company_id).get_company_jobs(
-        company_id, query
+        company_id, job_is_active_status, query
     )
     return build_pagination_response(
         response, query.page, query.page_size, request.url._url, PaginatedJob
@@ -44,9 +47,18 @@ def update_job(request: Request, company_id: str, job_id: str, job: UserCreateJo
     return JobsUseCase(scope(request)).update_job(company_id, job_id, job)
 
 
-@router.delete("/{job_id}")
-def delete_job(request: Request, company_id: str, job_id: str):
-    return JobsUseCase(scope(request)).delete_job(company_id, job_id)
+@router.post("/{job_id}/mark-inactive", response_model=Job)
+def mark_job_as_inactive(request: Request, company_id: str, job_id: str):
+    return JobsUseCase(scope(request)).update_job_active_status(
+        company_id, job_id, False
+    )
+
+
+@router.post("/{job_id}/mark-active", response_model=Job)
+def mark_job_as_active(request: Request, company_id: str, job_id: str):
+    return JobsUseCase(scope(request)).update_job_active_status(
+        company_id, job_id, True
+    )
 
 
 async def _process_jobs_csv_file(

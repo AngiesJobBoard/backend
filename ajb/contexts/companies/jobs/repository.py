@@ -31,6 +31,7 @@ class JobRepository(MultipleChildrenRepository[CreateJob, Job]):
     def get_company_jobs(
         self,
         company_id: str,
+        job_is_active_status: bool | None = None,
         query: QueryFilterParams | RepoFilterParams | None = None,
     ) -> tuple[list[Job], int]:
         # Better optimiation in the future is to track the count of applications in the job document directly
@@ -39,6 +40,8 @@ class JobRepository(MultipleChildrenRepository[CreateJob, Job]):
         else:
             query = query or RepoFilterParams()
         query.filters.append(Filter(field="company_id", value=company_id))
+        if job_is_active_status is not None:
+            query.filters.append(Filter(field="active", value=job_is_active_status))
         results, count = self.query_with_joins(
             joins=[
                 Join(

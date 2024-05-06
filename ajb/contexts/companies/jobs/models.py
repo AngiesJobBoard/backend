@@ -57,6 +57,7 @@ class CreateJob(UserCreateJob):
     total_applicants: int = 0
     high_matching_applicants: int = 0
     new_applicants: int = 0
+    active: bool = True
 
 
 class Job(CreateJob, BaseDataModel): ...

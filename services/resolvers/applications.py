@@ -16,12 +16,9 @@ from ajb.contexts.applications.events import (
 from ajb.contexts.applications.models import (
     ScanStatus,
     UpdateApplication,
-    Application,
 )
 from ajb.contexts.applications.matching.usecase import ApplicantMatchUsecase
 from ajb.contexts.applications.repository import ApplicationRepository
-from ajb.contexts.applications.usecase import ApplicationUseCase
-from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.applications.extract_data.usecase import ResumeExtractorUseCase
 from ajb.contexts.applications.application_questions.usecase import (

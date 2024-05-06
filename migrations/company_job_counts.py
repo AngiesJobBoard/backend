@@ -18,7 +18,8 @@ class CompanyCountsMigrationUseCase(BaseUseCase):
 
     def get_company_jobs(self, company_id: str) -> list[Job]:
         job_repo = self.get_repository(Collection.JOBS)
-        return job_repo.get_all(company_id=company_id)
+        all_jobs = job_repo.get_all(company_id=company_id)
+        return [job for job in all_jobs if job.active]
 
     def get_company_job_applications(self, job_id: str) -> list[Application]:
         application_repo = self.get_repository(Collection.APPLICATIONS)

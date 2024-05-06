@@ -115,6 +115,13 @@ class CompanyApplicationRepository(ApplicationRepository):
                     value=None,
                 )
             )
+            repo_filters.filters.append(
+                Filter(
+                    field="active",
+                    value=True,
+                    collection_alias="job",
+                )
+            )
         if resume_text_contains:
             repo_filters.filters.append(
                 Filter(
@@ -138,6 +145,14 @@ class CompanyApplicationRepository(ApplicationRepository):
                         field="application_status", value=status, and_or_operator="OR"
                     )
                 )
+            # If any status filters (otherwise all apps are returned) include a filter for jobs that are active only
+            repo_filters.filters.append(
+                Filter(
+                    field="active",
+                    value=True,
+                    collection_alias="job",
+                )
+            )
         return self.query_with_joins(
             joins=[
                 Join(

@@ -30,17 +30,10 @@ def test_create_many_jobs(request_scope, mock_openai):
     assert len(created_jobs) == 3
 
 
-def test_delete_job(request_scope, mock_openai):
-    company = CompanyFixture(request_scope).create_company()
-    usecase = JobsUseCase(request_scope, mock_openai)
-    created_job = usecase.create_job(company.id, UserCreateJob(position_title="test"))
-    usecase.delete_job(company.id, created_job.id)
-
-
 def test_query_company_jobs(request_scope):
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
-    company_fixture.create_company_job(company.id)
+    this_job = company_fixture.create_company_job(company.id)
     company_fixture.create_company_job(company.id)
     company_fixture.create_company_job(company.id)
     app_job = company_fixture.create_company_job(company.id)
@@ -51,8 +44,24 @@ def test_query_company_jobs(request_scope):
 
     query = QueryFilterParams(page=0, page_size=2)
     response, count = JobRepository(request_scope, company.id).get_company_jobs(
-        company.id, query
+        company.id, None, query
     )
 
     assert count == 4
     assert len(response) == 2
+
+    # Now make 1 inactive
+    JobRepository(request_scope, company.id).update_fields(this_job.id, active=False)
+    response, count = JobRepository(request_scope, company.id).get_company_jobs(
+        company.id, True
+    )
+
+    assert count == 3
+    assert len(response) == 3
+
+    response, count = JobRepository(request_scope, company.id).get_company_jobs(
+        company.id, False
+    )
+
+    assert count == 1
+    assert len(response) == 1
