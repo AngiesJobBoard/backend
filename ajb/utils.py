@@ -167,6 +167,8 @@ def get_perecent(numerator: int, denominator: int) -> int:
 def get_datetime_from_string(date_string: str) -> datetime:
     if date_string.lower() == "present":
         return datetime.now()
+    if date_string.lower() == "current":
+        return datetime.now()
     datetime_regex_map = {
         "DD-MM-YYYY": re.compile(r"^(\d{2})-(\d{2})-(\d{4})$"),
         "YYYY-Www": re.compile(r"^(\d{4})-W(\d{2})$"),
