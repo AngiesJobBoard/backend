@@ -154,7 +154,11 @@ class ApplicationUseCase(BaseUseCase):
         ]
         return self.create_many_applications(company_id, job_id, partial_candidates)
 
-    def create_application_from_resume(self, data: UserCreateResume) -> Application:
+    def create_application_from_resume(
+        self,
+        data: UserCreateResume,
+        additional_partial_data: CreateApplication | None = None,
+    ) -> Application:
         # Create an application for this resume
         resume = ResumeUseCase(self.request_scope).create_resume(data)
         partial_application = CreateApplication(
@@ -166,6 +170,10 @@ class ApplicationUseCase(BaseUseCase):
             resume_scan_status=ScanStatus.PENDING,
             match_score_status=ScanStatus.PENDING,
         )
+        if additional_partial_data:
+            partial_application = partial_application.model_dump()
+            partial_application.update(additional_partial_data.model_dump())
+            partial_application = CreateApplication(**partial_application)
         created_application = self.create_application(
             resume.company_id, resume.job_id, partial_application, False
         )

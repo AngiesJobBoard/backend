@@ -24,16 +24,21 @@ class ResumeExtractorUseCase(BaseUseCase):
         if not resume.file_type:
             raise ValueError("File type not provided")
 
-        if "pdf" in resume.file_type:
-            return extract_pdf_text_by_url(resume.resume_url), resume.resume_url
+        text = ""
+        try:
+            text = extract_pdf_text_by_url(resume.resume_url)
+        except Exception as e:
+            pass
 
-        if (
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            in resume.file_type
-        ):
-            return extract_docx_text_by_url(resume.resume_url), resume.resume_url
+        if not text:
+            try:
+                text = extract_docx_text_by_url(resume.resume_url)
+            except Exception as e:
+                pass
 
-        raise ValueError("File type not supported")
+        if not text:
+            raise ValueError("File type not supported")
+        return text, resume.resume_url
 
     async def extract_resume_information(self, resume_text: str) -> ExtractedResume:
         if resume_text == "":

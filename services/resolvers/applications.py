@@ -4,8 +4,6 @@ These are triggered when a company event is published to the Kafka topic
 and is then routed to the appropriate handler based on the event type.
 """
 
-import asyncio
-
 from ajb.base import RequestScope
 from ajb.base.events import BaseKafkaMessage, SourceServices
 from ajb.contexts.applications.events import (

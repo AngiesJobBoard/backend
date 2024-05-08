@@ -94,12 +94,24 @@ class IncomingPostCardManiaTransformer(BaseIncomingTransformer[PostCardManiaRawD
         resume_data = b64decode(self.data.resume_bytes[0])
         return ApplicationUseCase(self.request_scope).create_application_from_resume(
             data=UserCreateResume(
-                file_type="pdf",
+                file_type="upload",
                 file_name="webhook_resume",
                 resume_data=resume_data,
                 company_id=self.raw_data.company_id,
                 job_id=self.job_id,
-            )
+            ),
+            additional_partial_data=CreateApplication(
+                company_id=self.raw_data.company_id,
+                job_id=self.job_id,
+                name=f"{self.data.contact_information.full_name.first_name} {self.data.contact_information.full_name.last_name}",
+                email=self.data.contact_information.email,
+                phone=self.data.contact_information.phone,
+                user_location=Location(
+                    city=self.data.contact_information.city,
+                    state=self.data.contact_information.state,
+                    zipcode=self.data.contact_information.zip,
+                ),
+            ),
         )
 
     def create_application_from_data(self):

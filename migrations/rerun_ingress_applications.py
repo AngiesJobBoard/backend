@@ -1,4 +1,6 @@
-from ajb.base import BaseUseCase, RepoFilterParams
+from base64 import b64decode
+
+from ajb.base import BaseUseCase, RepoFilterParams, Collection
 from ajb.contexts.applications.events import IngressEvent
 
 from ajb.contexts.webhooks.ingress.applicants.application_raw_storage.repository import (
@@ -35,6 +37,16 @@ class ReRunApplicationUngressMigration(BaseUseCase):
                     raw_ingress_data_id=raw_ingress.id,
                 ),
             )
+
+    def download_pcm_ingress_file(self, raw_ingress_record_id: str, file_type: str):
+        raw_record = self.get_object(
+            Collection.RAW_INGRESS_APPLICATIONS, raw_ingress_record_id
+        )
+        resume_encoded = raw_record.data["resume_bytes"][0]
+        resume_bytes = b64decode(resume_encoded)
+
+        with open(f"downloaded_file.{file_type}", "wb") as file:
+            file.write(resume_bytes)
 
 
 def main():

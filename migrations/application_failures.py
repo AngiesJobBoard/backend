@@ -24,7 +24,8 @@ class ApplicationFailureReRunUseCase(BaseUseCase):
         application_repo = self.get_repository(Collection.APPLICATIONS)
         failed = application_repo.get_all(match_score_status=ScanStatus.FAILED.value)
         started = application_repo.get_all(match_score_status=ScanStatus.STARTED.value)
-        return failed + started
+        pending = application_repo.get_all(match_score_status=ScanStatus.PENDING.value)
+        return failed + started + pending
 
     async def rerun_failed_application_match(self):
         failed_application_matches = self.get_failed_application_match()
@@ -66,4 +67,4 @@ def main():
     asyncio.run(usecase.rerun_failed_application_match())
 
 
-main()
+# main()
