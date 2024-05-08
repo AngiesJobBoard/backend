@@ -68,8 +68,8 @@ class ApplicationEventsResolver:
         if not self.async_openai:
             raise MissingAsyncOpenAIRepository
 
+        extractor = ResumeExtractorUseCase(self.request_scope, self.async_openai)
         if data.parse_resume:
-            extractor = ResumeExtractorUseCase(self.request_scope, self.async_openai)
             if data.resume_id is None:
                 raise CouldNotParseResumeText
             raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
