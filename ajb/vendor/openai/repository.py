@@ -1,7 +1,7 @@
 import json
 from typing import Type
 from pydantic import BaseModel
-import instructor
+from instructor import from_openai
 from openai import OpenAI
 from aiohttp import ClientSession
 
@@ -12,7 +12,7 @@ from ajb.vendor.openai.client_factory import OpenAIClientFactory
 class OpenAIRepository:
     def __init__(self, client: OpenAI | None = None, model_override: str | None = None):
         self.client = client or OpenAIClientFactory.get_client()
-        self.instructor = instructor.from_openai(self.client)
+        self.instructor = from_openai(self.client)
         self.model_override = model_override
 
     def text_prompt(self, prompt: str, max_tokens: int = 100) -> str:

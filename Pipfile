@@ -25,6 +25,7 @@ python-docx = "*"
 stripe = "*"
 jsonpath-ng = "*"
 instructor = "*"
+anthropic = "*"
 
 [dev-packages]
 mypy = "*"
