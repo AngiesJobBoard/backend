@@ -19,7 +19,7 @@ from api.portal_api.middleware import verify_user, user_has_access_to_company
 
 company_api_router = APIRouter(
     tags=["Company"],
-    dependencies=[Depends(verify_user), Depends(user_has_access_to_company)],
+    dependencies=[Depends(verify_user)],
 )
 
 company_api_router.include_router(ai_generator.router)
