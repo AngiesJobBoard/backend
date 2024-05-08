@@ -196,11 +196,9 @@ class ApplicationEventsResolver:
         )
 
     async def application_is_submitted(self, send_webhooks: bool = True) -> None:
-        await asyncio.gather(
-            self.calculate_match_score(),
-            self.extract_application_filters(),
-            self.answer_application_questions(),
-        )
+        await self.calculate_match_score()
+        await self.extract_application_filters()
+        await self.answer_application_questions()
 
         # Send out application webhook
         if send_webhooks:

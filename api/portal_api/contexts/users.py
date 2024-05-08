@@ -19,21 +19,6 @@ router = APIRouter(tags=["Users"], prefix="/me")
 verify_password_attempt_cache: TTLCache[str, int] = TTLCache(maxsize=1000, ttl=60)
 
 
-@router.get("/state")
-def get_current_user_state(request: Request):
-    return JSONResponse(
-        json.loads(
-            json.dumps(
-                {
-                    "state": request.state.user.dict(),
-                    "companies": request.state.companies,
-                },
-                default=str,
-            )
-        )
-    )
-
-
 @router.get("/", response_model=User)
 def get_current_user(request: Request):
     return UserRepository(scope(request)).get(scope(request).user_id)

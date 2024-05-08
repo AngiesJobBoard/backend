@@ -64,5 +64,11 @@ class RecruiterRepository(MultipleChildrenRepository[CreateRecruiter, Recruiter]
         )
         return [CompanyAndRole(**result.model_dump()) for result in results]
 
+    def get_recruiter_by_company_and_user(self, company_id: str, user_id: str):
+        return self.get_one(
+            company_id=company_id,
+            user_id=user_id,
+        )
+
 
 RepositoryRegistry.register(RecruiterRepository)

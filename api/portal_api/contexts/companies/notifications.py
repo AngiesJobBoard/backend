@@ -45,7 +45,7 @@ def mark_all_notifications_as_read(request: Request, company_id: str):
     """Marks all notifications as read"""
     return CompanyNotificationUsecase(
         scope(request),
-    ).mark_all_recruiter_notifications_as_read(company_id, request.state.user.id)
+    ).mark_all_recruiter_notifications_as_read(company_id, scope(request).user_id)
 
 
 @router.post("/mark_read")

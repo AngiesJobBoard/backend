@@ -1,5 +1,13 @@
 from io import StringIO
-from fastapi import APIRouter, Request, UploadFile, File, HTTPException, Body, BackgroundTasks
+from fastapi import (
+    APIRouter,
+    Request,
+    UploadFile,
+    File,
+    HTTPException,
+    Body,
+    BackgroundTasks,
+)
 import pandas as pd
 
 from ajb.contexts.applications.usecase import ApplicationUseCase
@@ -50,11 +58,11 @@ async def upload_applications_from_csv(
 
 @router.post("/resume")
 async def upload_applications_from_resume(
-    background_tasks: BackgroundTasks, 
-    request: Request, 
-    company_id: str, 
-    job_id: str, 
-    files: list[UploadFile] = File(...)
+    background_tasks: BackgroundTasks,
+    request: Request,
+    company_id: str,
+    job_id: str,
+    files: list[UploadFile] = File(...),
 ):
     application_usecase = ApplicationUseCase(scope(request), storage)
     files_processed = 0
@@ -62,20 +70,23 @@ async def upload_applications_from_resume(
     for file in files:
         data = await file.read()  # Read file data in the main function
         background_tasks.add_task(
-            process_resume_file, 
-            application_usecase, 
-            file.filename, 
+            process_resume_file,
+            application_usecase,
+            file.filename,
             file.content_type,
-            data, 
-            company_id, 
-            job_id
+            data,
+            company_id,
+            job_id,
         )
         files_processed += 1
 
     return {"message": "Files are being processed", "files_processed": files_processed}
 
-def process_resume_file(application_usecase, filename, content_type, data, company_id, job_id):
-    file_end = filename.split('.')[-1]
+
+def process_resume_file(
+    application_usecase, filename, content_type, data, company_id, job_id
+):
+    file_end = filename.split(".")[-1]
     try:
         created_application = application_usecase.create_application_from_resume(
             UserCreateResume(
@@ -83,7 +94,7 @@ def process_resume_file(application_usecase, filename, content_type, data, compa
                 file_name=filename or f"resume.{file_end}",
                 resume_data=data,
                 company_id=company_id,
-                job_id=job_id
+                job_id=job_id,
             )
         )
         return created_application
