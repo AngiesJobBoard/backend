@@ -39,6 +39,7 @@ origins = [
     "http://localhost:3001",
     "https://matcher.ajbdevelopment.com",
     "https://*.ajbdevelopment.com",
+    "https://*.angiesjobboard.com",
 ]
 
 app.add_middleware(
