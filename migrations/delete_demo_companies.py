@@ -59,52 +59,6 @@ class DeleteDemoCompanyUseCase(BaseUseCase):
                 print("Skipping company deletion")
         print(f"Ending number of companies: {len(all_companies)}")
 
-    def delete_company_orphaned_documents(self):
-        companies_that_dont_exist = []
-        companies_that_do_exist = []
-        collection_list = [
-            Collection.COMPANY_RECRUITERS,
-            Collection.RECRUITER_INVITATIONS,
-            Collection.JOBS,
-            Collection.APPLICATIONS,
-            Collection.APPLICATION_RECRUITER_UPDATES,
-            Collection.RESUMES,
-            Collection.COMPANY_NOTIFICATIONS,
-            Collection.COMPANY_EMAIL_INGRESS_WEBHOOKS,
-            Collection.COMPANY_API_EGRESS_WEBHOOKS,
-            Collection.COMPANY_API_INGRESS_WEBHOOKS,
-            Collection.RAW_INGRESS_APPLICATIONS,
-        ]
-
-        for collection in collection_list:
-            repo = self.get_repository(collection)
-            try:
-                all_records = repo.get_all()
-            except:
-                print(f"Could not pull data for collection {collection}")
-                continue
-            for record in all_records:
-                if record.company_id in companies_that_do_exist:
-                    continue
-                if record.company_id in companies_that_dont_exist:
-                    print(
-                        f"Deleting record {record.id} with company_id {record.company_id} from collection {collection}"
-                    )
-                    r = repo.delete(record.id)
-                else:
-                    try:
-                        company = self.get_repository(Collection.COMPANIES).get(
-                            record.company_id
-                        )
-                        companies_that_do_exist.append(company.id)
-                    except:
-                        print(f"Company {record.company_id} does not exist")
-                        companies_that_dont_exist.append(record.company_id)
-                        print(
-                            f"Deleting record {record.id} with company_id {record.company_id} from collection {collection}"
-                        )
-                        r = repo.delete(record.id)
-
 
 def main():
     migration = DeleteDemoCompanyUseCase(MIGRATION_REQUEST_SCOPE)
