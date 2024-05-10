@@ -51,12 +51,12 @@ class Education(BaseModel):
 
 class Qualifications(BaseModel):
     most_recent_job: WorkHistory | None = None
-    work_history: list[WorkHistory] = Field(default_factory=list)
-    education: list[Education] = Field(default_factory=list)
-    skills: list[str] = Field(default_factory=list)
-    licenses: list[str] = Field(default_factory=list)
-    certifications: list[str] = Field(default_factory=list)
-    language_proficiencies: list[str] = Field(default_factory=list)
+    work_history: list[WorkHistory] | None = Field(default_factory=list)
+    education: list[Education] | None = Field(default_factory=list)
+    skills: list[str] | None = Field(default_factory=list)
+    licenses: list[str] | None = Field(default_factory=list)
+    certifications: list[str] | None = Field(default_factory=list)
+    language_proficiencies: list[str] | None = Field(default_factory=list)
 
 
 class JobDuration(BaseModel):
@@ -91,7 +91,7 @@ class UserCreatedApplication(BaseModel):
     resume_scan_attempts: int = 0
     match_score_status: ScanStatus = ScanStatus.NO_SCAN
     match_score_error_text: str | None = None
-    qualifications: Qualifications = Qualifications()
+    qualifications: Qualifications | None = Qualifications()
     additional_filters: AdditionalFilterInformation | None = None
     application_questions: list[ApplicationQuestion] | None = None
     name: str
@@ -212,7 +212,7 @@ class CreateApplication(UserCreatedApplication):
 
 class Application(CreateApplication, BaseDataModel):
 
-    def _get_job_duration_tuples(self) -> list[JobDuration]:
+    def _get_job_duration_tuples(self):
         duration_tuples = []
         if self.qualifications and self.qualifications.work_history:
             for work_history in self.qualifications.work_history:
@@ -228,7 +228,10 @@ class Application(CreateApplication, BaseDataModel):
                         still_at_job=work_history.still_at_job or False,
                     )
                     duration_tuples.append(duration_tuple)
-        sorted_duration_tuples = sorted(duration_tuples, key=lambda x: x.start_date)
+        sorted_duration_tuples = sorted(
+            (dt for dt in duration_tuples if dt.start_date is not None),
+            key=lambda x: x.start_date,
+        )
         return sorted_duration_tuples
 
     def get_average_job_duration_in_months(self):
@@ -273,7 +276,7 @@ class Application(CreateApplication, BaseDataModel):
         job_duration_tuples = self._get_job_duration_tuples()
         if not job_duration_tuples:
             return None
-        total_months = 0
+        total_months = 0.0
         for job_duration in job_duration_tuples:
             if job_duration.start_date and job_duration.end_date:
                 duration = relativedelta(job_duration.end_date, job_duration.start_date)

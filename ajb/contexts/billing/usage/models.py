@@ -32,12 +32,12 @@ class CreateMonthlyUsage(BaseModel):
     def calculate_total_usage_cost(
         self, usage_cost_details: dict[UsageType, UsageDetail]
     ):
-        total_cost = 0
+        total_cost = 0.0
         for usage_type, usage_count in self.transaction_counts.items():
             usage_detail = usage_cost_details[usage_type]
             if usage_count > usage_detail.free_tier_limit_per_month:
                 total_cost += (
-                    int(usage_count - usage_detail.free_tier_limit_per_month)
+                    float(usage_count - usage_detail.free_tier_limit_per_month)
                     * usage_detail.cost_usd_per_transaction
                 )
 

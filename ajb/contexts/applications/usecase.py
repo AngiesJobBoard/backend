@@ -51,7 +51,7 @@ class ApplicationUseCase(BaseUseCase):
         self.request_scope = request_scope
         self.storage_repo = storage or FirebaseStorageRepository()
 
-    def _get_job_questions(self, job_id):
+    def _get_job_questions(self, job_id: str) -> list[ApplicationQuestion]:
         job: Job = self.get_object(Collection.JOBS, job_id)
         if not job.application_questions_as_strings:
             return []
@@ -171,11 +171,13 @@ class ApplicationUseCase(BaseUseCase):
             match_score_status=ScanStatus.PENDING,
         )
         if additional_partial_data:
-            partial_application = partial_application.model_dump()
-            partial_application.update(additional_partial_data.model_dump())
-            partial_application = CreateApplication(**partial_application)
+            new_complete_application = partial_application.model_dump()
+            new_complete_application.update(additional_partial_data.model_dump())
+            modelled_new_complete_application = CreateApplication(
+                **new_complete_application
+            )
         created_application = self.create_application(
-            resume.company_id, resume.job_id, partial_application, False
+            resume.company_id, resume.job_id, modelled_new_complete_application, False
         )
         # Create kafka event for parsing the resume
         ApplicationEventProducer(

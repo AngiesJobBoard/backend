@@ -168,60 +168,6 @@ def test_admin_timeseries_with_aggregation(
     admin_search_repo.get_timeseries_data(
         collection=Collection.USERS, aggregation=Aggregation.DAILY
     )
-    # assert results[0]["count"] == 5
-
-    # results, count = admin_search_repo.get_timeseries_data(
-    #     collection=Collection.USERS, aggregation=Aggregation.HOURLY
-    # )
-    # assert count == 5
-    # assert len(results) == 1
-    # assert results[0]["count"] == 5
-
-    # results, count = admin_search_repo.get_timeseries_data(
-    #     collection=Collection.USERS, aggregation=Aggregation.MINUTE
-    # )
-    # assert count == 5
-    # assert len(results) == 1
-    # assert results[0]["count"] == 5
-
-    # results, count = admin_search_repo.get_timeseries_data(
-    #     collection=Collection.USERS, aggregation=Aggregation.WEEKLY
-    # )
-    # assert count == 5
-    # assert len(results) == 1
-    # assert results[0]["count"] == 5
-
-    # results, count = admin_search_repo.get_timeseries_data(
-    #     collection=Collection.USERS, aggregation=Aggregation.MONTHLY
-    # )
-    # assert count == 5
-    # assert len(results) == 1
-    # assert results[0]["count"] == 5
-
-    # results, count = admin_search_repo.get_timeseries_data(
-    #     collection=Collection.USERS, aggregation=Aggregation.YEARLY
-    # )
-    # assert count == 5
-    # assert len(results) == 1
-    # assert results[0]["count"] == 5
-
-    # results, count = admin_search_repo.get_timeseries_data(
-    #     collection=Collection.USERS,
-    #     start=datetime(2020, 1, 1),
-    #     end=datetime(2020, 1, 1),
-    #     aggregation=Aggregation.MONTHLY,
-    # )
-    # assert count == 0
-    # assert len(results) == 0
-
-    # results, count = admin_search_repo.get_timeseries_data(
-    #     collection=Collection.USERS,
-    #     start=datetime(2020, 1, 1),
-    #     end=datetime(3020, 1, 1),
-    #     aggregation=Aggregation.MONTHLY,
-    # )
-    # assert count == 5
-    # assert len(results) == 1
 
 
 def test_admin_global_search(

@@ -1,4 +1,4 @@
-from typing import cast
+from typing import cast, Any
 import re
 from concurrent.futures import ThreadPoolExecutor
 from ajb.base import (
@@ -144,7 +144,7 @@ class CompaniesUseCase(BaseUseCase):
         self, company_id: str, text: str, page: int, page_size: int
     ) -> CompanyGlobalSearchResults:
         """Search for jobs or applicants all at once"""
-        results = {}
+        results: dict[str, Any[list[CompanyGlobalSearchApplications]]] = {}
         with ThreadPoolExecutor() as executor:
             results["jobs"] = executor.submit(
                 self._global_search_jobs, company_id, text, page, page_size

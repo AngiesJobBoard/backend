@@ -46,13 +46,17 @@ def generate_prompt(resume_text: str) -> str:
     """
 
 
+class EmptyResumeException(Exception):
+    pass
+
+
 class SyncronousAIResumeExtractor:
     def __init__(self, openai: OpenAIRepository | None = None):
         self.openai = openai or OpenAIRepository()
 
     def get_candidate_profile_from_resume_text(self, resume_text: str):
         if resume_text == "":
-            raise Exception("Resume text is empty")
+            raise EmptyResumeException
         return self.openai.structured_prompt(
             prompt=generate_prompt(resume_text),
             max_tokens=4000,
@@ -66,7 +70,7 @@ class AIResumeExtractor:
 
     async def get_candidate_profile_from_resume_text(self, resume_text: str):
         if resume_text == "":
-            raise Exception("Resume text is empty")
+            raise EmptyResumeException
         results = await self.openai.json_prompt(
             prompt=generate_prompt(resume_text),
             max_tokens=4000,

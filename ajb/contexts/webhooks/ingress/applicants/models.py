@@ -9,7 +9,7 @@ class ApplicantWebhookEventType(str, Enum):
 
 class CreateApplicantWebhook(UserCreatedApplication):
     external_job_reference_code: str
-    external_reference_code: str
+    external_reference_code: str  # type: ignore
 
 
 class ApplicantsWebhook(BaseModel):

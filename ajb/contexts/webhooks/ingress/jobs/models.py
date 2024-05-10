@@ -11,11 +11,11 @@ class JobWebhookEventType(str, Enum):
 
 
 class CreateJobWebhook(UserCreateJob):
-    external_reference_code: str
+    external_reference_code: str  # type: ignore
 
 
 class UpdateJobWebhook(UserCreateJob):
-    external_reference_code: str
+    external_reference_code: str  # type: ignore
 
 
 class DeleteJobWebhook(BaseModel):

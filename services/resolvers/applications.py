@@ -73,8 +73,8 @@ class ApplicationEventsResolver:
             raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
         else:
             application = application_repository.get(data.application_id)
-            raw_text = application.extracted_resume_text
-            resume_url = application.resume_url
+            raw_text = str(application.extracted_resume_text)
+            resume_url = str(application.resume_url)
 
         if not raw_text or len(raw_text) == 0:
             raise CouldNotParseResumeText

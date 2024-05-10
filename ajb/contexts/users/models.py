@@ -17,8 +17,8 @@ class UpdateUser(BaseModel):
 
 
 class CreateUser(UpdateUser):
-    first_name: str
-    last_name: str
+    first_name: str  # type: ignore
+    last_name: str  # type: ignore
     email: str
     image_url: str | None = None
     phone_number: str | None = None

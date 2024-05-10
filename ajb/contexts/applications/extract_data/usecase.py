@@ -8,6 +8,14 @@ from ajb.contexts.applications.extract_data.ai_extractor import (
 )
 
 
+class EmptyResumeException(Exception):
+    pass
+
+
+class BadFileTypeException(Exception):
+    pass
+
+
 class ResumeExtractorUseCase(BaseUseCase):
     def __init__(self, request_scope: RequestScope, openai: AsyncOpenAIRepository):
         self.openai = openai
@@ -22,27 +30,27 @@ class ResumeExtractorUseCase(BaseUseCase):
         )
         # Check file type and call method accordingly
         if not resume.file_type:
-            raise ValueError("File type not provided")
+            raise BadFileTypeException
 
         text = ""
         try:
             text = extract_pdf_text_by_url(resume.resume_url)
-        except Exception as e:
+        except Exception:
             pass
 
         if not text:
             try:
                 text = extract_docx_text_by_url(resume.resume_url)
-            except Exception as e:
+            except Exception:
                 pass
 
         if not text:
-            raise ValueError("File type not supported")
+            raise BadFileTypeException
         return text, resume.resume_url
 
     async def extract_resume_information(self, resume_text: str) -> ExtractedResume:
         if resume_text == "":
-            raise Exception("Resume text is empty")
+            raise EmptyResumeException
         return await AIResumeExtractor(
             self.openai
         ).get_candidate_profile_from_resume_text(resume_text)

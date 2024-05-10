@@ -674,14 +674,6 @@ class MultipleChildrenRepository(BaseRepository[CreateDataSchema, DataSchema]):
                 f"No parent id provided for {parent_collection}, parent document may not exist"
             )
 
-    # pylint: disable=arguments-differ
-    def create(
-        self, data: CreateDataSchema, overridden_id: str | None = None, **kwargs
-    ) -> DataSchema:
-        return super().create(
-            data, overridden_id, self.parent_collection, self.parent_id
-        )
-
 
 class BaseViewRepository:
     view: View

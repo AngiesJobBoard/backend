@@ -65,6 +65,3 @@ class ApplicationFailureReRunUseCase(BaseUseCase):
 def main():
     usecase = ApplicationFailureReRunUseCase(MIGRATION_REQUEST_SCOPE)
     asyncio.run(usecase.rerun_failed_application_match())
-
-
-# main()

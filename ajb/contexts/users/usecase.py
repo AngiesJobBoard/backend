@@ -134,9 +134,6 @@ class UserUseCase(BaseUseCase):
     def create_demo_company_for_user(self, user_id: str) -> Company:
         # Check if user already in more than 1 company, if so then reject
         recruiter_repository = self.get_repository(Collection.COMPANY_RECRUITERS)
-        recruiter_results = recruiter_repository.get_count(user_id=user_id)
-        # if recruiter_results > 1:
-        # raise FailedToCreateDemoCompany
 
         # Create the new demo company
         user: User = self.get_object(Collection.USERS, user_id)

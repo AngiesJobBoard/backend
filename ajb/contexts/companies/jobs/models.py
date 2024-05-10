@@ -77,16 +77,21 @@ class AdminSearchJobsWithCompany(BaseModel):
     sort_is_descending: bool = False
 
     def convert_to_repo_params(self) -> RepoFilterParams:
-        formatted_query = RepoFilterParams(
+        formatted_query = self.initialize_repo_params()
+        self.add_filters(formatted_query)
+        self.add_sorts(formatted_query)
+        return formatted_query
+
+    def initialize_repo_params(self) -> RepoFilterParams:
+        return RepoFilterParams(
             filters=[],
             sorts=[],
-            pagination=Pagination(
-                page=self.page,
-                page_size=self.page_size,
-            ),
+            pagination=Pagination(page=self.page, page_size=self.page_size),
         )
+
+    def add_filters(self, query: RepoFilterParams) -> None:
         if self.position_title:
-            formatted_query.filters.append(
+            query.filters.append(
                 Filter(
                     field="position_title",
                     value=self.position_title,
@@ -94,7 +99,7 @@ class AdminSearchJobsWithCompany(BaseModel):
                 )
             )
         if self.company_name:
-            formatted_query.filters.append(
+            query.filters.append(
                 Filter(
                     field="name",
                     value=self.company_name,
@@ -102,30 +107,27 @@ class AdminSearchJobsWithCompany(BaseModel):
                     collection_alias="company",
                 )
             )
+
+    def add_sorts(self, query: RepoFilterParams) -> None:
         if self.sort:
             if "company" in self.sort:
-                formatted_query.sorts.append(
+                query.sorts.append(
                     Sort(
                         field="name",
                         direction="DESC" if self.sort_is_descending else "ASC",
                         collection_alias="company",
                     )
                 )
-            elif "pay" in self.sort:
-                formatted_query.sorts.append(
-                    Sort(
-                        field=self.sort.replace("__", "."),
-                        direction="DESC" if self.sort_is_descending else "ASC",
-                    )
-                )
             else:
-                formatted_query.sorts.append(
+                query.sorts.append(
                     Sort(
                         field=self.sort,
                         direction="DESC" if self.sort_is_descending else "ASC",
                     )
                 )
-        return formatted_query
+
+    def sort_direction(self) -> str:
+        return "DESC" if self.sort_is_descending else "ASC"
 
 
 class JobWithCompany(BaseDataModel):

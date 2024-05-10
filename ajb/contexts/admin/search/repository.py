@@ -1,4 +1,4 @@
-from typing import cast, Literal
+from typing import cast, Literal, Any
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
@@ -164,7 +164,7 @@ class AdminSearchRepository:
             pagination=pagination,
         )
 
-        results = {}
+        results: Any = {}
         with ThreadPoolExecutor() as executor:
             results[Collection.USERS] = executor.submit(
                 build_and_execute_query,
@@ -203,7 +203,12 @@ class AdminSearchRepository:
                 ],
             )
         return {
-            collection: result.result()[0] for collection, result in results.items()
+            collection: (
+                result.result()[0]
+                if isinstance(result.result(), tuple)
+                else result.result()
+            )
+            for collection, result in results.items()
         }
 
     def get_object(self, collection: Collection, object_id: str):

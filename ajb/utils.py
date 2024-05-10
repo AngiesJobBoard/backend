@@ -165,27 +165,40 @@ def get_perecent(numerator: int, denominator: int) -> int:
 
 
 def get_datetime_from_string(date_string: str) -> datetime:
-    if date_string.lower() == "present":
+    if is_present_or_current(date_string):
         return datetime.now()
-    if date_string.lower() == "current":
-        return datetime.now()
+
     datetime_regex_map = {
         "DD-MM-YYYY": re.compile(r"^(\d{2})-(\d{2})-(\d{4})$"),
         "YYYY-Www": re.compile(r"^(\d{4})-W(\d{2})$"),
     }
+
+    return parse_date_string(date_string, datetime_regex_map)
+
+
+def is_present_or_current(date_string: str) -> bool:
+    lower_date_string = date_string.lower()
+    return lower_date_string == "present" or "current" in lower_date_string
+
+
+def parse_date_string(date_string: str, datetime_regex_map: dict) -> datetime:
     try:
         return dateutil.parser.parse(date_string)
     except (ValueError, OverflowError):
         for format_label, regex in datetime_regex_map.items():
-            match = regex.match(date_string)
-            if match and format_label:
-                if format_label == "DD-MM-YYYY":
-                    day, month, year = match.groups()
-                    return datetime(int(year), int(month), int(day))
-                if format_label == "YYYY-Www":
-                    year, week = match.groups()
-                    return datetime.strptime(f"{year} {week} 1", "%Y %W %w")
+            if match := regex.match(date_string):
+                return construct_datetime_from_match(match, format_label)
     raise ValueError(f"Could not parse date string: {date_string}")
+
+
+def construct_datetime_from_match(match, format_label) -> datetime:
+    if format_label == "DD-MM-YYYY":
+        day, month, year = match.groups()
+        return datetime(int(year), int(month), int(day))
+    if format_label == "YYYY-Www":
+        year, week = match.groups()
+        return datetime.strptime(f"{year} {week} 1", "%Y %W %w")
+    raise ValueError("Unsupported date format")
 
 
 def get_miles_between_lat_long_pairs(

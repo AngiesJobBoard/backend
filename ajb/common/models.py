@@ -151,7 +151,7 @@ class DataReducedUser(BaseDataModel):
     auth_id: str | None = None
     profile_is_public: bool | None = None
     candidate_score: float | None = None
-    created_at: datetime | None = None
+    created_at: datetime
     most_recent_job: str | None = None
     most_recent_company: str | None = None
     desired_job_title: str | None = None

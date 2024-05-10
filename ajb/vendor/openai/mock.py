@@ -7,6 +7,7 @@ class MockCompletions:
     def __init__(self, return_content):
         self.return_content = return_content
 
+    # pylint: disable=unused-argument
     def create(self, *args, **kwargs):
         return ChatCompletion(
             id="test",

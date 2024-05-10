@@ -22,40 +22,6 @@ router = APIRouter(
 )
 
 
-async def _process_applications_csv_file(
-    company_id: str,
-    job_id: str,
-    file: UploadFile,
-    application_usecase: ApplicationUseCase,
-):
-    if file and file.filename and not file.filename.endswith(".csv"):
-        return []
-    content = await file.read()
-    content = content.decode("utf-8")
-    content = StringIO(content)
-    df = pd.read_csv(str(content))
-    raw_candidates = df.to_dict(orient="records")
-    return application_usecase.create_applications_from_csv(
-        company_id, job_id, raw_candidates
-    )
-
-
-@router.post("/csv-upload")
-async def upload_applications_from_csv(
-    request: Request, company_id: str, job_id: str, files: list[UploadFile] = File(...)
-):
-    all_created_applications = []
-    application_repo = ApplicationUseCase(scope(request))
-    for file in files:
-        application = await _process_applications_csv_file(
-            company_id, job_id, file, application_repo
-        )  # type: ignore
-        all_created_applications.extend(application)
-    if not all_created_applications:
-        raise HTTPException(status_code=400, detail="No valid applications found")
-    return all_created_applications
-
-
 @router.post("/resume")
 async def upload_applications_from_resume(
     background_tasks: BackgroundTasks,
