@@ -171,13 +171,13 @@ class ApplicationUseCase(BaseUseCase):
             match_score_status=ScanStatus.PENDING,
         )
         if additional_partial_data:
-            new_complete_application = partial_application.model_dump()
-            new_complete_application.update(additional_partial_data.model_dump())
-            modelled_new_complete_application = CreateApplication(
-                **new_complete_application
+            partial_application = partial_application.model_dump()
+            partial_application.update(additional_partial_data.model_dump())
+            partial_application = CreateApplication(
+                **partial_application
             )
         created_application = self.create_application(
-            resume.company_id, resume.job_id, modelled_new_complete_application, False
+            resume.company_id, resume.job_id, partial_application, False
         )
         # Create kafka event for parsing the resume
         ApplicationEventProducer(
