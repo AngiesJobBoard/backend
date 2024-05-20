@@ -59,3 +59,8 @@ def mark_job_as_active(request: Request, company_id: str, job_id: str):
     return JobsUseCase(scope(request)).update_job_active_status(
         company_id, job_id, True
     )
+
+
+@router.post("/{job_id}/toggle-public-page", response_model=Job)
+def toggle_job_public_page(request: Request, company_id: str, job_id: str, is_available: bool = Body(...)):
+    return JobRepository(scope(request), company_id).update_fields(job_id, job_is_public=is_available)
