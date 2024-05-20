@@ -1,7 +1,6 @@
 import json
 from fastapi import Request
 
-from ajb.base import RequestScope
 from ajb.contexts.companies.api_ingress_webhooks.models import (
     CompanyAPIIngress,
     APIIngressJWTData,
@@ -15,18 +14,7 @@ from ajb.contexts.companies.email_ingress_webhooks.repository import (
 )
 from ajb.vendor.jwt import decode_jwt
 from api.middleware import scope
-from api.vendors import db, kafka_producer
 from api.exceptions import Forbidden
-
-
-async def verify_open_request(
-    request: Request,
-):
-    request.state.request_scope = RequestScope(
-        user_id="webhook",
-        db=db,
-        kafka=kafka_producer,
-    )
 
 
 class OpenRequestValidator:

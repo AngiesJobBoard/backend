@@ -13,6 +13,7 @@ from .models import (
     CreateJob,
     JobWithCompany,
     AdminSearchJobsWithCompany,
+    FullJobWithCompany,
 )
 
 
@@ -60,20 +61,27 @@ class JobRepository(MultipleChildrenRepository[CreateJob, Job]):
         ]
         return formatted_job_results, count
 
+    def get_full_job_with_company(self, job_id: str) -> FullJobWithCompany:
+        return self.get_with_joins(
+            job_id,
+            joins=[
+                Join(
+                    to_collection_alias="company",
+                    to_collection="companies",
+                    from_collection_join_attr="company_id",
+                )
+            ],
+            return_model=FullJobWithCompany,
+        )  # type: ignore
+
     def get_jobs_with_company(
         self,
         job_id: str | None = None,
         query: AdminSearchJobsWithCompany = AdminSearchJobsWithCompany(),
-        is_live: bool = False,
-        is_boosted: bool = False,
     ) -> tuple[list[JobWithCompany], int]:
         formatted_query = query.convert_to_repo_params()
         if job_id:
             formatted_query.filters.append(Filter(field="_key", value=job_id))
-        if is_live:
-            formatted_query.filters.append(Filter(field="is_live", value=is_live))
-        if is_boosted:
-            formatted_query.filters.append(Filter(field="is_boosted", value=is_boosted))
         return self.query_with_joins(  # type: ignore
             joins=[
                 Join(

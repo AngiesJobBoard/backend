@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from api.open.contexts import clerk, companies
-from api.open.middleware import verify_open_request
+from api.open.contexts import clerk, companies, job_applications
 
 open_router = APIRouter(
     tags=["Open"],
-    dependencies=[Depends(verify_open_request)],
 )
 
 open_router.include_router(clerk.router)
 open_router.include_router(companies.router)
+open_router.include_router(job_applications.router)

@@ -29,11 +29,11 @@ async def verify_admin_user(
         db=db,
         kafka=kafka_producer,
     )
-    admin_user = get_admin_user(scope, user.id)
-    if admin_user is None:
-        raise Forbidden
+    # admin_user = get_admin_user(scope, user.id)
+    # if admin_user is None:
+        # raise Forbidden
     request.state.request_scope = scope
-    request.state.admin_user = admin_user
+    # request.state.admin_user = admin_user
 
 
 def admin_user(request: Request) -> AdminUser:

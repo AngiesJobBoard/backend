@@ -58,6 +58,7 @@ class CreateJob(UserCreateJob):
     high_matching_applicants: int = 0
     new_applicants: int = 0
     active: bool = True
+    job_is_public: bool = False
 
 
 class Job(CreateJob, BaseDataModel): ...
@@ -144,3 +145,7 @@ class JobWithCompany(BaseDataModel):
 @dataclass
 class PaginatedJobsWithCompany(PaginatedResponse[JobWithCompany]):
     data: list[JobWithCompany]
+
+
+class FullJobWithCompany(Job):
+    company: DataReducedCompany
