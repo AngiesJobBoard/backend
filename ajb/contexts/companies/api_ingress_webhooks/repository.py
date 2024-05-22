@@ -16,6 +16,8 @@ from ajb.base import (
     MultipleChildrenRepository,
     RepositoryRegistry,
     RequestScope,
+    RepoFilterParams,
+    QueryFilterParams,
 )
 from ajb.vendor.jwt import decode_jwt
 

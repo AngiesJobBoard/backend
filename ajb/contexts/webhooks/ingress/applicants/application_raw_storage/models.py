@@ -7,6 +7,7 @@ class CreateRawIngressApplication(BaseModel):
     company_id: str
     ingress_id: str
     application_id: str | None = None
+    job_id: str | None = None
     data: dict
 
 

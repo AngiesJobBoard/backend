@@ -37,12 +37,16 @@ class ApplicationRepository(ParentRepository[CreateApplication, Application]):
         raw_resume_text: str,
         resume_information: ExtractedResume,
     ) -> Application:
+        original_application = self.get(application_id)
         return self.update(
             application_id,
             UpdateApplication(
-                name=f"{resume_information.first_name} {resume_information.last_name}".title(),
-                email=resume_information.email,
-                phone=resume_information.phone_number,
+                name=(
+                    original_application.name
+                    or f"{resume_information.first_name} {resume_information.last_name}".title()
+                ),
+                email=original_application.email or resume_information.email,
+                phone=original_application.phone or resume_information.phone_number,
                 extracted_resume_text=raw_resume_text,
                 resume_url=resume_url,
                 qualifications=Qualifications(
@@ -62,7 +66,7 @@ class ApplicationRepository(ParentRepository[CreateApplication, Application]):
                     certifications=resume_information.certifications or [],
                     language_proficiencies=resume_information.languages or [],
                 ),
-                user_location=(
+                user_location=original_application.user_location or (
                     Location(
                         city=resume_information.city, state=resume_information.state
                     )

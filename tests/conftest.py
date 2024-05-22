@@ -12,7 +12,7 @@ from ajb.vendor.kafka.client_factory import KafkaProducerFactory
 from ajb.vendor.openai.mock import MockOpenAI
 from ajb.vendor.openai.repository import OpenAIRepository
 
-from api.app import app
+from api.main import app
 
 
 @pytest.fixture(scope="session", autouse=True)

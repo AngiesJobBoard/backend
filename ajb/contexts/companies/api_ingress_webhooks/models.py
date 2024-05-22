@@ -69,7 +69,8 @@ class CreateCompanyAPIIngress(UserCreateIngress):
         )
 
 
-class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel): ...
+class CompanyAPIIngress(CreateCompanyAPIIngress, BaseDataModel):
+    record_count: int | None = None  # added from query, not created or updated
 
 
 @dataclass

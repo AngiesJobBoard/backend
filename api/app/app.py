@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends
 
-from api.portal_api.contexts import (
+from api.app.contexts import (
     enumerations,
     health,
     static_data,
     users,
 )
-from api.portal_api.contexts.companies.app import company_api_router
-from api.portal_api.middleware import verify_user
+from api.app.contexts.companies.app import company_api_router
+from api.app.middleware import verify_user
 
 portal_api_router = APIRouter(
     tags=["Portal"],
