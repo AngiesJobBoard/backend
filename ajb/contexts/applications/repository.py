@@ -42,11 +42,11 @@ class ApplicationRepository(ParentRepository[CreateApplication, Application]):
             application_id,
             UpdateApplication(
                 name=(
-                    original_application.name
-                    or f"{resume_information.first_name} {resume_information.last_name}".title()
+                    original_application.name if original_application.name is not None else
+                    f"{resume_information.first_name} {resume_information.last_name}".title()
                 ),
-                email=original_application.email or resume_information.email,
-                phone=original_application.phone or resume_information.phone_number,
+                email=original_application.email if original_application.email is not None else resume_information.email,
+                phone=original_application.phone if original_application.phone is not None else resume_information.phone_number,
                 extracted_resume_text=raw_resume_text,
                 resume_url=resume_url,
                 qualifications=Qualifications(
