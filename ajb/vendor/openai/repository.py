@@ -39,12 +39,21 @@ class OpenAIRepository:
         return json.loads(output)
 
     def structured_prompt(
-        self, prompt: str, response_model: Type[BaseModel], max_tokens: int = 100
+        self,
+        prompt: str,
+        response_model: Type[BaseModel],
+        max_tokens: int = 100,
+        system_prompt: str | None = None,
     ):
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         return self.instructor.chat.completions.create(
             model=self.model_override or SETTINGS.OPENAI_MODEL,
             response_model=response_model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             max_tokens=max_tokens,
         )
 
