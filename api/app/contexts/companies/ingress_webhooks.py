@@ -21,7 +21,10 @@ router = APIRouter(
 
 @router.get("/", response_model=PaginatedCompanyIngress)
 def get_all_company_ingress_webhooks(
-    request: Request, company_id: str, job_id: str | None = None, query: QueryFilterParams = Depends()
+    request: Request,
+    company_id: str,
+    job_id: str | None = None,
+    query: QueryFilterParams = Depends(),
 ):
     response = APIIngressUsecase(scope(request)).get_ingress_records_with_count(
         company_id, job_id, query

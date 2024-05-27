@@ -14,7 +14,7 @@ from api.app.contexts.companies import (
     jobs,
     notifications,
     recruiters,
-    raw_api_ingress
+    raw_api_ingress,
 )
 from api.app.middleware import verify_user, user_has_access_to_company
 

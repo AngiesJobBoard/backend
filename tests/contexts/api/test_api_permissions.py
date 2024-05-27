@@ -11,7 +11,7 @@ from tests.contexts.api.conftest import (
 def test_portal_request_success(request_scope, api: TestClient):
     user = UserFixture(request_scope).create_user()
     request_scope.user_id = user.id
-    with portal_api_patches(request_scope, "api.portal_api.contexts.users.scope"):
+    with portal_api_patches(request_scope, "api.app.contexts.users.scope"):
         resp = api.get("/me/", headers=AUTH_HEADER)
 
     assert resp.status_code == 200

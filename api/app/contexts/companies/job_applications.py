@@ -50,7 +50,12 @@ async def upload_applications_from_resume(
 
 
 def process_resume_file(
-    application_usecase: ApplicationUseCase, filename, content_type, data, company_id, job_id
+    application_usecase: ApplicationUseCase,
+    filename,
+    content_type,
+    data,
+    company_id,
+    job_id,
 ):
     file_end = filename.split(".")[-1]
     try:
