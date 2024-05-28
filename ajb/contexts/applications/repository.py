@@ -43,10 +43,19 @@ class ApplicationRepository(ParentRepository[CreateApplication, Application]):
             UpdateApplication(
                 name=(
                     original_application.name
-                    or f"{resume_information.first_name} {resume_information.last_name}".title()
+                    if original_application.name is not None
+                    else f"{resume_information.first_name} {resume_information.last_name}".title()
                 ),
-                email=original_application.email or resume_information.email,
-                phone=original_application.phone or resume_information.phone_number,
+                email=(
+                    original_application.email
+                    if original_application.email is not None
+                    else resume_information.email
+                ),
+                phone=(
+                    original_application.phone
+                    if original_application.phone is not None
+                    else resume_information.phone_number
+                ),
                 extracted_resume_text=raw_resume_text,
                 resume_url=resume_url,
                 qualifications=Qualifications(
@@ -66,7 +75,8 @@ class ApplicationRepository(ParentRepository[CreateApplication, Application]):
                     certifications=resume_information.certifications or [],
                     language_proficiencies=resume_information.languages or [],
                 ),
-                user_location=original_application.user_location or (
+                user_location=original_application.user_location
+                or (
                     Location(
                         city=resume_information.city, state=resume_information.state
                     )

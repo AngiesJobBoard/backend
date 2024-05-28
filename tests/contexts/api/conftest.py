@@ -11,7 +11,7 @@ AUTH_HEADER = {"authorization": "Bearer abc"}
 
 @contextmanager
 def portal_api_patches(request_scope: RequestScope, path_to_router: str):
-    with patch("api.portal_api.middleware.decode_user_token") as mock_token:
+    with patch("api.app.middleware.decode_user_token") as mock_token:
         mock_token.return_value = SessionData(
             id=request_scope.user_id, actor={}, public_meta={}
         )

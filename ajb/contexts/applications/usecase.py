@@ -173,9 +173,7 @@ class ApplicationUseCase(BaseUseCase):
         if additional_partial_data:
             partial_application = partial_application.model_dump()
             partial_application.update(additional_partial_data.model_dump())
-            partial_application = CreateApplication(
-                **partial_application
-            )
+            partial_application = CreateApplication(**partial_application)
         created_application = self.create_application(
             resume.company_id, resume.job_id, partial_application, False
         )

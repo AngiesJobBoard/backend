@@ -5,7 +5,7 @@ from ajb.fixtures.users import UserFixture
 from tests.contexts.api.conftest import portal_api_patches, AUTH_HEADER
 
 
-ROUTER_PATH = "api.portal_api.contexts.users.scope"
+ROUTER_PATH = "api.app.contexts.users.scope"
 
 
 def test_get_me(request_scope, api: TestClient):
