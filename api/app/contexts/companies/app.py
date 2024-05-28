@@ -11,12 +11,13 @@ from api.app.contexts.companies import (
     invitations,
     job_applications,
     job_email_ingress,
+    job_interview_rubrics,
     jobs,
     notifications,
-    recruiters,
     raw_api_ingress,
+    recruiters,
 )
-from api.app.middleware import verify_user, user_has_access_to_company
+from api.app.middleware import user_has_access_to_company, verify_user
 
 company_api_router = APIRouter(
     tags=["Company"],
@@ -37,3 +38,4 @@ company_api_router.include_router(jobs.router)
 company_api_router.include_router(notifications.router)
 company_api_router.include_router(recruiters.router)
 company_api_router.include_router(raw_api_ingress.router)
+company_api_router.include_router(job_interview_rubrics.router)

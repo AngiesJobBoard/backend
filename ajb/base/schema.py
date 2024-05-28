@@ -6,6 +6,7 @@ as create them when running a migration or creating a new database.
 """
 
 from enum import Enum
+
 from pydantic import BaseModel
 
 
@@ -28,6 +29,8 @@ class Collection(str, Enum):
     COMPANY_EMAIL_INGRESS_WEBHOOKS = "company_email_ingress_webhooks"
     COMPANY_API_INGRESS_WEBHOOKS = "company_api_ingress_webhooks"
     RAW_INGRESS_APPLICATIONS = "raw_ingress_applications"
+    JOB_INTERVIEW_RUBRICS = "job_interview_rubrics"
+    JOB_INTERVIEWS = "job_interviews"
 
     COMPANY_API_EGRESS_WEBHOOKS = "company_api_egress_webhooks"
 

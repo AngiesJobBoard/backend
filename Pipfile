@@ -26,6 +26,8 @@ stripe = "*"
 jsonpath-ng = "*"
 instructor = "*"
 anthropic = "*"
+groq = "*"
+assemblyai = "*"
 
 [dev-packages]
 mypy = "*"

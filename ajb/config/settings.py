@@ -25,6 +25,11 @@ class AppSettings:
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "")
 
+    # Groq config
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GROQ_LLAMA_MODEL: str = os.getenv("GROQ_LLAMA_MODEL", "")
+    GROQ_WHISPER_MODEL: str = os.getenv("GROQ_WHISPER_MODEL", "")
+
     # Clerk config
     CLERK_JWT_PEM_KEY: str = os.getenv("CLERK_JWT_PEM_KEY", "").replace(r"\n", "\n")
     CLERK_TOKEN_LEEWAY: int = int(os.getenv("CLERK_TOKEN_LEEWAY", "3600"))
@@ -91,6 +96,9 @@ class AppSettings:
 
     # Stripe for handling subscriptions and invoicing
     STRIPE_API_KEY: str = os.getenv("STRIPE_API_KEY", "")
+
+    # AssemblyAI config
+    ASSEMBLYAI_API_KEY: str = os.getenv("ASSEMBLYAI_API_KEY", "")
 
     class Config:
         env_file = ".env"
