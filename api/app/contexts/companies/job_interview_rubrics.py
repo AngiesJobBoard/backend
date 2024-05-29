@@ -13,7 +13,7 @@ from ajb.contexts.companies.jobs.job_interview_rubric.repository import (
     JobInterviewRubricRepository,
 )
 from ajb.contexts.companies.jobs.job_interview_rubric.usecase import (
-    JobInterviewRubricUsecase,
+    JobInterviewRubricUseCase,
 )
 from api.middleware import scope
 from api.vendors import openai
@@ -38,14 +38,14 @@ def set_job_interview_rubric(
     """
     Create a job interview rubric for a specific job.
     """
-    return JobInterviewRubricUsecase(scope(request), job_id).set_sub_entity(rubric)
+    return JobInterviewRubricRepository(scope(request), job_id).set_sub_entity(rubric)
 
 
 @router.post("/generate", response_model=JobInterviewRubric)
-def generate_job_interview_rubric(request: Request, company_id: str, job_id: str):
+def generate_job_interview_rubric(request: Request, job_id: str):
     """
     Generate a job interview rubric for a specific job.
     """
-    return JobInterviewRubricUsecase(
+    return JobInterviewRubricUseCase(
         scope(request), openai
-    ).generate_job_interview_rubric(company_id, job_id)
+    ).generate_job_interview_rubric(job_id)

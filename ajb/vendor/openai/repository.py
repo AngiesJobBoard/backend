@@ -1,5 +1,5 @@
 import json
-from typing import Type
+from typing import Type, Any
 from pydantic import BaseModel
 from instructor import from_openai
 from openai import OpenAI
@@ -44,7 +44,7 @@ class OpenAIRepository:
         response_model: Type[BaseModel],
         max_tokens: int = 100,
         system_prompt: str | None = None,
-    ):
+    ) -> Any:
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
