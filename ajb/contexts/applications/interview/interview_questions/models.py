@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import List
 from pydantic import BaseModel, Field
 
@@ -13,7 +13,7 @@ class Subsection(BaseModel):
     )
 
 
-class SectionType(str, Enum):
+class SectionType(StrEnum):
     """Enumeration representing the types of sections in the question outline."""
 
     TECH_SKILLS_AND_EXPERIENCE = "Technical Skills and Experience"

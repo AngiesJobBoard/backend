@@ -1,4 +1,6 @@
-from ajb.contexts.interview.models import QuestionDocument
+from ajb.contexts.applications.interview.interview_questions.models import (
+    QuestionDocument,
+)
 from ajb.vendor.openai.repository import OpenAIRepository
 
 

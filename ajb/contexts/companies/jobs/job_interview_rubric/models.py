@@ -5,13 +5,17 @@ from pydantic import BaseModel, Field
 from ajb.base import BaseDataModel
 
 
-class ScoreLevel(StrEnum):
+class SkillLevel(StrEnum):
+    """Enumeration representing the how well a candidate does on a particular skill"""
+
     LOW = "Low"
     MEDIUM = "Medium"
     HIGH = "High"
 
 
 class Criteria(BaseModel):
+    """A Single Criteria for evaluating a candidate's interview transcript"""
+
     skill_name: str = Field(
         ...,
         description="The classification name for this skill",
@@ -21,10 +25,13 @@ class Criteria(BaseModel):
         description="The criteria for this skill",
     )
     weight: int = Field(..., gt=0, lt=5, description="How important this criteria is")
+    skill_level: SkillLevel = Field(
+        ..., description="How well the candidate does on this skill"
+    )
 
 
 class CreateJobInterviewRubric(BaseModel):
-    """Provide specific criteria for grading each skill"""
+    """Main criteria for grading each skill"""
 
     technical_skills: list[Criteria] = Field(
         ..., default_factory=list, description="The technical skills to evaluate"
