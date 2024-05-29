@@ -73,5 +73,5 @@ class AIJobInterviewRubric:
         return self.openai.structured_prompt(
             prompt=self.make_prompt_v1(job_details),
             response_model=CreateJobInterviewRubric,
-            max_tokens=20000,
+            max_tokens=8000,
         )
