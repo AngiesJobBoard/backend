@@ -6,7 +6,7 @@ from ajb.base import BaseDataModel
 
 
 class SkillLevel(StrEnum):
-    """Enumeration representing the how well a candidate does on a particular skill"""
+    """Enumeration representing the how proficient a candidate is on a particular skill"""
 
     LOW = "Low"
     MEDIUM = "Medium"
@@ -24,9 +24,9 @@ class Criteria(BaseModel):
         ...,
         description="The criteria for this skill",
     )
-    weight: int = Field(..., gt=0, lt=5, description="How important this criteria is")
+    weight: int = Field(..., gt=0, lt=5, description="The importance of this criteria")
     skill_level: SkillLevel = Field(
-        ..., description="How well the candidate does on this skill"
+        ..., description="The proficiency level of the candidate on this skill"
     )
 
 

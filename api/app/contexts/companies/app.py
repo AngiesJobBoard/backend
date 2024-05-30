@@ -12,6 +12,7 @@ from api.app.contexts.companies import (
     job_applications,
     job_email_ingress,
     job_interview_rubrics,
+    job_interview_questions,
     jobs,
     notifications,
     raw_api_ingress,
@@ -39,3 +40,4 @@ company_api_router.include_router(notifications.router)
 company_api_router.include_router(recruiters.router)
 company_api_router.include_router(raw_api_ingress.router)
 company_api_router.include_router(job_interview_rubrics.router)
+company_api_router.include_router(job_interview_questions.router)

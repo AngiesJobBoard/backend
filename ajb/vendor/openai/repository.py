@@ -1,9 +1,10 @@
 import json
-from typing import Type, Any
-from pydantic import BaseModel
+from typing import Any, Type
+
+from aiohttp import ClientSession
 from instructor import from_openai
 from openai import OpenAI
-from aiohttp import ClientSession
+from pydantic import BaseModel
 
 from ajb.config.settings import SETTINGS
 from ajb.vendor.openai.client_factory import OpenAIClientFactory

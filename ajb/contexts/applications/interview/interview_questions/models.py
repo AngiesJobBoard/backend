@@ -1,13 +1,15 @@
 from enum import StrEnum
-from typing import List
+
 from pydantic import BaseModel, Field
+
+from ajb.base import BaseDataModel
 
 
 class Subsection(BaseModel):
     """Class representing a related subsection containing questions."""
 
     title: str = Field(..., description="Title of the subsection")
-    questions: List[str] = Field(
+    questions: list[str] = Field(
         ...,
         description="List of questions in the subsection",
     )
@@ -27,16 +29,20 @@ class Section(BaseModel):
     """Class representing a main section containing subsections."""
 
     title: SectionType = Field(..., description="Title of the main section")
-    subsections: List[Subsection] = Field(
+    subsections: list[Subsection] = Field(
         default_factory=list,
         description="List of subsections in the main section",
     )
 
 
-class QuestionDocument(BaseModel):
+class CreateInterviewQuestions(BaseModel):
     """Class representing the entire question outline structure for an interview."""
 
-    question_outline: List[Section] = Field(
+    question_outline: list[Section] = Field(
         default_factory=list,
         description="List of main sections in the document",
     )
+
+
+class InterviewQuestions(CreateInterviewQuestions, BaseDataModel):
+    pass

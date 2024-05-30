@@ -15,7 +15,9 @@ class JobInterviewRubricUseCase(BaseUseCase):
         self.request_scope = request_scope
 
     def generate_job_interview_rubric(self, job_id: str) -> JobInterviewRubric:
-        job_rubric_repo = self.get_repository(Collection.JOB_INTERVIEW_RUBRICS, self.request_scope, job_id)
+        job_rubric_repo = self.get_repository(
+            Collection.JOB_INTERVIEW_RUBRICS, self.request_scope, job_id
+        )
         job = self.get_object(Collection.JOBS, job_id)
         job_interview_rubric_to_create = (
             self.ai_job_interview_rubric.generate_job_rubric(job)

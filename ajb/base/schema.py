@@ -31,6 +31,7 @@ class Collection(str, Enum):
     RAW_INGRESS_APPLICATIONS = "raw_ingress_applications"
     JOB_INTERVIEW_RUBRICS = "job_interview_rubrics"
     JOB_INTERVIEWS = "job_interviews"
+    INTERVIEW_QUESTIONS = "interview_questions"
 
     COMPANY_API_EGRESS_WEBHOOKS = "company_api_egress_webhooks"
 
