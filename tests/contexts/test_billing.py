@@ -167,6 +167,6 @@ def test_get_company_name_with_id(request_scope):
     usecase = CompanyBillingUsecase(request_scope)
 
     returned_company_id = usecase._get_company_name_with_id(company)
-    assert type(returned_company_id) == str  # Returned value has to be a string
+    assert isinstance(returned_company_id, str)  # Returned value has to be a string
     assert company.name in returned_company_id  # Must contain company name
     assert str(company.id) in returned_company_id  # Must contain company ID
