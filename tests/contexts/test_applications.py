@@ -1,9 +1,15 @@
 from datetime import datetime
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.message import Message
+
 from unittest.mock import patch
 from aiohttp import ClientSession
 import pytest
 
 from ajb.base.models import RepoFilterParams
+from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.applications.models import (
@@ -15,6 +21,11 @@ from ajb.contexts.applications.models import (
     CreateApplication,
     CreateApplicationStatusUpdate,
     ScanStatus,
+)
+from ajb.contexts.billing.usecase import CompanyBillingUsecase
+from ajb.contexts.companies.email_ingress_webhooks.models import (
+    CompanyEmailIngress,
+    EmailIngressType,
 )
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.jobs.repository import JobRepository
@@ -28,6 +39,7 @@ from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.companies.notifications.repository import (
     CompanyNotificationRepository,
 )
+from ajb.contexts.resumes.models import UserCreateResume
 from ajb.vendor.arango.models import Filter, Operator
 from ajb.vendor.openai.repository import AsyncOpenAIRepository
 from ajb.fixtures.companies import CompanyFixture
@@ -227,8 +239,11 @@ def test_application_counts(request_scope):
             name="apply guy",
             email="apply@guy.com",
         ),
-        False,
+        True,
     )
+
+    # Validate a kafka request was created
+    assert len(request_scope.kafka.messages["applications"]) == 1
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
@@ -475,3 +490,195 @@ def test_company_counts_with_job_active_filter(request_scope):
     company = company_repo.get(app_data.company.id)
     assert company.total_applicants == 1
     assert company.total_jobs == 1
+
+
+def test_create_many_applications(request_scope):
+    company_fixture = CompanyFixture(request_scope)
+    company = company_fixture.create_company()
+    job = company_fixture.create_company_job(company.id)
+
+    company_repo = CompanyRepository(request_scope)
+    job_repo = JobRepository(request_scope, company.id)
+
+    # Verify that we are starting with 0 applicants
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 0
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 0
+
+    assert retrieved_job.total_applicants == 0
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 0
+
+    usecase = ApplicationUseCase(request_scope)
+    applications = [
+        CreateApplication(
+            company_id=company.id,
+            job_id=job.id,
+            name="john doe",
+            email="johndoe@applicant.com",
+        ),
+        CreateApplication(
+            company_id=company.id,
+            job_id=job.id,
+            name="jane doe",
+            email="janedoe@applicant.com",
+        ),
+    ]
+
+    # Create applications with kafka patch
+    usecase.create_many_applications(
+        company_id=company.id,
+        job_id=job.id,
+        partial_applications=applications,
+        produce_submission_event=True,
+    )
+
+    # Validate kafka requests were created
+    assert len(request_scope.kafka.messages["applications"]) == 2
+
+    # Verify that the 2 applicants were successfully created
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 2
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 2
+
+    assert retrieved_job.total_applicants == 2
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 2
+
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 2
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 2
+
+    assert retrieved_job.total_applicants == 2
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 2
+
+    # Test application statistics
+    statistics = usecase.get_application_statistics(company.id, job.id)
+    assert (
+        sum(statistics.match_scores.values()) == 2
+    )  # Ensure the two applicants have appeared in match scores
+    assert (
+        sum(statistics.statuses.values()) == 2
+    )  # Check that the two applicants have appeared in statuses
+
+
+def test_create_application_from_resume(request_scope):
+    company_fixture = CompanyFixture(request_scope)
+    company = company_fixture.create_company()
+    job = company_fixture.create_company_job(company.id)
+
+    company_repo = CompanyRepository(request_scope)
+    job_repo = JobRepository(request_scope, company.id)
+
+    usecase = ApplicationUseCase(request_scope)
+
+    # Prepare data
+    resume = UserCreateResume(
+        file_type="pdf",
+        file_name="test_resume",
+        resume_data=bytes(1),
+        company_id=company.id,
+        job_id=job.id,
+    )
+    application = CreateApplication(
+        company_id=company.id,
+        job_id=job.id,
+        name="john doe",
+        email="johndoe@applicant.com",
+    )
+
+    # Create application
+    usecase.create_application_from_resume(resume, application)
+
+    # Check for kofka message
+    assert len(request_scope.kafka.messages["applications"]) == 1
+
+    # Verify applicant was created
+    retrieved_company = company_repo.get(company.id)
+    retrieved_job = job_repo.get(job.id)
+
+    assert retrieved_company.total_applicants == 1
+    assert retrieved_company.high_matching_applicants == 0
+    assert retrieved_company.new_applicants == 1
+
+    assert retrieved_job.total_applicants == 1
+    assert retrieved_job.high_matching_applicants == 0
+    assert retrieved_job.new_applicants == 1
+
+
+def test_email_application_ingress(request_scope):
+    company_fixture = CompanyFixture(request_scope)
+    company = company_fixture.create_company()
+    job = company_fixture.create_company_job(company.id)
+    usecase = ApplicationUseCase(request_scope)
+
+    # Prepare data
+    ingress_email = MIMEMultipart()
+
+    company_email_ingress = CompanyEmailIngress(
+        company_id=company.id,
+        job_id=job.id,
+        subdomain="www",
+        id="test_ingress_email",
+        created_at=datetime.now(),
+        created_by="unittest",
+        updated_at=datetime.now(),
+        updated_by="unittest",
+        ingress_type=EmailIngressType.CREATE_APPLICATION,
+    )
+
+    # Ensure that it does not succeed with an empty email
+    passed_with_empty_email = True
+    try:
+        usecase.process_email_application_ingress(Message(), company_email_ingress)
+    except ValueError:
+        passed_with_empty_email = False
+
+    if passed_with_empty_email:
+        raise AssertionError(
+            "process_email_application_ingress ran anyway with an empty email"
+        )
+
+    # Attach multiple parts to email
+    ingress_email.attach(MIMEText("Example email body", "plain"))
+    ingress_email.attach(MIMEText("Second email part", "plain"))
+
+    # Process email with multiple parts
+    usecase.process_email_application_ingress(ingress_email, company_email_ingress)
+
+    # Check for company usage
+    usage = CompanyBillingUsecase(request_scope).get_historic_company_usage(company.id)
+    assert (
+        usage[1] == 1
+    )  # Company usage is incremented at the end of process_email_application_ingress, so we will make sure that happens here
+
+
+def test_create_application_from_raw_text(request_scope):
+    company_fixture = CompanyFixture(request_scope)
+    company = company_fixture.create_company()
+    job = company_fixture.create_company_job(company.id)
+
+    usecase = ApplicationUseCase(request_scope)
+
+    # Prepare data
+    example_resume = ExtractedResume()
+
+    # Make request with patched resume extractor
+    with patch(
+        "ajb.contexts.applications.extract_data.ai_extractor.SyncronousAIResumeExtractor.get_candidate_profile_from_resume_text",
+        return_value=example_resume,
+    ):
+        usecase.application_is_created_from_raw_text(company.id, job.id, "test")
+
+    # Check that the application creation event was fired
+    assert len(request_scope.kafka.messages["applications"]) == 1
