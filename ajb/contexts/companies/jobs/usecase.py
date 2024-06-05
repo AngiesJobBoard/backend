@@ -92,9 +92,7 @@ class JobsUseCase(BaseUseCase):
         )
         return total_applicants, total_high_match, total_new
 
-    def _update_company_counts(
-        self, company_id: str
-    ):
+    def _update_company_counts(self, company_id: str):
         # Prepare repos
         application_repo = CompanyApplicationRepository(self.request_scope)
         company_repo = CompanyRepository(self.request_scope)

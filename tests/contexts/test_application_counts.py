@@ -48,7 +48,9 @@ def check_total_company_application_counts(
     assert high_match_count == expected_high_match
 
 
-def check_active_company_application_counts(request_scope, company_id, expected_total, expected_new, expected_high_match):
+def check_active_company_application_counts(
+    request_scope, company_id, expected_total, expected_new, expected_high_match
+):
     """Helper method for validating number of active applicants to an entire company"""
     company_repo = CompanyRepository(request_scope)
 
@@ -138,24 +140,22 @@ def test_mark_job_active(request_scope):
     )
 
     # Sanity checks to ensure successful creation
-    check_job_application_counts(
-        request_scope, job1.id, 2, 2, 0
-    )
-    check_job_application_counts(
-        request_scope, job2.id, 1, 1, 0
-    )
-    check_total_company_application_counts(
-        request_scope, company.id, 3, 3, 0
-    )
+    check_job_application_counts(request_scope, job1.id, 2, 2, 0)
+    check_job_application_counts(request_scope, job2.id, 1, 1, 0)
+    check_total_company_application_counts(request_scope, company.id, 3, 3, 0)
     check_active_company_application_counts(request_scope, company.id, 3, 3, 0)
 
     # Test mark job as inactive
-    mark_job_as_inactive(request, company.id, job1.id) # Make job 1 inactive
-    check_active_company_application_counts(request_scope, company.id, 1, 1, 0) # Job 1's applicants should now be inactive, leaving only the job 2 applicant.
+    mark_job_as_inactive(request, company.id, job1.id)  # Make job 1 inactive
+    check_active_company_application_counts(
+        request_scope, company.id, 1, 1, 0
+    )  # Job 1's applicants should now be inactive, leaving only the job 2 applicant.
 
     # Test mark job as active
-    mark_job_as_active(request, company.id, job1.id) # Make job active again
-    check_active_company_application_counts(request_scope, company.id, 3, 3, 0) # Job 1 applicants should come back now
+    mark_job_as_active(request, company.id, job1.id)  # Make job active again
+    check_active_company_application_counts(
+        request_scope, company.id, 3, 3, 0
+    )  # Job 1 applicants should come back now
 
 
 # AJBTODO: these are some more endpoints we can try and hit
