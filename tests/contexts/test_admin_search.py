@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 import pytest
 
@@ -37,6 +38,7 @@ def example_user_data(request_scope):
             ),
             overridden_id=f"test{suffix}_id",
         )
+        time.sleep(0.01)
 
 
 @pytest.fixture(scope="function")

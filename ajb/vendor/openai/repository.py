@@ -1,9 +1,9 @@
 import json
 from typing import Type, Any
+from asyncio import get_event_loop
 from pydantic import BaseModel
 from instructor import from_openai
 from openai import OpenAI
-from asyncio import get_event_loop
 
 from ajb.config.settings import SETTINGS
 from ajb.vendor.openai.client_factory import OpenAIClientFactory

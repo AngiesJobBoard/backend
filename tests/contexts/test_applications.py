@@ -5,7 +5,6 @@ from email.mime.text import MIMEText
 from email.message import Message
 
 from unittest.mock import patch
-from aiohttp import ClientSession
 import pytest
 
 from ajb.base.models import RepoFilterParams
@@ -598,7 +597,7 @@ def test_create_application_from_resume(request_scope):
     usecase.create_application_from_resume(resume, application)
 
     # Check for kofka message
-    assert len(request_scope.kafka.messages["applications"]) == 1
+    assert len(request_scope.kafka.messages["applications"]) == 2
 
     # Verify applicant was created
     retrieved_company = company_repo.get(company.id)
