@@ -94,8 +94,8 @@ class UserCreatedApplication(BaseModel):
     qualifications: Qualifications | None = Qualifications()
     additional_filters: AdditionalFilterInformation | None = None
     application_questions: list[ApplicationQuestion] | None = None
-    name: str
-    email: str
+    name: str | None = None
+    email: str | None = None
     phone: str | None = None
     user_location: Location | None = None
     external_reference_code: str | None = None
@@ -178,7 +178,7 @@ class UpdateApplication(BaseModel):
     resume_id: str | None = None
     extracted_resume_text: str | None = None
     resume_scan_status: ScanStatus | None = None
-    resume_scan_error_test: str | None = None
+    resume_scan_error_text: str | None = None
     match_score_status: ScanStatus | None = None
     match_score_error_text: str | None = None
     qualifications: Qualifications | None = None
@@ -436,7 +436,7 @@ class DataReducedApplication(BaseDataModel):
 
     resume_id: str | None = None
     resume_scan_status: ScanStatus | None = None
-    resume_scan_error_test: str | None = None
+    resume_scan_error_text: str | None = None
     match_score_status: ScanStatus | None = None
     match_score_error_text: str | None = None
 

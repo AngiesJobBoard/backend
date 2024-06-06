@@ -182,7 +182,6 @@ def rerun_resume_scan(request: Request, company_id: str, application_id: str):
         job_id=application.job_id,
         resume_id=application.resume_id,
         application_id=application.id,
-        parse_resume=True,
     )
     return True
 
@@ -194,7 +193,7 @@ def rerun_match_score(request: Request, company_id: str, application_id: str):
         raise ApplicationNotExist
     ApplicationEventProducer(
         scope(request), source_service=SourceServices.API
-    ).application_is_submitted(
+    ).company_gets_match_score(
         application.company_id, application.job_id, application.id
     )
     return True
@@ -220,7 +219,6 @@ async def update_resume_scan_text(
         job_id=application.job_id,
         resume_id=application.resume_id,
         application_id=application.id,
-        parse_resume=False,
     )
     return True
 
