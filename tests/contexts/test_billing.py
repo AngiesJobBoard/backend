@@ -10,7 +10,11 @@ from ajb.contexts.billing.billing_models import (
     SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS,
     UsageType,
 )
-from ajb.contexts.billing.usecase import CompanyBillingUsecase
+from ajb.contexts.billing.usecase import (
+    CompanyBillingUsecase,
+    NoLineItemsToInvoiceException,
+    StripeCustomerIDMissingException,
+)
 from ajb.contexts.billing.usage.models import CreateMonthlyUsage
 
 from ajb.contexts.companies.repository import CompanyRepository
@@ -207,9 +211,9 @@ def test_stripe_setup(request_scope):
     retrieved_company = usecase._get_or_update_company_with_created_stripe_company_id(
         company.id
     )
-    assert isinstance(
-        retrieved_company.stripe_customer_id, str
-    )  # Ensure that the company was assigned an ID successfully
+    assert (
+        retrieved_company.stripe_customer_id == "1"
+    )  # Ensure that the company was assigned the mocked ID
 
     # Test that it is retrieving cached information rather than creating a new stripe ID
     company_repo.update_fields(
@@ -257,22 +261,32 @@ def test_convert_usage_to_stripe_invoice(request_scope):
     try:
         usecase.convert_usage_to_stripe_invoice_data(
             company, company_subscription, company_usage
-        )
-    except ValueError:
+        )  # As there is no stripe customer ID yet, we should see an exception raised
+    except StripeCustomerIDMissingException:
         passed_with_no_stripe_id = False
 
     if passed_with_no_stripe_id:
         raise AssertionError(
-            "convert_usage_to_stripe_invoice_data ran with no stripe ID"
+            "convert_usage_to_stripe_invoice_data failed to raise a StripeCustomerIDMissingException"
         )
 
     # Assign stripe ID and test the function
     company = usecase._get_or_update_company_with_created_stripe_company_id(
         company.id
     )  # Assign stripe ID
-    invoice = usecase.convert_usage_to_stripe_invoice_data(
-        company, company_subscription, company_usage
-    )
+
+    passed_with_no_usage = True  # Flag to keep track
+    try:
+        usecase.convert_usage_to_stripe_invoice_data(
+            company, company_subscription, company_usage
+        )  # As there is no company usage yet, we should see another exception
+    except NoLineItemsToInvoiceException:
+        passed_with_no_usage = False
+
+    if passed_with_no_usage:
+        raise AssertionError(
+            "convert_usage_to_stripe_invoice_data failed to raise a NoLineItemsToInvoiceException"
+        )
 
     # Try again with company usage
     usecase.increment_company_usage(
@@ -292,6 +306,21 @@ def test_convert_usage_to_stripe_invoice(request_scope):
     assert (
         len(invoice.invoice_items) == 1
     )  # We should have one item on our invoice (the resume scans)
+    assert (
+        invoice.invoice_items[0].description == UsageType.RESUME_SCANS
+    )  # Check that the usage type is correct
+    assert (
+        invoice.invoice_items[0].quantity == 1000
+    )  # Check that the number of scans is correct
+    expected_unit_amount_decimal = str(
+        SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[SubscriptionPlan.STARTER][
+            UsageType.RESUME_SCANS
+        ].cost_usd_per_transaction
+        * 100
+    )
+    assert (
+        invoice.invoice_items[0].unit_amount_decimal == expected_unit_amount_decimal
+    )  # Check that unit amount decimal is correct
 
 
 def test_generate_stripe_invoice(request_scope):
@@ -300,8 +329,17 @@ def test_generate_stripe_invoice(request_scope):
 
     usecase = CompanyBillingUsecase(request_scope, MockStripeRepository())
 
-    # Run with no usage data to ensure that doesn't throw an error
-    usecase.generate_stripe_invoice(company.id)
+    # Run with no usage data, this should raise an exception.
+    passed_with_no_usage = True
+    try:
+        usecase.generate_stripe_invoice(company.id)
+    except NoLineItemsToInvoiceException:
+        passed_with_no_usage = False
+
+    if passed_with_no_usage:
+        raise AssertionError(
+            "convert_usage_to_stripe_invoice_data failed to raise a NoLineItemsToInvoiceException"
+        )
 
     # Add some data so that an invoice is generated
     usecase.increment_company_usage(
