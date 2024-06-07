@@ -49,8 +49,8 @@ class ApplicationFixture:
                 email="nice@email.com",
                 name="Nice Name",
                 phone="123-456-7890",
-                resume_scan_status=ScanStatus.NO_SCAN,
-                match_score_status=ScanStatus.NO_SCAN,
+                resume_scan_status=ScanStatus.COMPLETED,
+                match_score_status=ScanStatus.COMPLETED,
                 qualifications=Qualifications(
                     most_recent_job=WorkHistory(
                         job_title="Software Engineer",

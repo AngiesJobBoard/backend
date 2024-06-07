@@ -1,10 +1,8 @@
-from concurrent.futures import ThreadPoolExecutor
 from email.message import Message
 
 from ajb.base import (
     BaseUseCase,
     Collection,
-    RepoFilterParams,
     RequestScope,
 )
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
@@ -29,9 +27,8 @@ from ajb.contexts.billing.usecase import (
 from ajb.contexts.applications.extract_data.ai_extractor import (
     SyncronousAIResumeExtractor,
 )
+from ajb.vendor.pdf_plumber import extract_text
 from ajb.vendor.arango.repository import ArangoDBRepository
-from ajb.vendor.arango.models import Filter
-from ajb.config.settings import SETTINGS
 
 from ajb.contexts.applications.models import (
     CreateApplication,
@@ -99,7 +96,7 @@ class ApplicationUseCase(BaseUseCase):
         if produce_submission_event:
             ApplicationEventProducer(
                 self.request_scope, source_service=SourceServices.API
-            ).application_is_submitted(
+            ).company_gets_match_score(
                 created_application.company_id,
                 created_application.job_id,
                 created_application.id,
@@ -142,7 +139,7 @@ class ApplicationUseCase(BaseUseCase):
                 self.request_scope, SourceServices.API
             )
             for application in created_applications:
-                event_producer.application_is_submitted(company_id, job_id, application)
+                event_producer.company_gets_match_score(company_id, job_id, application)
         return created_applications
 
     def create_applications_from_csv(
@@ -165,15 +162,16 @@ class ApplicationUseCase(BaseUseCase):
             company_id=resume.company_id,
             job_id=resume.job_id,
             resume_id=resume.id,
-            name="-",
-            email="-",
+            resume_url=resume.resume_url,
             resume_scan_status=ScanStatus.PENDING,
             match_score_status=ScanStatus.PENDING,
+            extracted_resume_text=extract_text(data.resume_data),
         )
         if additional_partial_data:
             partial_application = partial_application.model_dump()
             partial_application.update(additional_partial_data.model_dump())
             partial_application = CreateApplication(**partial_application)
+
         created_application = self.create_application(
             resume.company_id, resume.job_id, partial_application, False
         )
@@ -185,7 +183,6 @@ class ApplicationUseCase(BaseUseCase):
             job_id=resume.job_id,
             resume_id=resume.id,
             application_id=created_application.id,
-            parse_resume=True,
         )
         return created_application
 
@@ -299,15 +296,13 @@ class ApplicationUseCase(BaseUseCase):
         application_repo: ApplicationRepository = self.get_repository(Collection.APPLICATIONS)  # type: ignore
         application_repo.update_application_with_parsed_information(
             application_id=created_application.id,
-            resume_url=created_application.resume_url,
-            raw_resume_text=raw_text,
             resume_information=resume_information,  # type: ignore
         )
 
         # Create kafka event for handling the match
         ApplicationEventProducer(
             self.request_scope, source_service=SourceServices.API
-        ).application_is_submitted(
+        ).company_gets_match_score(
             company_id=company_id,
             job_id=job_id,
             application_id=created_application.id,

@@ -1,7 +1,6 @@
 import io
 import urllib3
 import pdfplumber
-from fastapi import UploadFile
 from docx import Document
 
 
@@ -38,11 +37,11 @@ def extract_docx_text_by_url(url: str):
     return all_text
 
 
-async def extract_pdf_text_by_file(file: UploadFile):
+def extract_pdf_text_by_file(content: bytes):
     """
     Extracts text from a PDF file.
     """
-    temp = io.BytesIO(await file.read())
+    temp = io.BytesIO(content)
     all_text = ""
     with pdfplumber.open(temp) as pdf:
         for pdf_page in pdf.pages:
@@ -51,11 +50,11 @@ async def extract_pdf_text_by_file(file: UploadFile):
     return all_text
 
 
-async def extract_docx_text_by_file(file: UploadFile):
+def extract_docx_text_by_file(content: bytes):
     """
     Extracts text from a DOCX file.
     """
-    temp = io.BytesIO(await file.read())
+    temp = io.BytesIO(content)
     doc = Document(temp)
     all_text = ""
     for paragraph in doc.paragraphs:
@@ -63,26 +62,22 @@ async def extract_docx_text_by_file(file: UploadFile):
     return all_text
 
 
-async def extract_text_file(file: UploadFile):
+def extract_text_file(contents: bytes):
     """
     Extracts text from a text file.
     """
-    contents = await file.read()
     text = contents.decode("utf-8")
     return text
 
 
-async def extract_text(file: UploadFile):
+def extract_text(file_bytes: bytes):
     """
     Extracts text from a file based on its type.
     """
-    file_extension = str(file.filename).rsplit(".", maxsplit=1)[-1]
-
-    if file_extension == "pdf":
-        return await extract_pdf_text_by_file(file)
-    if file_extension == "txt":
-        return await extract_text_file(file)
     try:
-        return await extract_docx_text_by_file(file)
+        return extract_pdf_text_by_file(file_bytes)
     except Exception:
-        raise BadFileTypeException
+        try:
+            return extract_text_file(file_bytes)
+        except Exception:
+            return extract_docx_text_by_file(file_bytes)

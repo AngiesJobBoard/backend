@@ -43,10 +43,11 @@ class CompanyEvent(str, Enum):
 
 
 class ApplicationEvent(str, Enum):
-    APPLICATION_IS_SUBMITTED = "application_is_submitted"
     APPLICATION_IS_UPDATED = "application_is_updated"
     APPLICATION_IS_DELETED = "application_is_deleted"
     UPLOAD_RESUME = "upload_resume"
+    GET_MATCH_SCORE = "get_match_score"
+    POST_APPLICATION_SUBMISSION = "post_application_submission"
     INGRESS_EVENT = "ingress_event"
 
 

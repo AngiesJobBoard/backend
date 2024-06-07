@@ -5,11 +5,11 @@ from email.mime.text import MIMEText
 from email.message import Message
 
 from unittest.mock import patch
-from aiohttp import ClientSession
 import pytest
 
 from ajb.base.models import RepoFilterParams
 from ajb.config.settings import AppSettings
+
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
@@ -290,20 +290,17 @@ async def test_high_matching_applicants(request_scope):
     company_repo = CompanyRepository(request_scope)
     job_repo = JobRepository(request_scope, company.id)
 
-    async with ClientSession() as session:
-        matcher_usecase = ApplicantMatchUsecase(
-            request_scope, AsyncOpenAIRepository(session)
-        )
+    matcher_usecase = ApplicantMatchUsecase(request_scope, AsyncOpenAIRepository())
 
-        with patch(
-            "ajb.contexts.applications.matching.usecase.ApplicantMatchUsecase.get_match"
-        ) as mock_get_match:
-            mock_get_match.return_value = ApplicantMatchScore(
-                match_score=100, match_reason="test"
-            )
-            await matcher_usecase.update_application_with_match_score(
-                created_application.id, job
-            )
+    with patch(
+        "ajb.contexts.applications.matching.usecase.ApplicantMatchUsecase.get_match"
+    ) as mock_get_match:
+        mock_get_match.return_value = ApplicantMatchScore(
+            match_score=100, match_reason="test"
+        )
+        await matcher_usecase.update_application_with_match_score(
+            created_application.id, job
+        )
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
