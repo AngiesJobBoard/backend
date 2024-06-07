@@ -4,7 +4,6 @@ from fastapi import (
     UploadFile,
     File,
     Body,
-    BackgroundTasks,
 )
 
 from ajb.contexts.applications.usecase import ApplicationUseCase

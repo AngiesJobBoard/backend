@@ -162,6 +162,7 @@ class ApplicationUseCase(BaseUseCase):
             company_id=resume.company_id,
             job_id=resume.job_id,
             resume_id=resume.id,
+            resume_url=resume.resume_url,
             resume_scan_status=ScanStatus.PENDING,
             match_score_status=ScanStatus.PENDING,
             extracted_resume_text=extract_text(data.resume_data),
