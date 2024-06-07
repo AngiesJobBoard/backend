@@ -6,10 +6,10 @@ from api.app.contexts.companies import (
     applications,
     billing,
     companies,
+    create_applications,
     egress_webhooks,
     ingress_webhooks,
     invitations,
-    job_applications,
     job_email_ingress,
     job_interview_rubrics,
     job_interview_questions,
@@ -33,7 +33,7 @@ company_api_router.include_router(companies.router)
 company_api_router.include_router(egress_webhooks.router)
 company_api_router.include_router(ingress_webhooks.router)
 company_api_router.include_router(invitations.router)
-company_api_router.include_router(job_applications.router)
+company_api_router.include_router(create_applications.router)
 company_api_router.include_router(job_email_ingress.router)
 company_api_router.include_router(jobs.router)
 company_api_router.include_router(notifications.router)
