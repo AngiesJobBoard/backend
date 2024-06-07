@@ -58,7 +58,7 @@ class CreateJob(UserCreateJob):
     high_matching_applicants: int = 0
     new_applicants: int = 0
     active: bool = True
-    job_is_public: bool = False
+    job_is_public: bool | None = None
 
 
 class Job(CreateJob, BaseDataModel): ...

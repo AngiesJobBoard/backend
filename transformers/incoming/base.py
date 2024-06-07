@@ -68,9 +68,9 @@ class BaseIncomingTransformer(ABC, t.Generic[T]):
     def create_application(self) -> Application:
         pass
 
-    def update_raw_record(self, application_id: str) -> None:
+    def update_raw_record(self, job_id: str, application_id: str) -> None:
         RawIngressApplicationRepository(self.request_scope).update_fields(
-            self.raw_data.id, application_id=application_id
+            self.raw_data.id, job_id=job_id, application_id=application_id
         )
 
     def run(self) -> None:
@@ -78,4 +78,4 @@ class BaseIncomingTransformer(ABC, t.Generic[T]):
             warn("This record has already been processed")
         self.infer_job_from_raw_data()
         application = self.create_application()
-        self.update_raw_record(application.id)
+        self.update_raw_record(application.job_id, application.id)

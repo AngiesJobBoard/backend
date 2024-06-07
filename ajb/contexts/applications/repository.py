@@ -10,6 +10,7 @@ from ajb.base import (
 from ajb.exceptions import EntityNotFound
 from ajb.vendor.arango.models import Filter, Operator, Join
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
+from ajb.contexts.applications.models import ScanStatus
 
 from .models import (
     CompanyApplicationView,
@@ -33,18 +34,27 @@ class ApplicationRepository(ParentRepository[CreateApplication, Application]):
         self,
         *,
         application_id: str,
-        resume_url: str | None,
-        raw_resume_text: str,
         resume_information: ExtractedResume,
     ) -> Application:
+        original_application = self.get(application_id)
         return self.update(
             application_id,
             UpdateApplication(
-                name=f"{resume_information.first_name} {resume_information.last_name}".title(),
-                email=resume_information.email,
-                phone=resume_information.phone_number,
-                extracted_resume_text=raw_resume_text,
-                resume_url=resume_url,
+                name=(
+                    original_application.name
+                    if original_application.name is not None
+                    else f"{resume_information.first_name} {resume_information.last_name}".title()
+                ),
+                email=(
+                    original_application.email
+                    if original_application.email is not None
+                    else resume_information.email
+                ),
+                phone=(
+                    original_application.phone
+                    if original_application.phone is not None
+                    else resume_information.phone_number
+                ),
                 qualifications=Qualifications(
                     most_recent_job=(
                         WorkHistory(
@@ -62,7 +72,8 @@ class ApplicationRepository(ParentRepository[CreateApplication, Application]):
                     certifications=resume_information.certifications or [],
                     language_proficiencies=resume_information.languages or [],
                 ),
-                user_location=(
+                user_location=original_application.user_location
+                or (
                     Location(
                         city=resume_information.city, state=resume_information.state
                     )
@@ -90,6 +101,7 @@ class CompanyApplicationRepository(ApplicationRepository):
         resume_text_contains: str | None = None,
         has_required_skill: str | None = None,
         status_filter: list[str] | None = None,
+        completed_scans_only: bool = True,
     ):
         if isinstance(query, QueryFilterParams):
             repo_filters = query.convert_to_repo_filters()
@@ -153,6 +165,10 @@ class CompanyApplicationRepository(ApplicationRepository):
                     collection_alias="job",
                 )
             )
+        if completed_scans_only:
+            repo_filters.filters.append(
+                Filter(field="resume_scan_status", value=ScanStatus.COMPLETED.value)
+            )
         return self.query_with_joins(
             joins=[
                 Join(
@@ -204,7 +220,9 @@ class CompanyApplicationRepository(ApplicationRepository):
                     and_or_operator="OR",
                 )
             )
-        return self.get_company_view_list(company_id, repo_filters, job_id=job_id)
+        return self.get_company_view_list(
+            company_id, repo_filters, job_id=job_id, completed_scans_only=False
+        )
 
     def get_all_company_applications_from_email(
         self, company_id: str, email: str

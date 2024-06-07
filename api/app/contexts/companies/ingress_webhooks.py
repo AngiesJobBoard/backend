@@ -10,6 +10,7 @@ from ajb.contexts.companies.api_ingress_webhooks.models import (
 from ajb.contexts.companies.api_ingress_webhooks.repository import (
     CompanyAPIIngressRepository,
 )
+from ajb.contexts.companies.api_ingress_webhooks.usecase import APIIngressUsecase
 from api.middleware import scope
 
 router = APIRouter(
@@ -20,10 +21,13 @@ router = APIRouter(
 
 @router.get("/", response_model=PaginatedCompanyIngress)
 def get_all_company_ingress_webhooks(
-    request: Request, company_id: str, query: QueryFilterParams = Depends()
+    request: Request,
+    company_id: str,
+    job_id: str | None = None,
+    query: QueryFilterParams = Depends(),
 ):
-    response = CompanyAPIIngressRepository(scope(request), company_id).query(
-        query, company_id=company_id
+    response = APIIngressUsecase(scope(request)).get_ingress_records_with_count(
+        company_id, job_id, query
     )
     return build_pagination_response(
         response,

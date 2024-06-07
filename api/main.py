@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from ajb.vendor.sentry import initialize_sentry
 from ajb.config.settings import SETTINGS
 from api.admin.app import admin_router
-from api.portal_api.app import portal_api_router
+from api.app.app import portal_api_router
 from api.open.app import open_router
 
 from .middleware import (

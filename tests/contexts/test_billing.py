@@ -158,3 +158,17 @@ def test_increment_company_usage_no_plan_no_usage(request_scope):
     assert created_plan.plan == SubscriptionPlan.STARTER
     assert created_usage.transaction_counts[UsageType.RESUME_SCANS] == 10
     assert int(created_usage.total_usage_usd) == 0
+
+
+def test_get_company_name_with_id(request_scope):
+    company_fixture = CompanyFixture(request_scope)
+    company = company_fixture.create_company()
+
+    usecase = CompanyBillingUsecase(request_scope)
+
+    returned_company_id = usecase._get_company_name_with_id(company)
+
+    assert isinstance(returned_company_id, str)  # Returned value has to be a string
+    assert type(returned_company_id) == str  # Returned value has to be a string
+    assert company.name in returned_company_id  # Must contain company name
+    assert str(company.id) in returned_company_id  # Must contain company ID

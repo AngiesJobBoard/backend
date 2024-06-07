@@ -44,7 +44,6 @@ def rerun_resume_scan(request: Request, application_id: str = Body(...)):
         job_id=application.job_id,
         resume_id=application.resume_id,
         application_id=application.id,
-        parse_resume=True,
     )
     return True
 
@@ -54,7 +53,7 @@ def rerun_application_submission(request: Request, application_id: str = Body(..
     application = ApplicationRepository(scope(request)).get(application_id)
     ApplicationEventProducer(
         scope(request), source_service=SourceServices.ADMIN
-    ).application_is_submitted(
+    ).company_gets_match_score(
         application.company_id, application.job_id, application.id
     )
     return True
@@ -77,7 +76,6 @@ async def update_resume_scan_text(
         job_id=application.job_id,
         resume_id=application.resume_id,
         application_id=application.id,
-        parse_resume=False,
     )
     return True
 

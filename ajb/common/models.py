@@ -146,7 +146,7 @@ class DataReducedUser(BaseDataModel):
     first_name: str | None = None
     last_name: str | None = None
     image_url: str | None = None
-    phone_number: str | None = None
+    phone: str | None = None
     email: str | None = None
     auth_id: str | None = None
     profile_is_public: bool | None = None
@@ -173,7 +173,7 @@ class DataReducedUser(BaseDataModel):
             first_name=record.get("first_name"),
             last_name=record.get("last_name"),
             image_url=record.get("image_url"),
-            phone_number=record.get("phone_number"),
+            phone=record.get("phone"),
             email=record.get("email"),
             auth_id=record.get("auth_id"),
             profile_is_public=record.get("profile_is_public"),
