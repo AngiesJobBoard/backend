@@ -5,10 +5,10 @@ Jobs have to be manually set as public for their links to be accessible.
 
 from fastapi import APIRouter, Depends, UploadFile, File, Body, status
 from ajb.contexts.companies.jobs.repository import JobRepository, FullJobWithCompany
+from ajb.contexts.resumes.models import UserCreateResume
+from ajb.contexts.applications.models import CreateApplication
 from ajb.contexts.applications.usecase import (
     ApplicationUseCase,
-    UserCreateResume,
-    CreateApplication,
 )
 
 from ajb.base import RequestScope
