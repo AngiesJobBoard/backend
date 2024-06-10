@@ -1,7 +1,6 @@
 from ajb.base.models import RepoFilterParams
 from ajb.contexts.applications.models import CreateApplication
 from ajb.contexts.applications.repository import CompanyApplicationRepository
-from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.fixtures.companies import CompanyFixture
 from ajb.contexts.applications.usecase import ApplicationUseCase
@@ -127,7 +126,7 @@ def test_mark_job_active(request_scope):
     )
 
     # Create application for job 2
-    created_application = usecase.create_application(
+    usecase.create_application(
         company.id,
         job2.id,
         CreateApplication(

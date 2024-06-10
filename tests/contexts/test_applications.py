@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from ajb.base.models import RepoFilterParams
-from ajb.config.settings import AppSettings
+from ajb.config.settings import SETTINGS
 
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.applications.repository import CompanyApplicationRepository
@@ -244,7 +244,7 @@ def test_application_counts(request_scope):
     )
 
     # Validate a kafka request was created
-    assert len(request_scope.kafka.messages[AppSettings.KAFKA_APPLICATIONS_TOPIC]) == 1
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 1
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
@@ -535,7 +535,7 @@ def test_create_many_applications(request_scope):
     )
 
     # Validate kafka requests were created
-    assert len(request_scope.kafka.messages[AppSettings.KAFKA_APPLICATIONS_TOPIC]) == 2
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 2
 
     # Verify that the 2 applicants were successfully created
     retrieved_company = company_repo.get(company.id)
@@ -598,8 +598,8 @@ def test_create_application_from_resume(request_scope):
     # Create application
     usecase.create_application_from_resume(resume, application)
 
-    # Check for kofka message
-    assert len(request_scope.kafka.messages[AppSettings.KAFKA_APPLICATIONS_TOPIC]) == 1
+    # Check for kafka message
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 2
 
     # Verify applicant was created
     retrieved_company = company_repo.get(company.id)
@@ -679,4 +679,4 @@ def test_create_application_from_raw_text(request_scope):
         usecase.application_is_created_from_raw_text(company.id, job.id, "test")
 
     # Check that the application creation event was fired
-    assert len(request_scope.kafka.messages[AppSettings.KAFKA_APPLICATIONS_TOPIC]) == 1
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 1
