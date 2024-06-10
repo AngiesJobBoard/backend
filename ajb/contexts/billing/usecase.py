@@ -27,6 +27,14 @@ from ajb.contexts.billing.billing_models import (
 )
 
 
+class NoLineItemsToInvoiceException(Exception):
+    pass
+
+
+class StripeCustomerIDMissingException(Exception):
+    pass
+
+
 class CompanyBillingUsecase(BaseUseCase):
     def __init__(
         self, request_scope: RequestScope, stripe: StripeRepository | None = None
@@ -151,7 +159,7 @@ class CompanyBillingUsecase(BaseUseCase):
         self, company: Company, subscription: CompanySubscription, usage: MonthlyUsage
     ) -> CreateInvoiceData | None:
         if not company.stripe_customer_id:
-            raise ValueError("Company does not have a stripe customer id")
+            raise StripeCustomerIDMissingException()
         invoice_data = CreateInvoiceData(
             stripe_customer_id=company.stripe_customer_id,
             description=f"Angie's Job Matcher Usage for {self._convert_billing_period_to_date_range(usage.billing_period)}",
@@ -178,7 +186,7 @@ class CompanyBillingUsecase(BaseUseCase):
                 )
             )
         if len(invoice_data.invoice_items) == 0:
-            return None
+            raise NoLineItemsToInvoiceException()
         return invoice_data
 
     def generate_stripe_invoice(
