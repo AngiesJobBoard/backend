@@ -52,57 +52,36 @@ class ApplicationEventsResolver:
         request_scope: RequestScope,
         sendgrid: SendgridRepository | None = None,
         openai: OpenAIRepository | None = None,
-        async_openai: AsyncOpenAIRepository | None = None,
     ):
         self.message = message
         self.request_scope = request_scope
         self.sendgrid = sendgrid or SendgridRepository()
-        self.openai = openai
-        self.async_openai = async_openai
+        self.openai = AsyncOpenAIRepository(openai) or AsyncOpenAIRepository(
+            OpenAIRepository()
+        )
 
     async def _extract_and_update_application(
         self, data: ResumeAndApplication, application_repository: ApplicationRepository
-    ) -> bool:
-        if not self.async_openai:
-            raise MissingAsyncOpenAIRepository
-
-        extractor = ResumeExtractorUseCase(self.request_scope, self.async_openai)
-        if data.parse_resume:
-            if data.resume_id is None:
-                raise CouldNotParseResumeText
-            raw_text, resume_url = extractor.extract_resume_text_and_url(data.resume_id)
-        else:
-            application = application_repository.get(data.application_id)
-            raw_text = str(application.extracted_resume_text)
-            resume_url = str(application.resume_url)
-
-        if not raw_text or len(raw_text) == 0:
+    ) -> None:
+        extractor = ResumeExtractorUseCase(self.request_scope, self.openai)
+        application = application_repository.get(data.application_id)
+        if application.extracted_resume_text is None:
             raise CouldNotParseResumeText
-        resume_information = await extractor.extract_resume_information(raw_text)
+        resume_information = await extractor.extract_resume_information(
+            application.extracted_resume_text
+        )
 
         CompanyBillingUsecase(self.request_scope).increment_company_usage(
             company_id=data.company_id, incremental_usages={UsageType.RESUME_SCANS: 1}
         )
-
-        event_producer = ApplicationEventProducer(
-            self.request_scope, SourceServices.API
-        )
         application_repository.update_application_with_parsed_information(
             application_id=data.application_id,
-            resume_url=resume_url,
-            raw_resume_text=raw_text,
             resume_information=resume_information,
         )
-        event_producer.application_is_submitted(
-            data.company_id, data.job_id, data.application_id
-        )
-        original_application_deleted = False
-        return original_application_deleted
 
     async def upload_resume(self) -> None:
         data = ResumeAndApplication.model_validate(self.message.data)
         application_repository = ApplicationRepository(self.request_scope)
-        application = application_repository.get(data.application_id)
 
         # Update the scan status to started
         application_repository.update_fields(
@@ -111,48 +90,30 @@ class ApplicationEventsResolver:
 
         # Try to peform the parse and updates
         try:
-            original_application_deleted = await self._extract_and_update_application(
-                data, application_repository
+            await self._extract_and_update_application(data, application_repository)
+            application_repository.update_fields(
+                data.application_id, resume_scan_status=ScanStatus.COMPLETED
             )
-            if not original_application_deleted:
-                application_repository.update_fields(
-                    data.application_id, resume_scan_status=ScanStatus.COMPLETED
-                )
-        except Exception as e:
-            if application.resume_scan_attempts >= 2:
-                # Give up and mark as failed
-                application_repository.update_fields(
-                    data.application_id,
-                    resume_scan_status=ScanStatus.FAILED,
-                    resume_scan_error_text=str(e),
-                    resume_scan_attempts=application.resume_scan_attempts + 1,
-                )
-            else:
-                # Update count and reason and try again
-                application_repository.update_fields(
-                    data.application_id,
-                    resume_scan_status=ScanStatus.PENDING,
-                    resume_scan_error_text=str(e),
-                    resume_scan_attempts=application.resume_scan_attempts + 1,
-                )
-                # Async wait 3 seconds then create a new event to try again
+            if data.send_post_application_event:
                 ApplicationEventProducer(
                     self.request_scope, SourceServices.SERVICES
-                ).company_uploads_resume(
-                    data.company_id,
-                    data.resume_id,
-                    data.application_id,
-                    data.job_id,
-                    data.parse_resume,
+                ).post_application_submission(
+                    company_id=data.company_id,
+                    job_id=data.job_id,
+                    application_id=data.application_id,
                 )
-            raise e
+        except Exception as e:
+            application_repository.update_fields(
+                data.application_id,
+                resume_scan_status=ScanStatus.FAILED,
+                resume_scan_error_text=str(e),
+            )
+            return
 
-    async def calculate_match_score(self) -> None:
-        if not self.async_openai:
-            raise MissingAsyncOpenAIRepository
+    async def company_gets_match_score(self) -> None:
         data = ApplicantAndCompany.model_validate(self.message.data)
         await ApplicantMatchUsecase(
-            self.request_scope, self.async_openai
+            self.request_scope, self.openai
         ).update_application_with_match_score(data.application_id)
         CompanyBillingUsecase(self.request_scope).increment_company_usage(
             company_id=data.company_id, incremental_usages={UsageType.MATCH_SCORES: 1}
@@ -175,12 +136,8 @@ class ApplicationEventsResolver:
         )
 
     async def answer_application_questions(self) -> None:
-        if not self.async_openai:
-            raise MissingAsyncOpenAIRepository
         data = ApplicantAndCompany.model_validate(self.message.data)
-        question_usecase = ApplicantQuestionsUsecase(
-            self.request_scope, self.async_openai
-        )
+        question_usecase = ApplicantQuestionsUsecase(self.request_scope, self.openai)
         answered_questions = (
             await question_usecase.update_application_with_questions_answered(
                 data.application_id
@@ -193,8 +150,7 @@ class ApplicationEventsResolver:
             },
         )
 
-    async def application_is_submitted(self, send_webhooks: bool = True) -> None:
-        await self.calculate_match_score()
+    async def post_application_submission(self, send_webhooks: bool = True) -> None:
         await self.extract_application_filters()
         await self.answer_application_questions()
 

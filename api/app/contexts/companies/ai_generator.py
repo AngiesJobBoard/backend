@@ -42,7 +42,8 @@ def generate_description_from_job(
 async def create_job_from_file(file: UploadFile = File(...)):
     generator = AIJobGenerator(openai)
     try:
-        extracted_text = await extract_text(file)
+        file_bytes = await file.read()
+        extracted_text = extract_text(file_bytes)
     except BadFileTypeException:
         raise GenericHTTPException(
             status_code=400,
