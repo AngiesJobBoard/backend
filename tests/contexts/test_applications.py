@@ -5,11 +5,11 @@ from email.mime.text import MIMEText
 from email.message import Message
 
 from unittest.mock import patch
-from aiohttp import ClientSession
 import pytest
 
 from ajb.base.models import RepoFilterParams
-from ajb.config.settings import AppSettings
+from ajb.config.settings import SETTINGS
+
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
@@ -244,7 +244,7 @@ def test_application_counts(request_scope):
     )
 
     # Validate a kafka request was created
-    assert len(request_scope.kafka.messages[AppSettings.KAFKA_APPLICATIONS_TOPIC]) == 1
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 1
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
@@ -290,20 +290,17 @@ async def test_high_matching_applicants(request_scope):
     company_repo = CompanyRepository(request_scope)
     job_repo = JobRepository(request_scope, company.id)
 
-    async with ClientSession() as session:
-        matcher_usecase = ApplicantMatchUsecase(
-            request_scope, AsyncOpenAIRepository(session)
-        )
+    matcher_usecase = ApplicantMatchUsecase(request_scope, AsyncOpenAIRepository())
 
-        with patch(
-            "ajb.contexts.applications.matching.usecase.ApplicantMatchUsecase.get_match"
-        ) as mock_get_match:
-            mock_get_match.return_value = ApplicantMatchScore(
-                match_score=100, match_reason="test"
-            )
-            await matcher_usecase.update_application_with_match_score(
-                created_application.id, job
-            )
+    with patch(
+        "ajb.contexts.applications.matching.usecase.ApplicantMatchUsecase.get_match"
+    ) as mock_get_match:
+        mock_get_match.return_value = ApplicantMatchScore(
+            match_score=100, match_reason="test"
+        )
+        await matcher_usecase.update_application_with_match_score(
+            created_application.id, job
+        )
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
@@ -538,7 +535,7 @@ def test_create_many_applications(request_scope):
     )
 
     # Validate kafka requests were created
-    assert len(request_scope.kafka.messages[AppSettings.KAFKA_APPLICATIONS_TOPIC]) == 2
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 2
 
     # Verify that the 2 applicants were successfully created
     retrieved_company = company_repo.get(company.id)
@@ -601,8 +598,8 @@ def test_create_application_from_resume(request_scope):
     # Create application
     usecase.create_application_from_resume(resume, application)
 
-    # Check for kofka message
-    assert len(request_scope.kafka.messages[AppSettings.KAFKA_APPLICATIONS_TOPIC]) == 1
+    # Check for kafka message
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 2
 
     # Verify applicant was created
     retrieved_company = company_repo.get(company.id)
@@ -682,4 +679,4 @@ def test_create_application_from_raw_text(request_scope):
         usecase.application_is_created_from_raw_text(company.id, job.id, "test")
 
     # Check that the application creation event was fired
-    assert len(request_scope.kafka.messages[AppSettings.KAFKA_APPLICATIONS_TOPIC]) == 1
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 1

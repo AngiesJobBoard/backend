@@ -1,3 +1,4 @@
+from ajb.base import BaseUseCase
 from ajb.base.events import SourceServices
 from ajb.base.schema import Collection
 from ajb.contexts.applications.constants import ApplicationConstants
@@ -5,6 +6,7 @@ from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.applications.extract_data.ai_extractor import (
     SyncronousAIResumeExtractor,
 )
+from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.models import Application, CreateApplication, ScanStatus
 from ajb.contexts.resumes.models import UserCreateResume
 from ajb.contexts.resumes.usecase import ResumeUseCase
@@ -36,7 +38,7 @@ class ApplicationCreationUseCase:
         if produce_submission_event:
             ApplicationEventProducer(
                 self.main.request_scope, source_service=SourceServices.API
-            ).application_is_submitted(
+            ).company_gets_match_score(
                 created_application.company_id,
                 created_application.job_id,
                 created_application.id,
@@ -79,7 +81,7 @@ class ApplicationCreationUseCase:
                 self.main.request_scope, SourceServices.API
             )
             for application in created_applications:
-                event_producer.application_is_submitted(company_id, job_id, application)
+                event_producer.company_gets_match_score(company_id, job_id, application)
         return created_applications
 
     def create_applications_from_csv(
@@ -125,7 +127,6 @@ class ApplicationCreationUseCase:
             job_id=resume.job_id,
             resume_id=resume.id,
             application_id=created_application.id,
-            parse_resume=True,
         )
         return created_application
 
@@ -154,15 +155,13 @@ class ApplicationCreationUseCase:
         application_repo: ApplicationRepository = self.main.get_repository(Collection.APPLICATIONS)  # type: ignore
         application_repo.update_application_with_parsed_information(
             application_id=created_application.id,
-            resume_url=created_application.resume_url,
-            raw_resume_text=raw_text,
             resume_information=resume_information,  # type: ignore
         )
 
         # Create kafka event for handling the match
         ApplicationEventProducer(
             self.main.request_scope, source_service=SourceServices.API
-        ).application_is_submitted(
+        ).company_gets_match_score(
             company_id=company_id,
             job_id=job_id,
             application_id=created_application.id,

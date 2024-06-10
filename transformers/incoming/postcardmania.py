@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from ajb.common.models import Location
 from ajb.contexts.applications.models import CreateApplication
 from ajb.contexts.applications.usecase import ApplicationUseCase, UserCreateResume
+from ajb.vendor.pdf_plumber import extract_text
 from transformers.incoming.base import BaseIncomingTransformer, CouldNotInferJobError
 
 
@@ -111,6 +112,7 @@ class IncomingPostCardManiaTransformer(BaseIncomingTransformer[PostCardManiaRawD
                     state=self.data.contact_information.state,
                     zipcode=self.data.contact_information.zip,
                 ),
+                extracted_resume_text=extract_text(resume_data),
             ),
         )
 

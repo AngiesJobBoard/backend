@@ -53,4 +53,6 @@ class ResumeExtractorUseCase(BaseUseCase):
             raise EmptyResumeException
         return await AIResumeExtractor(
             self.openai
-        ).get_candidate_profile_from_resume_text(resume_text)
+        ).get_candidate_profile_from_resume_text(
+            resume_text
+        )  # type: ignore
