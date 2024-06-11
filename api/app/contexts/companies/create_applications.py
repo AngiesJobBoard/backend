@@ -25,7 +25,7 @@ async def upload_applications_from_resume(
     job_id: str,
     files: list[UploadFile] = File(...),
 ):
-    application_usecase = ApplicationUseCase(scope(request), storage)
+    application_usecase = ApplicationUseCase(scope(request))
     files_processed = 0
 
     for file in files:

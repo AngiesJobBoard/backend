@@ -50,7 +50,6 @@ class ApplicationFailureReRunUseCase(BaseUseCase):
                             company_id=application.company_id,
                             job_id=application.job_id,
                             application_id=application.id,
-                            send_post_application_event=False,
                         ).model_dump(),
                         topic=KafkaTopic.APPLICATIONS,
                         event_type=ApplicationEvent.GET_MATCH_SCORE,

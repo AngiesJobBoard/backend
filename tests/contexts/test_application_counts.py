@@ -11,7 +11,7 @@ from api.app.contexts.companies.jobs import mark_job_as_active, mark_job_as_inac
 class MockRequest:  # Class for mocking Starlette requests
     def __init__(self, request_scope):
         self.state = type("state", (), {})()
-        self.state.request_scope = request_scope
+        self.state.request_scope = request_scope  # type: ignore
 
 
 def check_total_company_application_counts(
@@ -145,13 +145,13 @@ def test_mark_job_active(request_scope):
     check_active_company_application_counts(request_scope, company.id, 3, 3, 0)
 
     # Test mark job as inactive
-    mark_job_as_inactive(request, company.id, job1.id)  # Make job 1 inactive
+    mark_job_as_inactive(request, company.id, job1.id)  # type: ignore # Make job 1 inactive
     check_active_company_application_counts(
         request_scope, company.id, 1, 1, 0
     )  # Job 1's applicants should now be inactive, leaving only the job 2 applicant.
 
     # Test mark job as active
-    mark_job_as_active(request, company.id, job1.id)  # Make job active again
+    mark_job_as_active(request, company.id, job1.id)  # type: ignore # Make job active again
     check_active_company_application_counts(
         request_scope, company.id, 3, 3, 0
     )  # Job 1 applicants should come back now

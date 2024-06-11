@@ -2,8 +2,9 @@ from base64 import b64decode
 from pydantic import BaseModel
 
 from ajb.common.models import Location
+from ajb.contexts.resumes.models import UserCreateResume
 from ajb.contexts.applications.models import CreateApplication
-from ajb.contexts.applications.usecase import ApplicationUseCase, UserCreateResume
+from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.vendor.pdf_plumber import extract_text
 from transformers.incoming.base import BaseIncomingTransformer, CouldNotInferJobError
 
