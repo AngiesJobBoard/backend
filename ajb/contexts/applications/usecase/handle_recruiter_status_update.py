@@ -1,3 +1,4 @@
+from ajb.base import BaseUseCase
 from ajb.base.schema import Collection
 from ajb.contexts.applications.constants import ApplicationConstants
 from ajb.contexts.applications.models import (
@@ -8,29 +9,10 @@ from ajb.contexts.applications.models import (
 from ajb.contexts.applications.recruiter_updates.usecase import RecruiterUpdatesUseCase
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 
+from .helpers import ApplicationHelpersUseCase
 
-class ApplicationUpdatesUseCase:
-    def __init__(self, main):
-        self.main = main
 
-    def update_application_counts(
-        self,
-        company_id: str,
-        job_id: str,
-        field: str,
-        count_change: int,
-        is_increase: bool,
-    ):
-        company_repo = self.main.get_repository(Collection.COMPANIES)
-        job_repo = self.main.get_repository(
-            Collection.JOBS, self.main.request_scope, parent_id=company_id
-        )
-        if is_increase:
-            company_repo.increment_field(company_id, field, count_change)
-            job_repo.increment_field(job_id, field, count_change)
-            return
-        company_repo.decrement_field(company_id, field, count_change)
-        job_repo.decrement_field(job_id, field, count_change)
+class RecruiterUpdateStatusResolver(BaseUseCase):
 
     def _update_company_count_for_new_applications(
         self, original_application: Application, new_application: Application
@@ -40,7 +22,7 @@ class ApplicationUpdatesUseCase:
             or new_application.application_status is None
         ):
             return
-        self.update_application_counts(
+        ApplicationHelpersUseCase(self.request_scope).update_application_counts(
             company_id=new_application.company_id,
             job_id=new_application.job_id,
             field=ApplicationConstants.NEW_APPLICANTS,
@@ -55,7 +37,7 @@ class ApplicationUpdatesUseCase:
         application_id: str,
         new_status: CreateApplicationStatusUpdate,
     ) -> CompanyApplicationView:
-        with self.main.request_scope.start_transaction(
+        with self.request_scope.start_transaction(
             read_collections=[Collection.APPLICATIONS, Collection.JOBS],
             write_collections=[
                 Collection.APPLICATIONS,
@@ -63,20 +45,16 @@ class ApplicationUpdatesUseCase:
                 Collection.COMPANY_NOTIFICATIONS,
             ],
         ) as transaction_scope:
-            application_repo = self.main.get_repository(
+            application_repo = self.get_repository(
                 Collection.APPLICATIONS, transaction_scope
             )
             original_application: Application = application_repo.get(application_id)
+
+            assert original_application.job_id == job_id
+            assert original_application.company_id == company_id
+
             application_repo.update_fields(
                 application_id, application_status=new_status.application_status
-            )
-            RecruiterUpdatesUseCase(transaction_scope).update_application_status(
-                company_id,
-                job_id,
-                application_id,
-                self.main.request_scope.user_id,
-                new_status.application_status,
-                new_status.update_reason,
             )
             response = CompanyApplicationRepository(
                 transaction_scope
