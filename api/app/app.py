@@ -10,7 +10,6 @@ from api.app.contexts.companies.app import company_api_router
 from api.app.middleware import verify_user
 
 portal_api_router = APIRouter(
-    tags=["Portal"],
     dependencies=[Depends(verify_user)],
 )
 

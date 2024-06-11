@@ -5,6 +5,12 @@ Jobs have to be manually set as public for their links to be accessible.
 
 from fastapi import APIRouter, Depends, UploadFile, File, Body, status
 from ajb.contexts.companies.jobs.repository import JobRepository, FullJobWithCompany
+from ajb.contexts.companies.jobs.public_application_forms.usecase import (
+    JobPublicApplicationFormUsecase,
+)
+from ajb.contexts.companies.jobs.public_application_forms.models import (
+    UserCreatePublicApplicationForm,
+)
 from ajb.contexts.applications.usecase import (
     ApplicationUseCase,
     UserCreateResume,
@@ -28,26 +34,21 @@ router = APIRouter(
 
 @router.get("/jobs/{job_id}", response_model=FullJobWithCompany)
 def get_job(job_id: str):
-    result = JobRepository(JOB_APPLICATIONS_REQUEST_SCOPE).get_full_job_with_company(
-        job_id
-    )
-    if not result.job_is_public or result.active is False:
-        raise GenericHTTPException(404, "Not found")
-    return result
+    return JobPublicApplicationFormUsecase(
+        JOB_APPLICATIONS_REQUEST_SCOPE
+    ).get_public_job_data(job_id)
 
 
 @router.post("/jobs/{job_id}/apply", status_code=status.HTTP_204_NO_CONTENT)
 async def apply_to_job(
     job_id: str,
-    email: str = Body(...),
-    name: str = Body(...),
-    phone_number: str = Body(...),
+    form_data: UserCreatePublicApplicationForm = Body(...),
     resume: UploadFile = File(...),
 ):
-    # Check job is valid public job first
-    job = JobRepository(JOB_APPLICATIONS_REQUEST_SCOPE).get(job_id)
-    if not job.job_is_public or job.active is False:
-        raise GenericHTTPException(404, "Not found")
+    # Save the raw form data
+    created_form_data = JobPublicApplicationFormUsecase(
+        JOB_APPLICATIONS_REQUEST_SCOPE
+    ).submit_public_job_application(form_data, job_id)
 
     # Now create the application
     data = await resume.read()
@@ -59,15 +60,16 @@ async def apply_to_job(
             file_type=content_type or file_end,
             file_name=filename or f"resume.{file_end}",
             resume_data=data,
-            company_id=job.company_id,
+            company_id=created_form_data.company_id,
             job_id=job_id,
         ),
         additional_partial_data=CreateApplication(
-            email=email,
-            name=name,
-            phone=phone_number,
+            email=created_form_data.email,
+            name=created_form_data.full_legal_name,
+            phone=created_form_data.phone,
             job_id=job_id,
-            company_id=job.company_id,
+            company_id=created_form_data.job_id,
+            application_form_id=created_form_data.id,
         ),
     )
     return status.HTTP_204_NO_CONTENT

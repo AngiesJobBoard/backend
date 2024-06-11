@@ -22,6 +22,7 @@ class Collection(str, Enum):
     RECRUITER_INVITATIONS = "recruiter_invitations"
     JOBS = "jobs"
     APPLICATIONS = "applications"
+    PUBLIC_APPLICATION_FORMS = "public_application_forms"
     APPLICATION_RECRUITER_UPDATES = "application_recruiter_updates"
     RESUMES = "resumes"
     COMPANY_NOTIFICATIONS = "company_notifications"

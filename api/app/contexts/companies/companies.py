@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, UploadFile, File
 
 from ajb.contexts.companies.models import (
     Company,
@@ -6,6 +6,7 @@ from ajb.contexts.companies.models import (
     UpdateCompany,
     CompanyNameAndID,
     CompanyGlobalSearchResults,
+    CompanyImageUpload,
 )
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.usecase import CompaniesUseCase
@@ -13,6 +14,7 @@ from ajb.exceptions import CompanyCreateException
 
 from api.exceptions import GenericHTTPException
 from api.middleware import scope
+from api.vendors import storage
 
 
 router = APIRouter(tags=["Companies"], prefix="/companies")
@@ -63,3 +65,17 @@ def get_company(request: Request, company_id: str):
 def delete_company(request: Request, company_id: str):
     """Deletes a company by id"""
     return CompanyRepository(scope(request)).delete(company_id)
+
+
+@router.post("/{company_id}/main-image", response_model=Company)
+def update_current_user_profile_picture(
+    request: Request, company_id: str, file: UploadFile = File(...)
+):
+    data = CompanyImageUpload(
+        file_type=file.content_type if file.content_type else "image/png",
+        file_name=file.filename if file.filename else "company_main_image",
+        picture_data=file.file.read(),
+    )
+    return CompaniesUseCase(scope(request), storage).update_company_main_image(
+        company_id, data
+    )
