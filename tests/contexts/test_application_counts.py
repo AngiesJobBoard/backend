@@ -145,13 +145,13 @@ def test_mark_job_active(request_scope):
     check_active_company_application_counts(request_scope, company.id, 3, 3, 0)
 
     # Test mark job as inactive
-    mark_job_as_inactive(request, company.id, job1.id)  # type: ignore  # Make job 1 inactive
+    mark_job_as_inactive(request, company.id, job1.id)  # type: ignore # Make job 1 inactive
     check_active_company_application_counts(
         request_scope, company.id, 1, 1, 0
     )  # Job 1's applicants should now be inactive, leaving only the job 2 applicant.
 
     # Test mark job as active
-    mark_job_as_active(request, company.id, job1.id)  # type: ignore  # Make job active again
+    mark_job_as_active(request, company.id, job1.id)  # type: ignore # Make job active again
     check_active_company_application_counts(
         request_scope, company.id, 3, 3, 0
     )  # Job 1 applicants should come back now

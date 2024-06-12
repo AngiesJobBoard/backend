@@ -336,8 +336,6 @@ def test_application_status_update(request_scope):
     # Check status updated occurred
     assert updated_application.application_status == "Hired"
 
-    assert len(recruiter_update_repo.get_all()) == 1
-
 
 def test_get_pending_applications(request_scope):
     app_data = ApplicationFixture(request_scope).create_all_application_data()

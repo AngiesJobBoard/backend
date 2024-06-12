@@ -51,7 +51,7 @@ async def jobs_email_webhook_handler(
         envelope
     )
     ingress_email = message_from_string(email)
-    ApplicationUseCase(scope(request), storage).process_email_application_ingress(
+    ApplicationUseCase(scope(request)).process_email_application_ingress(
         ingress_email, ingress_record
     )
     return status.HTTP_204_NO_CONTENT
