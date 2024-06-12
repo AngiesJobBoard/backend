@@ -35,15 +35,22 @@ async def jobs_api_webhook_handler(request: Request, payload: dict):
 
 @router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
 async def applicants_api_webhook_handler(request: Request, payload: dict):
+    from httpx import AsyncClient
+    from fastapi import status
+
     new_location = "https://api.angiesjobboard.com/webhooks/companies/api-ingress/applicants"
-    r = requests.post(
-        new_location,
-        headers=request.headers,
-        json=payload,
-        verify=False
-    )
-    print(f"\n\n{r.text}\n\n")
+    token = request.headers.get("Authorization")
+    async with AsyncClient() as client:
+        # Customize headers as needed, for example:
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}"
+            # Add other necessary headers
+        }
+        response = await client.post(new_location, headers=headers, json=payload)
+        print(f"\n\n{response.text}\n\n")
     return status.HTTP_204_NO_CONTENT
+
 
 @router.post("/email-ingress", status_code=status.HTTP_204_NO_CONTENT)
 async def jobs_email_webhook_handler(
