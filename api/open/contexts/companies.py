@@ -1,3 +1,4 @@
+import requests
 from fastapi import APIRouter, status, Request, Form
 from email import message_from_string
 
@@ -23,10 +24,11 @@ router = APIRouter(
 
 
 def temp_redirect_for_pcm(request: Request, payload: dict):
-    header = request.headers.get("Authorization")
-    if header and "postcardmania" in header:
+    authorization = request.headers["Authorization"]
+    if "Bearer" in authorization:
+        authorization = authorization.split("Bearer")[1].strip()
+    if authorization and "postcardmania" in authorization:
         # Redirect to prod
-        import requests
         requests.post(
             "https://api.angiesjobboard.com/webhooks/companies/api-ingress/applicants",
             headers=request.headers,
