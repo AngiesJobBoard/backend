@@ -29,16 +29,6 @@ def temp_redirect_for_pcm(request: Request, payload: dict):
         headers=request.headers,
         json=payload,
     )
-    authorization = request.headers["Authorization"]
-    if "Bearer" in authorization:
-        authorization = authorization.split("Bearer")[1].strip()
-    if authorization and "postcardmania" in authorization:
-        # Redirect to prod
-        requests.post(
-            "https://api.angiesjobboard.com/webhooks/companies/api-ingress/applicants",
-            headers=request.headers,
-            json=payload,
-        )
 
 
 @router.post("/api-ingress/jobs", status_code=status.HTTP_204_NO_CONTENT)
@@ -53,15 +43,13 @@ async def jobs_api_webhook_handler(request: Request, payload: dict):
 
 @router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
 async def applicants_api_webhook_handler(request: Request, payload: dict):
-    # ! Special case for redirecting for a specific header
-    temp_redirect_for_pcm(request, payload)
-    request.state.request_scope = WEBHOOK_REQUEST_SCOPE
-    ingress_record = OpenRequestValidator(request).validate_api_ingress_request()
-    WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
-        ingress_record, payload
+    new_location = "https://api.angiesjobboard.com/webhooks/companies/api-ingress/applicants"
+    requests.post(
+        new_location,
+        headers=request.headers,
+        json=payload,
     )
     return status.HTTP_204_NO_CONTENT
-
 
 @router.post("/email-ingress", status_code=status.HTTP_204_NO_CONTENT)
 async def jobs_email_webhook_handler(
