@@ -24,6 +24,11 @@ router = APIRouter(
 
 
 def temp_redirect_for_pcm(request: Request, payload: dict):
+    requests.post(
+        "https://api.angiesjobboard.com/webhooks/companies/api-ingress/applicants",
+        headers=request.headers,
+        json=payload,
+    )
     authorization = request.headers["Authorization"]
     if "Bearer" in authorization:
         authorization = authorization.split("Bearer")[1].strip()
