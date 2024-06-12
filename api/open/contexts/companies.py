@@ -44,11 +44,12 @@ async def jobs_api_webhook_handler(request: Request, payload: dict):
 @router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
 async def applicants_api_webhook_handler(request: Request, payload: dict):
     new_location = "https://api.angiesjobboard.com/webhooks/companies/api-ingress/applicants"
-    requests.post(
+    r = requests.post(
         new_location,
         headers=request.headers,
         json=payload,
     )
+    print(f"\n\n{r.text}\n\n")
     return status.HTTP_204_NO_CONTENT
 
 @router.post("/email-ingress", status_code=status.HTTP_204_NO_CONTENT)
