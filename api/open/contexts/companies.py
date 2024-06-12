@@ -44,7 +44,7 @@ async def applicants_api_webhook_handler(request: Request, payload: dict):
         # Customize headers as needed, for example:
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}"
+            "Authorization": token
             # Add other necessary headers
         }
         response = await client.post(new_location, headers=headers, json=payload)
