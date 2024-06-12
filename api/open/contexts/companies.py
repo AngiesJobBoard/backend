@@ -23,14 +23,6 @@ router = APIRouter(
 )
 
 
-def temp_redirect_for_pcm(request: Request, payload: dict):
-    requests.post(
-        "https://api.angiesjobboard.com/webhooks/companies/api-ingress/applicants",
-        headers=request.headers,
-        json=payload,
-    )
-
-
 @router.post("/api-ingress/jobs", status_code=status.HTTP_204_NO_CONTENT)
 async def jobs_api_webhook_handler(request: Request, payload: dict):
     request.state.request_scope = WEBHOOK_REQUEST_SCOPE
@@ -48,6 +40,7 @@ async def applicants_api_webhook_handler(request: Request, payload: dict):
         new_location,
         headers=request.headers,
         json=payload,
+        verify=False
     )
     print(f"\n\n{r.text}\n\n")
     return status.HTTP_204_NO_CONTENT
