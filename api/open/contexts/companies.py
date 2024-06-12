@@ -22,18 +22,6 @@ router = APIRouter(
 )
 
 
-def temp_redirect_for_pcm(request: Request, payload: dict):
-    header = request.headers.get("Authorization")
-    if header and "postcardmania" in header:
-        # Redirect to prod
-        import requests
-        requests.post(
-            "https://api.angiesjobboard.com/webhooks/companies/api-ingress/applicants",
-            headers=request.headers,
-            json=payload,
-        )
-
-
 @router.post("/api-ingress/jobs", status_code=status.HTTP_204_NO_CONTENT)
 async def jobs_api_webhook_handler(request: Request, payload: dict):
     request.state.request_scope = WEBHOOK_REQUEST_SCOPE
@@ -46,8 +34,6 @@ async def jobs_api_webhook_handler(request: Request, payload: dict):
 
 @router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
 async def applicants_api_webhook_handler(request: Request, payload: dict):
-    # ! Special case for redirecting for a specific header
-    temp_redirect_for_pcm(request, payload)
     request.state.request_scope = WEBHOOK_REQUEST_SCOPE
     ingress_record = OpenRequestValidator(request).validate_api_ingress_request()
     WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
