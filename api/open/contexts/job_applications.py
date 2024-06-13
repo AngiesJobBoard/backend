@@ -46,11 +46,13 @@ async def apply_to_job(
     resume: UploadFile = File(...),
 ):
     # Save the raw form data
-    created_form_data = JobPublicApplicationFormUsecase(
+    created_form_data, updated_existing_applications = JobPublicApplicationFormUsecase(
         JOB_APPLICATIONS_REQUEST_SCOPE
     ).submit_public_job_application(
         UserCreatePublicApplicationForm.model_validate(json.loads(form_data)), job_id
     )
+    if updated_existing_applications:
+        return status.HTTP_204_NO_CONTENT
 
     # Now create the application
     data = await resume.read()
