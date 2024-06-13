@@ -33,7 +33,7 @@ class CreateApplicationFromResumeResolver(BaseUseCase):
             return partial_application
 
         partial_application_dict = partial_application.model_dump()
-        additional_partial_data_dict = additional_partial_data.model_dump()
+        additional_partial_data_dict = additional_partial_data.model_dump(exclude_none=True)
         partial_application_dict.update(additional_partial_data_dict)
         return CreateApplication(**partial_application_dict)
 
@@ -69,6 +69,7 @@ class CreateApplicationFromResumeResolver(BaseUseCase):
         partial_application = self._combine_additional_data(
             partial_application, additional_partial_data
         )
+        print(partial_application)
         return partial_application
 
     def create_application_from_resume(
