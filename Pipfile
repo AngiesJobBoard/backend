@@ -23,6 +23,7 @@ aiohttp = "*"
 python-docx = "*"
 stripe = "*"
 instructor = "*"
+croniter = "*"
 
 [dev-packages]
 mypy = "*"
