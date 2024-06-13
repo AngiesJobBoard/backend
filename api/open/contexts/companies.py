@@ -1,4 +1,3 @@
-import requests
 from fastapi import APIRouter, status, Request, Form
 from email import message_from_string
 
@@ -6,7 +5,7 @@ from ajb.base import RequestScope
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.webhooks.ingress.jobs.usecase import WebhookJobsUseCase
 from ajb.contexts.webhooks.ingress.applicants.usecase import WebhookApplicantsUseCase
-from api.vendors import db, storage, kafka_producer
+from api.vendors import db, kafka_producer
 
 from api.open.middleware import OpenRequestValidator
 from api.middleware import scope
@@ -35,20 +34,11 @@ async def jobs_api_webhook_handler(request: Request, payload: dict):
 
 @router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
 async def applicants_api_webhook_handler(request: Request, payload: dict):
-    from httpx import AsyncClient
-    from fastapi import status
-
-    new_location = "https://api.angiesjobboard.com/webhooks/companies/api-ingress/applicants"
-    token = request.headers.get("Authorization")
-    async with AsyncClient() as client:
-        # Customize headers as needed, for example:
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": token
-            # Add other necessary headers
-        }
-        response = await client.post(new_location, headers=headers, json=payload)
-        print(f"\n\n{response.text}\n\n")
+    request.state.request_scope = WEBHOOK_REQUEST_SCOPE
+    ingress_record = OpenRequestValidator(request).validate_api_ingress_request()
+    WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
+        ingress_record, payload
+    )
     return status.HTTP_204_NO_CONTENT
 
 
