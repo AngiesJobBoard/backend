@@ -8,8 +8,6 @@ from fastapi import (
 
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.resumes.models import UserCreateResume
-
-from api.vendors import storage
 from api.middleware import scope
 
 
@@ -59,7 +57,7 @@ def process_resume_file(
             resume_data=data,
             company_id=company_id,
             job_id=job_id,
-        )
+        ),
     )
     return created_application
 

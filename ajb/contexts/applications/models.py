@@ -206,6 +206,7 @@ class CreateApplication(UserCreatedApplication):
     application_status: str | None = None
     application_match_score: int | None = None
     application_match_reason: str = ""
+    application_form_id: str | None = None
 
     recruiter_tags: list[str] = Field(default_factory=list)
 

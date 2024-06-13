@@ -4,7 +4,7 @@ from api.admin.contexts import admin_users, general_admin, search, users
 from api.admin.middleware import verify_admin_user
 
 admin_router = APIRouter(
-    tags=["Admin"], prefix="/admin", dependencies=[Depends(verify_admin_user)]
+    prefix="/admin", dependencies=[Depends(verify_admin_user)]
 )
 
 admin_router.include_router(admin_users.router)

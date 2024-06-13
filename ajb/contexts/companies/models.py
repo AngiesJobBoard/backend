@@ -72,6 +72,8 @@ class UpdateCompany(BaseModel):
     settings: CompanySettings | None = None
     company_has_created_first_job: bool | None = None
     company_has_imported_first_application: bool | None = None
+    main_image: str | None = None
+    icon_image: str | None = None
 
 
 class CreateCompany(UserCreateCompany):
@@ -85,6 +87,8 @@ class CreateCompany(UserCreateCompany):
     company_has_created_first_job: bool = False
     company_has_imported_first_application: bool = False
     stripe_customer_id: str | None = None
+    main_image: str | None = None
+    icon_image: str | None = None
 
 
 class Company(BaseDataModel, CreateCompany): ...
@@ -120,3 +124,9 @@ class CompanyGlobalSearchApplications(BaseDataModel):
 class CompanyGlobalSearchResults(BaseModel):
     jobs: list[CompanyGlobalSearchJobs]
     applications: list[CompanyGlobalSearchApplications]
+
+
+class CompanyImageUpload(BaseModel):
+    file_type: str
+    file_name: str
+    picture_data: bytes

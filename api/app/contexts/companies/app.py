@@ -19,7 +19,6 @@ from api.app.contexts.companies import (
 from api.app.middleware import verify_user, user_has_access_to_company
 
 company_api_router = APIRouter(
-    tags=["Company"],
     dependencies=[Depends(verify_user)],
 )
 
