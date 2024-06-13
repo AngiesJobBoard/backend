@@ -2,8 +2,7 @@ from ajb.base import BaseUseCase, Collection
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.exceptions import EntityNotFound
 
-from .repository import JobPublicApplicationFormRepository
-from .models import UserCreatePublicApplicationForm, CreatePublicApplicationForm
+from .models import UserCreatePublicApplicationForm, CreatePublicApplicationForm, PublicApplicationForm
 
 
 class JobNotActiveException(Exception):
@@ -24,7 +23,7 @@ class JobPublicApplicationFormUsecase(BaseUseCase):
 
     def submit_public_job_application(
         self, data: UserCreatePublicApplicationForm, job_id: str
-    ):
+    ) -> PublicApplicationForm:
         # First check the job is valid
         try:
             job = self.get_public_job_data(job_id)
@@ -34,7 +33,7 @@ class JobPublicApplicationFormUsecase(BaseUseCase):
         ):
             raise FailedToSubmitApplciationException
 
-        repo: JobPublicApplicationFormRepository = self.get_repository(Collection.PUBLIC_APPLICATION_FORMS)  # type: ignore
+        repo = self.get_repository(Collection.PUBLIC_APPLICATION_FORMS)
         return repo.create(
             CreatePublicApplicationForm(
                 company_id=job.company_id, job_id=job_id, **data.model_dump()

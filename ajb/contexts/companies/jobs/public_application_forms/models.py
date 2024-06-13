@@ -11,44 +11,29 @@ class Reference(BaseModel):
     company_and_position_title: str
 
 
-class EmploymentHistory(BaseModel):
-    hire_date: datetime
-    ending_date: datetime
-    ending_hourly_pay_rate: float
-    manager_name: str
-    manager_phone: str
-    manager_email: str
-    company_name: str
-    job_duties: str
-    reason_for_leaving: str
-
-
 class UserCreatePublicApplicationForm(BaseModel):
     full_legal_name: str
-    preferred_name: str
     email: str
     phone: str
-    valid_drivers_license: bool
-    over_18_years_old: bool
-    legally_authorized_to_work_in_us: bool
-    smoke_vape_chew_thc_products: bool
-    willing_and_able_to_pass_drug_test: bool
-    arrested_charged_convicted_of_felony: bool
+    worked_at_company_before: bool | None
+    valid_drivers_license: bool | None
+    over_18_years_old: bool | None
+    legally_authorized_to_work_in_us: bool | None
+    smoke_vape_chew_thc_products: bool | None
+    willing_and_able_to_pass_drug_test: bool | None
+    arrested_charged_convicted_of_felony: bool | None
     felony_details: str
     references: list[Reference]
-    employment_history: list[EmploymentHistory]
     how_did_you_hear_about_us: str
+    referral_name: str
+    other_referral_source: str
     when_available_to_start: datetime
-    desired_hourly_pay_rate: float | None = None
-    worked_at_company_before: bool
-    has_reliable_transportation: bool
-
-    willing_to_submit_to_background_check: bool
-    willing_to_submit_to_drug_test: bool
-    willing_to_submit_to_driving_record_check: bool
-    willing_to_submit_to_reference_check: bool
-
-    confirm_all_statements_true: bool
+    has_reliable_transportation: bool | None
+    alternative_to_reliable_transportation: str
+    willing_to_submit_to_background_check: bool | None
+    willing_to_submit_to_drug_test: bool | None
+    willing_to_submit_to_reference_check: bool | None
+    confirm_all_statements_true: bool | None
     e_signature: str
 
 

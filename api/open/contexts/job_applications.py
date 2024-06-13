@@ -3,7 +3,8 @@ This router is for use with jobs.angiesjobboard.com a public facing job board.
 Jobs have to be manually set as public for their links to be accessible.
 """
 
-from fastapi import APIRouter, UploadFile, File, Body, status
+import json
+from fastapi import APIRouter, UploadFile, File, Form, status
 from ajb.contexts.companies.jobs.repository import FullJobWithCompany
 from ajb.contexts.companies.jobs.public_application_forms.usecase import (
     JobPublicApplicationFormUsecase,
@@ -41,20 +42,24 @@ def get_job(job_id: str):
 @router.post("/jobs/{job_id}/apply", status_code=status.HTTP_204_NO_CONTENT)
 async def apply_to_job(
     job_id: str,
-    form_data: UserCreatePublicApplicationForm = Body(...),
+    form_data: str = Form(...),
     resume: UploadFile = File(...),
 ):
     # Save the raw form data
     created_form_data = JobPublicApplicationFormUsecase(
         JOB_APPLICATIONS_REQUEST_SCOPE
-    ).submit_public_job_application(form_data, job_id)
+    ).submit_public_job_application(
+        UserCreatePublicApplicationForm.model_validate(json.loads(form_data)), job_id
+    )
 
     # Now create the application
     data = await resume.read()
     filename = resume.filename
     content_type = resume.content_type
     file_end = filename.split(".")[-1]  # type: ignore
-    ApplicationUseCase(JOB_APPLICATIONS_REQUEST_SCOPE).create_application_from_resume(
+    ApplicationUseCase(
+        JOB_APPLICATIONS_REQUEST_SCOPE
+    ).create_application_from_resume(
         data=UserCreateResume(
             file_type=content_type or file_end,
             file_name=filename or f"resume.{file_end}",
@@ -67,7 +72,7 @@ async def apply_to_job(
             name=created_form_data.full_legal_name,
             phone=created_form_data.phone,
             job_id=job_id,
-            company_id=created_form_data.job_id,
+            company_id=created_form_data.company_id,
             application_form_id=created_form_data.id,
         ),
     )
