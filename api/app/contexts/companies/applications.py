@@ -251,6 +251,7 @@ def update_application_status(
 )
 def get_application_public_form_data(
     request: Request,
+    company_id: str,
     job_id: str,
     application_id: str,
     public_application_id: str | None = None,
@@ -265,6 +266,8 @@ def get_application_public_form_data(
         raise GenericHTTPException(
             status_code=404, detail="Public application form does not exist"
         )
-    return JobPublicApplicationFormRepository(scope(request), job_id).get(
+    res = JobPublicApplicationFormRepository(scope(request), job_id).get(
         public_application_id
     )
+    assert res.company_id == company_id  # mostly useless but need to use company id somehow
+    return res
