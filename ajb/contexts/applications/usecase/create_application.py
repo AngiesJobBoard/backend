@@ -52,9 +52,11 @@ class CreateApplicationResolver(BaseUseCase):
         partial_application: CreateApplication,
         produce_submission_event: bool = True,
     ) -> Application:
-        """All roads lead to here for creating an application..."""
+        """
+        All roads lead to here for creating an application...
+        """
         BillingValidateUsageUseCase(self.request_scope, company_id).validate_usage(
-            company_id, UsageType.APPLICATIONS_PROCESSED
+            company_id, UsageType.APPLICATIONS_PROCESSED, 1, True
         )
         created_application = self._handle_create_application(
             partial_application, job_id

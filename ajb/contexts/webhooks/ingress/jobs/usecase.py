@@ -1,7 +1,6 @@
 from ajb.base import BaseUseCase, Collection
 from ajb.contexts.companies.jobs.usecase import JobsUseCase
 from ajb.contexts.companies.jobs.models import UserCreateJob, Job
-from ajb.contexts.billing.usecase import CompanyBillingUsecase, UsageType
 from .models import (
     JobsWebhook,
     JobWebhookEventType,

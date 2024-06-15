@@ -36,9 +36,11 @@ class CreateMonthlyUsage(BaseModel):
         for usage_type, usage_count in self.transaction_counts.items():
             usage_detail = usage_cost_details[usage_type]
             if usage_detail.unlimited_use:
+                # No per-use cost on any unlimited use
                 continue
             if usage_count > usage_detail.free_tier_limit_per_month:
                 if usage_detail.blocked_after_free_tier:
+                    # This error means something bad happened, the action should have been stopped before getting to this point
                     raise BillingAfterBlockedFreeTierError
                 total_cost += (
                     float(usage_count - usage_detail.free_tier_limit_per_month)

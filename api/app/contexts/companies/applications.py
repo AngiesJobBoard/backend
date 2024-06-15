@@ -63,7 +63,7 @@ def get_all_company_applications(
         resume_text_contains,
         has_required_skill,
         status_filter.split(",") if status_filter else None,
-        # completed_scans_only=False
+        completed_scans_only=False
     )
     return build_pagination_response(
         results,

@@ -36,7 +36,7 @@ class JobsUseCase(BaseUseCase):
         job: UserCreateJob,
     ) -> Job:
         BillingValidateUsageUseCase(self.request_scope, company_id).validate_usage(
-            company_id, UsageType.TOTAL_JOBS
+            company_id, UsageType.TOTAL_JOBS, 1
         )
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         created_job: Job = job_repo.create(

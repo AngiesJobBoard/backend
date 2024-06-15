@@ -8,7 +8,6 @@ from ajb.contexts.companies.api_egress_webhooks.models import (
     EgressObjectType,
     WebhookEgressMessage,
 )
-from ajb.contexts.billing.usecase import CompanyBillingUsecase, UsageType
 
 
 class BaseWebhookEgress(BaseUseCase):

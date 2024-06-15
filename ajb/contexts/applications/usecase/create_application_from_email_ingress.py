@@ -2,8 +2,6 @@ from email.message import Message
 
 from ajb.base import BaseUseCase
 from ajb.contexts.applications.models import Application
-from ajb.contexts.billing.billing_models import UsageType
-from ajb.contexts.billing.usecase import CompanyBillingUsecase
 from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
 from ajb.contexts.resumes.models import UserCreateResume
 

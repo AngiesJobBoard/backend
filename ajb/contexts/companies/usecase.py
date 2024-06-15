@@ -13,6 +13,7 @@ from ajb.contexts.users.models import User
 from ajb.base.events import (
     SourceServices,
 )
+from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase, TierFeatures, FeatureNotAvailableOnTier
 from ajb.vendor.arango.models import Filter, Operator, Join
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 from ajb.exceptions import RepositoryNotProvided
@@ -169,6 +170,14 @@ class CompaniesUseCase(BaseUseCase):
         )
 
     def _update_job_applications_by_email(self, company_id: str, enabled: bool) -> None:
+        # Only if feature is available on current subscription
+        try:
+            BillingValidateUsageUseCase(self.request_scope, company_id).validate_feature_access(
+                TierFeatures.EMAIL_INGRESS
+            )
+        except FeatureNotAvailableOnTier:
+            return
+
         email_ingress_repository = self.get_repository(
             Collection.COMPANY_EMAIL_INGRESS_WEBHOOKS
         )

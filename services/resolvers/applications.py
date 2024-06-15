@@ -26,10 +26,8 @@ from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.webhooks.egress.applicants.usecase import (
     CompanyApplicantsWebhookEgress,
 )
-from ajb.contexts.billing.usecase import (
-    CompanyBillingUsecase,
-    UsageType,
-)
+from ajb.contexts.billing.usecase import UsageType
+from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 from ajb.exceptions import RepositoryNotProvided

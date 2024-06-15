@@ -20,10 +20,6 @@ from ajb.contexts.applications.recruiter_updates.usecase import RecruiterUpdates
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
-from ajb.contexts.billing.usecase import (
-    CompanyBillingUsecase,
-    UsageType,
-)
 from ajb.contexts.applications.extract_data.ai_extractor import (
     SyncronousAIResumeExtractor,
 )

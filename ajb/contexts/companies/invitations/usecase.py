@@ -7,7 +7,7 @@ from ajb.contexts.companies.recruiters.repository import (
     RecruiterRepository,
     RecruiterAndUser,
 )
-from ajb.contexts.billing.usecase import CompanyBillingUsecase, UsageType
+from ajb.contexts.billing.usecase import UsageType
 from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase
 from ajb.config.settings import SETTINGS
 from ajb.exceptions import (
@@ -32,7 +32,7 @@ class CompanyInvitationUseCase(BaseUseCase):
 
         # Check if company has enough recruiter slots before continuing
         BillingValidateUsageUseCase(self.request_scope, company_id).validate_usage(
-            company_id, UsageType.TOTAL_RECRUITERS
+            company_id, UsageType.TOTAL_RECRUITERS, 1
         )
 
         with self.request_scope.start_transaction(
@@ -195,13 +195,6 @@ class CompanyInvitationUseCase(BaseUseCase):
             invitation_repo.delete_many(
                 [invitation.id for invitation in all_other_invitations]
             )
-
-        CompanyBillingUsecase(self.request_scope).increment_company_usage(
-            company_id=decoded_invitation.company_id,
-            incremental_usages={
-                UsageType.TOTAL_RECRUITERS: 1,
-            },
-        )
         return recruiter_and_user
 
     def user_cancels_invitation(

@@ -28,4 +28,4 @@ class TierLimitHTTPException(HTTPException):
 
 class FeatureNotAvailableOnTierHTTPException(HTTPException):
     def __init__(self, detail: str | None = None):
-        super().__init__(status_code=403, detail=detail or "Feature not available")
+        super().__init__(status_code=402, detail=detail or "Feature not available")

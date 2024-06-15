@@ -25,6 +25,7 @@ from ajb.contexts.billing.billing_models import (
     UsageType,
     SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS,
 )
+from .subscription_cache import SUBSCRIPTION_CACHE
 
 
 class NoLineItemsToInvoiceException(Exception):
@@ -66,7 +67,9 @@ class CompanyBillingUsecase(BaseUseCase):
             data.plan
         ]
         subscription.plan = data.plan
-        return subscription_repo.update(subscription.id, subscription)
+        results = subscription_repo.update(subscription.id, subscription)
+        SUBSCRIPTION_CACHE[company_id] = results
+        return results
 
     def _get_company_recruiter_count(self, company_id: str):
         recruiter_repo = self.get_repository(
@@ -132,6 +135,18 @@ class CompanyBillingUsecase(BaseUseCase):
                 company_id=company_id, transaction_counts=incremental_usages
             ),
         )
+    
+    def set_company_usage(
+        self, company_id: str, usages_to_set: dict[UsageType, int]
+    ):
+        usage_repo = self.get_repository(
+            Collection.COMPANY_SUBSCRIPTION_USAGE_AND_BILLING,
+            self.request_scope,
+            company_id,
+        )
+        current_usage = self.get_or_create_company_usage(company_id)
+        current_usage.transaction_counts.update(usages_to_set)
+        return usage_repo.update(current_usage.id, current_usage)
 
     def _get_company_name_with_id(self, company: Company):
         return f"{company.name} - {company.id}"
