@@ -8,6 +8,10 @@ from fastapi import (
 
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.resumes.models import UserCreateResume
+from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase, UsageType
+from ajb.exceptions import TierLimitHitException
+
+from api.exceptions import TierLimitHTTPException
 from api.middleware import scope
 
 
@@ -23,6 +27,12 @@ async def upload_applications_from_resume(
     job_id: str,
     files: list[UploadFile] = File(...),
 ):
+    try:
+        BillingValidateUsageUseCase(scope(request)).validate_usage(
+            company_id, UsageType.APPLICATIONS_PROCESSED
+        )
+    except TierLimitHitException:
+        raise TierLimitHTTPException
     application_usecase = ApplicationUseCase(scope(request))
     files_processed = 0
 
@@ -66,6 +76,12 @@ def process_resume_file(
 async def upload_application_from_text_dump(
     request: Request, company_id: str, job_id: str, text: str = Body(...)
 ):
+    try:
+        BillingValidateUsageUseCase(scope(request)).validate_usage(
+            company_id, UsageType.APPLICATIONS_PROCESSED
+        )
+    except TierLimitHitException:
+        raise TierLimitHTTPException
     return ApplicationUseCase(scope(request)).application_is_created_from_raw_text(
         company_id, job_id, text
     )

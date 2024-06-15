@@ -264,13 +264,6 @@ class ApplicationUseCase(BaseUseCase):
                 )
             )
             created_applications.append(created_application)
-
-        CompanyBillingUsecase(self.request_scope).increment_company_usage(
-            company_id=ingress_record.company_id,
-            incremental_usages={
-                UsageType.EMAIL_INGRESS: len(created_applications),
-            },
-        )
         return created_applications
 
     def application_is_created_from_raw_text(

@@ -11,16 +11,6 @@ from .create_application_from_resume import CreateApplicationFromResumeResolver
 
 
 class ApplicationEmailIngressResolver(BaseUseCase):
-    def _increment_company_usage(
-        self, company_id: str, created_applications: list[Application]
-    ) -> None:
-        CompanyBillingUsecase(self.request_scope).increment_company_usage(
-            company_id=company_id,
-            incremental_usages={
-                UsageType.EMAIL_INGRESS: len(created_applications),
-            },
-        )
-
     def _validate_email(self, ingress_email: Message) -> None:
         if not ingress_email.is_multipart():
             raise ValueError("Email is not multipart")
@@ -61,5 +51,4 @@ class ApplicationEmailIngressResolver(BaseUseCase):
             )
             if potential_created_application:
                 created_applications.append(potential_created_application)
-        self._increment_company_usage(ingress_record.company_id, created_applications)
         return created_applications

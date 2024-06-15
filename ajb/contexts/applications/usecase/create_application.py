@@ -4,6 +4,7 @@ from ajb.base.schema import Collection
 from ajb.contexts.applications.constants import ApplicationConstants
 from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.applications.models import Application, CreateApplication
+from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase, UsageType
 
 from .helpers import ApplicationHelpersUseCase
 
@@ -51,6 +52,10 @@ class CreateApplicationResolver(BaseUseCase):
         partial_application: CreateApplication,
         produce_submission_event: bool = True,
     ) -> Application:
+        """All roads lead to here for creating an application..."""
+        BillingValidateUsageUseCase(self.request_scope).validate_usage(
+            company_id, UsageType.APPLICATIONS_PROCESSED
+        )
         created_application = self._handle_create_application(
             partial_application, job_id
         )

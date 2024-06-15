@@ -1,6 +1,4 @@
-from io import StringIO
-from fastapi import APIRouter, Request, Depends, UploadFile, File, Body
-import pandas as pd
+from fastapi import APIRouter, Request, Depends, Body
 
 from ajb.base import QueryFilterParams, build_pagination_response
 from ajb.contexts.companies.jobs.models import (
@@ -10,7 +8,10 @@ from ajb.contexts.companies.jobs.models import (
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.jobs.usecase import JobsUseCase
+from ajb.exceptions import TierLimitHitException
+
 from api.middleware import scope
+from api.exceptions import TierLimitHTTPException
 
 
 router = APIRouter(tags=["Company Jobs"], prefix="/companies/{company_id}/jobs")
@@ -33,7 +34,10 @@ def get_all_jobs(
 
 @router.post("/", response_model=Job)
 def create_job(request: Request, company_id: str, job: UserCreateJob):
-    response = JobsUseCase(scope(request)).create_job(company_id, job)
+    try:
+        response = JobsUseCase(scope(request)).create_job(company_id, job)
+    except TierLimitHitException:
+        raise TierLimitHTTPException
     return response
 
 

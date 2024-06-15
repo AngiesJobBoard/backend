@@ -44,7 +44,3 @@ class BaseWebhookEgress(BaseUseCase):
                 event=event, object=object_type, data=data
             ).model_dump(mode="json"),
         )
-        CompanyBillingUsecase(self.request_scope).increment_company_usage(
-            company_id=egress_record.company_id,
-            incremental_usages={UsageType.API_EGRESS: 1},
-        )

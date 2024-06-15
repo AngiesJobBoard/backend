@@ -1,12 +1,14 @@
 from typing import cast
 
 from ajb.base import BaseUseCase, Collection
+from ajb.contexts.companies.models import Company
 from ajb.contexts.companies.recruiters.models import CreateRecruiter
 from ajb.contexts.companies.recruiters.repository import (
     RecruiterRepository,
     RecruiterAndUser,
 )
 from ajb.contexts.billing.usecase import CompanyBillingUsecase, UsageType
+from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase
 from ajb.config.settings import SETTINGS
 from ajb.exceptions import (
     RecruiterCreateException,
@@ -27,6 +29,12 @@ class CompanyInvitationUseCase(BaseUseCase):
     def user_creates_invite(
         self, data: UserCreateInvitation, inviting_user_id: str, company_id: str
     ) -> Invitation:
+
+        # Check if company has enough recruiter slots before continuing
+        BillingValidateUsageUseCase(self.request_scope).validate_usage(
+            company_id, UsageType.TOTAL_RECRUITERS
+        )
+
         with self.request_scope.start_transaction(
             read_collections=[Collection.RECRUITER_INVITATIONS, Collection.COMPANIES],
             write_collections=[Collection.RECRUITER_INVITATIONS],
@@ -94,6 +102,37 @@ class CompanyInvitationUseCase(BaseUseCase):
                 ),
             )
             return created_invitation
+
+    def user_resends_invitation(
+        self, company_id: str, invitation_id: str
+    ) -> Invitation:
+        invitation: Invitation = self.get_object(
+            Collection.RECRUITER_INVITATIONS,
+            invitation_id,
+            self.request_scope,
+            company_id,
+        )
+        company: Company = self.get_object(Collection.COMPANIES, company_id)
+        invitation_data = InvitationData(
+            email=invitation.email,
+            invitation_id=invitation.id,
+            company_id=company_id,
+        )
+        deeplink_param = invitation_data.convert_to_deeplink_param(
+            SETTINGS.RECRUITER_INVITATION_SECRET
+        )
+        invitation_link = f"{SETTINGS.APP_URL}/confirm-invite?invite={deeplink_param}"
+        SendgridRepository().send_email_template(
+            to_emails=invitation.email,
+            subject="You've been invited to Angie's Job Board!",
+            template_data=RecruiterInvitationData(
+                companyName=company.name,
+                platformName=SETTINGS.APP_NAME,
+                invitationLink=invitation_link,
+                supportEmail=SETTINGS.SUPPORT_EMAIL,
+            ),
+        )
+        return invitation
 
     def user_confirms_invitations(
         self, accepting_user_id: str, deeplink_param: str

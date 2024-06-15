@@ -70,10 +70,6 @@ class ApplicationEventsResolver:
         resume_information = await extractor.extract_resume_information(
             application.extracted_resume_text
         )
-
-        CompanyBillingUsecase(self.request_scope).increment_company_usage(
-            company_id=data.company_id, incremental_usages={UsageType.RESUME_SCANS: 1}
-        )
         application_repository.update_application_with_parsed_information(
             application_id=data.application_id,
             resume_information=resume_information,
@@ -115,9 +111,6 @@ class ApplicationEventsResolver:
         await ApplicantMatchUsecase(
             self.request_scope, self.openai
         ).update_application_with_match_score(data.application_id)
-        CompanyBillingUsecase(self.request_scope).increment_company_usage(
-            company_id=data.company_id, incremental_usages={UsageType.MATCH_SCORES: 1}
-        )
 
     async def extract_application_filters(self) -> None:
         application_repo = ApplicationRepository(self.request_scope)
@@ -142,12 +135,6 @@ class ApplicationEventsResolver:
             await question_usecase.update_application_with_questions_answered(
                 data.application_id
             )
-        )
-        CompanyBillingUsecase(self.request_scope).increment_company_usage(
-            company_id=data.company_id,
-            incremental_usages={
-                UsageType.APPLICATION_QUESTIONS_ANSWERED: answered_questions
-            },
         )
 
     async def post_application_submission(self, send_webhooks: bool = True) -> None:

@@ -1,13 +1,12 @@
 from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.base.events import SourceServices
-from ajb.base.models import RepoFilterParams
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.applications.models import Application
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.repository import CompanyRepository
-from ajb.vendor.arango.models import Filter, Operator
+from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase, UsageType
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.config.settings import SETTINGS
 
@@ -32,6 +31,9 @@ class JobsUseCase(BaseUseCase):
         company_id: str,
         job: UserCreateJob,
     ) -> Job:
+        BillingValidateUsageUseCase(self.request_scope).validate_usage(
+            company_id, UsageType.TOTAL_JOBS
+        )
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         created_job: Job = job_repo.create(
             CreateJob(**job.model_dump(), company_id=company_id)

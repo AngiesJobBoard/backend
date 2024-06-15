@@ -8,9 +8,9 @@ from ajb.contexts.companies.invitations.models import (
 )
 from ajb.contexts.companies.invitations.usecase import CompanyInvitationUseCase
 from ajb.contexts.companies.invitations.repository import InvitationRepository
-from ajb.exceptions import RecruiterCreateException
+from ajb.exceptions import RecruiterCreateException, TierLimitHitException
 
-from api.exceptions import GenericHTTPException
+from api.exceptions import GenericHTTPException, TierLimitHTTPException
 from api.middleware import scope
 
 
@@ -44,8 +44,18 @@ def create_invitation(request: Request, company_id: str, data: UserCreateInvitat
             data, scope(request).user_id, company_id
         )
         return response
+    except TierLimitHitException as e:
+        raise TierLimitHTTPException()
     except RecruiterCreateException as e:
         raise GenericHTTPException(400, str(e))
+
+
+@router.post("/companies/{company_id}/invitations/{invitation_id}/resend")
+def resend_invitation(request: Request, company_id: str, invitation_id: str):
+    """Resends an invitation for a company"""
+    return CompanyInvitationUseCase(scope(request)).user_resends_invitation(
+        company_id, invitation_id
+    )
 
 
 @router.delete("/companies/{company_id}/invitations/{invitation_id}")
@@ -56,9 +66,10 @@ def cancel_invitation(request: Request, company_id: str, invitation_id: str):
     )
 
 
-@router.post("/confirm-recruiter-invitation")
-def confirm_invitation(request: Request, encoded_invitation: str):
-    """Assumes user is logged in and accepts invitation"""
-    return CompanyInvitationUseCase(scope(request)).user_confirms_invitations(
-        scope(request).user_id, encoded_invitation
-    )
+# @router.post("/confirm-recruiter-invitation")
+# def confirm_invitation(request: Request, encoded_invitation: str):
+#     """Assumes user is logged in and accepts invitation"""
+#     # Need to fix this endpoint... needs to be outside of company app
+#     return CompanyInvitationUseCase(scope(request)).user_confirms_invitations(
+#         scope(request).user_id, encoded_invitation
+#     )

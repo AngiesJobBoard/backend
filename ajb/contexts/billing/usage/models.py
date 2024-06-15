@@ -11,17 +11,17 @@ def generate_billing_period_string():
     return f"{now.year}-{now.month}"
 
 
+class BillingAfterBlockedFreeTierError(Exception):
+    pass
+
+
 class CreateMonthlyUsage(BaseModel):
     company_id: str
     billing_period: str = generate_billing_period_string()
 
     transaction_counts: dict[UsageType, int] = {
-        UsageType.RESUME_SCANS: 0,
-        UsageType.MATCH_SCORES: 0,
-        UsageType.APPLICATION_QUESTIONS_ANSWERED: 0,
-        UsageType.EMAIL_INGRESS: 0,
-        UsageType.API_INGRESS: 0,
-        UsageType.API_EGRESS: 0,
+        UsageType.APPLICATIONS_PROCESSED: 0,
+        UsageType.TOTAL_JOBS: 0,
         UsageType.TOTAL_RECRUITERS: 0,
     }
 
@@ -35,12 +35,15 @@ class CreateMonthlyUsage(BaseModel):
         total_cost = 0.0
         for usage_type, usage_count in self.transaction_counts.items():
             usage_detail = usage_cost_details[usage_type]
+            if usage_detail.unlimited_use:
+                continue
             if usage_count > usage_detail.free_tier_limit_per_month:
+                if usage_detail.blocked_after_free_tier:
+                    raise BillingAfterBlockedFreeTierError
                 total_cost += (
                     float(usage_count - usage_detail.free_tier_limit_per_month)
                     * usage_detail.cost_usd_per_transaction
                 )
-
         self.total_usage_usd = total_cost
 
     @classmethod
@@ -50,12 +53,8 @@ class CreateMonthlyUsage(BaseModel):
         return cls(
             company_id=company_id,
             transaction_counts={
-                UsageType.RESUME_SCANS: 0,
-                UsageType.MATCH_SCORES: 0,
-                UsageType.APPLICATION_QUESTIONS_ANSWERED: 0,
-                UsageType.EMAIL_INGRESS: 0,
-                UsageType.API_INGRESS: 0,
-                UsageType.API_EGRESS: 0,
+                UsageType.APPLICATIONS_PROCESSED: 0,
+                UsageType.TOTAL_JOBS: 0,
                 UsageType.TOTAL_RECRUITERS: num_recruiters,
             },
         )
