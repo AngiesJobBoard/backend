@@ -53,7 +53,7 @@ class CreateApplicationResolver(BaseUseCase):
         produce_submission_event: bool = True,
     ) -> Application:
         """All roads lead to here for creating an application..."""
-        BillingValidateUsageUseCase(self.request_scope).validate_usage(
+        BillingValidateUsageUseCase(self.request_scope, company_id).validate_usage(
             company_id, UsageType.APPLICATIONS_PROCESSED
         )
         created_application = self._handle_create_application(

@@ -24,3 +24,8 @@ class NotFound(HTTPException):
 class TierLimitHTTPException(HTTPException):
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=402, detail=detail or "Tier limit reached")
+
+
+class FeatureNotAvailableOnTierHTTPException(HTTPException):
+    def __init__(self, detail: str | None = None):
+        super().__init__(status_code=403, detail=detail or "Feature not available")

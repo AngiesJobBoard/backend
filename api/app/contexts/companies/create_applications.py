@@ -28,7 +28,7 @@ async def upload_applications_from_resume(
     files: list[UploadFile] = File(...),
 ):
     try:
-        BillingValidateUsageUseCase(scope(request)).validate_usage(
+        BillingValidateUsageUseCase(scope(request), company_id).validate_usage(
             company_id, UsageType.APPLICATIONS_PROCESSED
         )
     except TierLimitHitException:
@@ -77,7 +77,7 @@ async def upload_application_from_text_dump(
     request: Request, company_id: str, job_id: str, text: str = Body(...)
 ):
     try:
-        BillingValidateUsageUseCase(scope(request)).validate_usage(
+        BillingValidateUsageUseCase(scope(request), company_id).validate_usage(
             company_id, UsageType.APPLICATIONS_PROCESSED
         )
     except TierLimitHitException:

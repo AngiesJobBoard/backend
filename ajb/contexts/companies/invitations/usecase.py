@@ -31,7 +31,7 @@ class CompanyInvitationUseCase(BaseUseCase):
     ) -> Invitation:
 
         # Check if company has enough recruiter slots before continuing
-        BillingValidateUsageUseCase(self.request_scope).validate_usage(
+        BillingValidateUsageUseCase(self.request_scope, company_id).validate_usage(
             company_id, UsageType.TOTAL_RECRUITERS
         )
 

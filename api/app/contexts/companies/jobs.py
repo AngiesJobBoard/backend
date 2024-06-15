@@ -8,10 +8,10 @@ from ajb.contexts.companies.jobs.models import (
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.jobs.usecase import JobsUseCase
-from ajb.exceptions import TierLimitHitException
+from ajb.exceptions import TierLimitHitException, FeatureNotAvailableOnTier
 
 from api.middleware import scope
-from api.exceptions import TierLimitHTTPException
+from api.exceptions import TierLimitHTTPException, FeatureNotAvailableOnTierHTTPException
 
 
 router = APIRouter(tags=["Company Jobs"], prefix="/companies/{company_id}/jobs")
@@ -69,6 +69,9 @@ def mark_job_as_active(request: Request, company_id: str, job_id: str):
 def toggle_job_public_page(
     request: Request, company_id: str, job_id: str, is_available: bool = Body(...)
 ):
-    return JobRepository(scope(request), company_id).update_fields(
-        job_id, job_is_public=is_available
-    )
+    try:
+        return JobsUseCase(scope(request)).toggle_job_public_application_form(
+            company_id, job_id, is_available
+        )
+    except FeatureNotAvailableOnTier:
+        raise FeatureNotAvailableOnTierHTTPException

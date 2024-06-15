@@ -123,3 +123,9 @@ class TierLimitHitException(Exception):
     def __init__(self, message="Tier limit hit"):
         self.message = message
         super().__init__(self.message)
+
+
+class FeatureNotAvailableOnTier(Exception):
+    def __init__(self, message="Feature not available on tier"):
+        self.message = message
+        super().__init__(self.message)

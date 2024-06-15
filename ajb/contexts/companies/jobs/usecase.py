@@ -6,7 +6,11 @@ from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.applications.models import Application
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.repository import CompanyRepository
-from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase, UsageType
+from ajb.contexts.billing.validate_usage import (
+    BillingValidateUsageUseCase,
+    UsageType,
+    TierFeatures,
+)
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.config.settings import SETTINGS
 
@@ -31,7 +35,7 @@ class JobsUseCase(BaseUseCase):
         company_id: str,
         job: UserCreateJob,
     ) -> Job:
-        BillingValidateUsageUseCase(self.request_scope).validate_usage(
+        BillingValidateUsageUseCase(self.request_scope, company_id).validate_usage(
             company_id, UsageType.TOTAL_JOBS
         )
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
@@ -155,3 +159,14 @@ class JobsUseCase(BaseUseCase):
             self.request_scope, SourceServices.API
         ).company_updates_job(company_id=company_id, job_id=job_id)
         return updated_job
+
+    def toggle_job_public_application_form(
+        self, company_id: str, job_id: str, is_available: bool
+    ):
+        BillingValidateUsageUseCase(
+            self.request_scope, company_id
+        ).validate_feature_access(TierFeatures.PUBLIC_APPLICATION_PAGE)
+        job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
+        return job_repo.update_fields(
+            job_id, job_is_public=is_available
+        )

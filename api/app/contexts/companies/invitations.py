@@ -50,7 +50,7 @@ def create_invitation(request: Request, company_id: str, data: UserCreateInvitat
         raise GenericHTTPException(400, str(e))
 
 
-@router.post("/companies/{company_id}/invitations/{invitation_id}/resend")
+@router.post("/companies/{company_id}/invitations/{invitation_id}/resend", response_model=Invitation)
 def resend_invitation(request: Request, company_id: str, invitation_id: str):
     """Resends an invitation for a company"""
     return CompanyInvitationUseCase(scope(request)).user_resends_invitation(
@@ -64,12 +64,3 @@ def cancel_invitation(request: Request, company_id: str, invitation_id: str):
     return CompanyInvitationUseCase(scope(request)).user_cancels_invitation(
         company_id, invitation_id, scope(request).user_id
     )
-
-
-# @router.post("/confirm-recruiter-invitation")
-# def confirm_invitation(request: Request, encoded_invitation: str):
-#     """Assumes user is logged in and accepts invitation"""
-#     # Need to fix this endpoint... needs to be outside of company app
-#     return CompanyInvitationUseCase(scope(request)).user_confirms_invitations(
-#         scope(request).user_id, encoded_invitation
-#     )
