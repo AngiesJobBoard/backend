@@ -25,7 +25,7 @@ from ajb.contexts.billing.billing_models import (
     UsageType,
     SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS,
 )
-from .subscription_cache import SUBSCRIPTION_CACHE
+from ..subscription_cache import SUBSCRIPTION_CACHE
 
 
 class NoLineItemsToInvoiceException(Exception):
