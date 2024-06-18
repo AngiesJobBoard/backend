@@ -37,16 +37,9 @@ class CreateSubscriptionUsage(BaseUseCase):
             )
         )
 
-    def validate_invoice(
-        self, company_subscription: CompanySubscription, data: InvoicePaymentSucceeded
-    ) -> None:
+    def validate_invoice(self, data: InvoicePaymentSucceeded) -> None:
         if data.paid is False or data.status != "paid":
             raise InvoiceNotPaid
-
-        # There is a race condition where the subscription ID may not be attached to the subscription object yet
-        # BUT we do have the company ID so that is all that matters really...
-        # if data.subscription != company_subscription.stripe_subscription_id:
-        # raise MismatchedSubscription
 
     def create_usage_from_paid_invoice(self, data: InvoicePaymentSucceeded) -> None:
         self._store_raw_invoice_data(data)
@@ -57,7 +50,7 @@ class CreateSubscriptionUsage(BaseUseCase):
             self.request_scope, company.id
         )
         company_subscription = subscription_repo.get_sub_entity()
-        self.validate_invoice(company_subscription, data)
+        self.validate_invoice(data)
 
         # All checks out, create the usage and attach created usage to subscription object
         created_usage = CompanySubscriptionUsageRepository(
@@ -65,8 +58,8 @@ class CreateSubscriptionUsage(BaseUseCase):
         ).create(
             CreateMonthlyUsage(
                 company_id=company.id,
-                usage_expires=datetime.now()
-                + timedelta(days=40),  # 1 month plus 10 day grace period
+                usage_expires=datetime.fromtimestamp(data.effective_at)
+                + timedelta(days=40),  # ~1 month plus 10 day grace period
                 invoice_details=data,
             )
         )

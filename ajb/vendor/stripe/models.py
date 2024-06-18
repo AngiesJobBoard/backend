@@ -42,6 +42,7 @@ class StripeCheckoutSessionCompleted(BaseModel):
 class InvoicePaymentSucceeded(BaseModel):
     id: str
     created: int
+    effective_at: int
     amount_due: int
     amount_paid: int
     customer: str
