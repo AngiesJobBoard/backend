@@ -32,7 +32,7 @@ class MismatchedSubscription(Exception):
 class CreateSubscriptionUsage(BaseUseCase):
     def _store_raw_invoice_data(self, data: InvoicePaymentSucceeded) -> None:
         self.get_repository(Collection.BILLING_AUDIT_EVENTS).create(
-            CreateAuditEvent(company_id=None, data=data.model_dump())
+            CreateAuditEvent(company_id=None, type="invoice_paid", data=data.model_dump())
         )
 
     def validate_invoice(

@@ -28,7 +28,7 @@ class CancelSubscription(BaseUseCase):
 
     def _store_cancellation_data(self, data: dict) -> None:
         self.get_repository(Collection.BILLING_AUDIT_EVENTS).create(
-            CreateAuditEvent(company_id=None, data=data)
+            CreateAuditEvent(company_id=None, data=data, type="subscription_cancelled")
         )
 
     def cancel_company_subscription(

@@ -42,7 +42,11 @@ class CompleteCreateSubscription(BaseUseCase):
         self, data: StripeCheckoutSessionCompleted
     ) -> None:
         self.get_repository(Collection.BILLING_AUDIT_EVENTS).create(
-            CreateAuditEvent(company_id=None, data=data.model_dump())
+            CreateAuditEvent(
+                company_id=None,
+                type="stripe_checkout_session_completed",
+                data=data.model_dump(),
+            )
         )
 
     def validate_session(
@@ -60,7 +64,9 @@ class CompleteCreateSubscription(BaseUseCase):
         if data.status != "complete":
             raise CheckoutSessionStatusNotComplete()
 
-    def complete_create_subscription(self, data: StripeCheckoutSessionCompleted) -> None:
+    def complete_create_subscription(
+        self, data: StripeCheckoutSessionCompleted
+    ) -> None:
         self._store_raw_checkout_session_data(data)
         company: Company = self.get_repository(Collection.COMPANIES).get_one(
             stripe_customer_id=data.customer

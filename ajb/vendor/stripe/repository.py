@@ -27,6 +27,7 @@ class StripeRepository:
         company_id: str,
         stripe_customer_id: str,
         price_id: str,
+        charge_is_recurring: bool = True
     ) -> StripeCheckoutSessionCreated:
         params = {
             "customer": stripe_customer_id,
@@ -37,7 +38,7 @@ class StripeRepository:
                     "quantity": 1,
                 }
             ],
-            "mode": "subscription",
+            "mode": "subscription" if charge_is_recurring else "payment",
             "success_url": "http://localhost:3000/subscription-success",
             "client_reference_id": company_id,
         }

@@ -47,7 +47,11 @@ class StartCreateSubscription(BaseUseCase):
         self, data: StripeCheckoutSessionCreated
     ) -> None:
         self.get_repository(Collection.BILLING_AUDIT_EVENTS).create(
-            CreateAuditEvent(company_id=None, data=data.model_dump())
+            CreateAuditEvent(
+                company_id=None,
+                type="stripe_checkout_session_created",
+                data=data.model_dump(),
+            )
         )
 
     def update_company_to_have_stripe_customer_id(self, company: Company) -> Company:
@@ -100,15 +104,24 @@ class StartCreateSubscription(BaseUseCase):
 
         # Create the session in stripe to get URL and things
         assert company_with_stripe.stripe_customer_id is not None
+        if plan == SubscriptionPlan.APPSUMO:
+            recurring = False
+        else:
+            recurring = True
         checkout_session = self.stripe.create_subscription_checkout_session(
-            company_id, company_with_stripe.stripe_customer_id, SUBSCRIPTION_PRICE_MAP[plan]
+            company_id,
+            company_with_stripe.stripe_customer_id,
+            SUBSCRIPTION_PRICE_MAP[plan],
+            recurring,
         )
 
         # Store checkout for audit purposes
         self._store_raw_checkout_session_data(checkout_session)
 
         # Now create the company subscription object
-        return CompanySubscriptionRepository(self.request_scope, company_id).set_sub_entity(
+        return CompanySubscriptionRepository(
+            self.request_scope, company_id
+        ).set_sub_entity(
             self._create_subscription_object(
                 company_with_stripe, plan, checkout_session
             )
