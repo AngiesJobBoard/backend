@@ -78,6 +78,6 @@ class CompleteCreateSubscription(BaseUseCase):
         self.validate_session(company_subscription, data)
         subscription_repo.update_fields(
             company_subscription.id,
-            stripe_subscription_id=data.subscription,
+            stripe_subscription_id=data.subscription,  # Will remain None for app sumo single payments
             subscription_status=SubscriptionStatus.ACTIVE,
         )

@@ -30,12 +30,12 @@ class StripeCheckoutSessionCompleted(BaseModel):
     created: int
     currency: str
     customer: str  # customer id
-    invoice: str
+    invoice: str | None  # only None if the payment occurs only once, subscription ALWAYS have invoice
     livemode: bool  # indicates testing or not
     metadata: CommonMetadata
     payment_status: str  # Looking for status 'paid'
     status: str  # Looking for status 'complete'
-    subscription: str  # This is the generated subscription id
+    subscription: str | None  # This is the generated subscription id - only occurs with recurring payments
     success_url: str  # The url the user was sent to
 
 
