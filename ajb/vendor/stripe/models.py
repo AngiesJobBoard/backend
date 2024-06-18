@@ -37,3 +37,13 @@ class StripeCheckoutSessionCompleted(BaseModel):
     status: str  # Looking for status 'complete'
     subscription: str  # This is the generated subscription id
     success_url: str  # The url the user was sent to
+
+
+class InvoicePaymentSucceeded(BaseModel):
+    id: str
+    created: int
+
+
+class InvoicePaymentFailed(BaseModel):
+    id: str
+    created: int

@@ -1,3 +1,11 @@
+"""
+People have subscriptions in stripe and they get billed monthly.
+When they first sign up they are billed immediately.
+
+When billing occurs in stripe we will get a webhook sent to us with the billing details (success failure etc.)
+As these events come in they should line up with this usage object which is a snapshot of the usage at the time of billing.
+"""
+
 from datetime import datetime
 from pydantic import BaseModel
 

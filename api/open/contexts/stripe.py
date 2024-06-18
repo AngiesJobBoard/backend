@@ -1,10 +1,7 @@
 from fastapi import APIRouter, Request, status, Depends
 
 from ajb.base import RequestScope
-from ajb.contexts.billing.usecase.complete_create_subscription import (
-    CompleteCreateSubscription,
-    StripeCheckoutSessionCompleted,
-)
+from ajb.contexts.billing.billing_event_router import StripeBillingEventRouter
 from api.vendors import db, kafka_producer
 
 
@@ -27,18 +24,5 @@ router = APIRouter(
 
 @router.post("/payments", status_code=status.HTTP_204_NO_CONTENT)
 async def payments_webhook_handler(payload: dict):
-    """
-    Currently handles:
-      - checkout.session.completed
-
-    Needs to also handle:
-      - invoice.payment_succeeded
-      - invoice.payment_failed
-
-    """
-    if "object" in payload:
-        payload = payload["object"]
-    CompleteCreateSubscription(WEBHOOK_REQUEST_SCOPE).complete_subscription_setup(
-        data=StripeCheckoutSessionCompleted(**payload)
-    )
+    StripeBillingEventRouter(WEBHOOK_REQUEST_SCOPE, payload).route_event()
     return status.HTTP_204_NO_CONTENT
