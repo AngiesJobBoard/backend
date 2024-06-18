@@ -32,7 +32,9 @@ class MismatchedSubscription(Exception):
 class CreateSubscriptionUsage(BaseUseCase):
     def _store_raw_invoice_data(self, data: InvoicePaymentSucceeded) -> None:
         self.get_repository(Collection.BILLING_AUDIT_EVENTS).create(
-            CreateAuditEvent(company_id=None, type="invoice_paid", data=data.model_dump())
+            CreateAuditEvent(
+                company_id=None, type="invoice_paid", data=data.model_dump()
+            )
         )
 
     def validate_invoice(
@@ -41,8 +43,10 @@ class CreateSubscriptionUsage(BaseUseCase):
         if data.paid is False or data.status != "paid":
             raise InvoiceNotPaid
 
-        if data.subscription != company_subscription.stripe_subscription_id:
-            raise MismatchedSubscription
+        # There is a race condition where the subscription ID may not be attached to the subscription object yet
+        # BUT we do have the company ID so that is all that matters really...
+        # if data.subscription != company_subscription.stripe_subscription_id:
+        # raise MismatchedSubscription
 
     def create_usage_from_paid_invoice(self, data: InvoicePaymentSucceeded) -> None:
         self._store_raw_invoice_data(data)
@@ -56,7 +60,9 @@ class CreateSubscriptionUsage(BaseUseCase):
         self.validate_invoice(company_subscription, data)
 
         # All checks out, create the usage and attach created usage to subscription object
-        created_usage = CompanySubscriptionUsageRepository(self.request_scope, company.id).create(
+        created_usage = CompanySubscriptionUsageRepository(
+            self.request_scope, company.id
+        ).create(
             CreateMonthlyUsage(
                 company_id=company.id,
                 usage_expires=datetime.now()

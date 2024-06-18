@@ -9,11 +9,13 @@ from ajb.contexts.companies.models import Company
 from ajb.contexts.billing.subscriptions.models import (
     CompanySubscription,
     CreateCompanySubscription,
+    SubscriptionStatus,
 )
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
 from ajb.vendor.stripe.repository import StripeRepository
 from ajb.contexts.billing.billing_audit_events.models import CreateAuditEvent
 from ajb.vendor.stripe.models import StripeCheckoutSessionCreated
+from ajb.exceptions import EntityNotFound
 
 from ..billing_models import SubscriptionPlan
 
@@ -34,6 +36,10 @@ SUBSCRIPTION_PRICE_MAP: dict[SubscriptionPlan, str] = {
     SubscriptionPlan.GOLD: GOLD_TIER_PRICE_ID,
     SubscriptionPlan.PLATINUM: PLATINUM_TIER_PRICE_ID,
 }
+
+
+class CompanyAlreadyHasSubscription(Exception):
+    pass
 
 
 class StartCreateSubscription(BaseUseCase):
@@ -78,6 +84,20 @@ class StartCreateSubscription(BaseUseCase):
             plan,
             checkout_session,
         )
+
+    def check_if_company_already_has_subscription(self, company_id: str):
+        try:
+            potential_subscription = CompanySubscriptionRepository(
+                self.request_scope, company_id
+            ).get_sub_entity()
+
+            # Are there other statuses we want to handle??
+            if potential_subscription.subscription_status in [
+                SubscriptionStatus.ACTIVE,
+            ]:
+                raise CompanyAlreadyHasSubscription
+        except EntityNotFound:
+            return
 
     def start_create_subscription(
         self, company_id: str, plan: SubscriptionPlan
