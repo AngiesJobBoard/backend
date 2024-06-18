@@ -113,6 +113,7 @@ class StartCreateSubscription(BaseUseCase):
         and will finally activate the subscription for this company.
         """
         company: Company = self.get_object(Collection.COMPANIES, company_id)
+        self.check_if_company_already_has_subscription(company_id)
 
         # Ensure the company is established in stripe as a customer
         if company.stripe_customer_id is None:
