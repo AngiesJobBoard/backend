@@ -12,6 +12,7 @@ class SubscriptionPlan(str, Enum):
     GOLD = "Gold"
     PLATINUM = "Platinum"
     APPSUMO = "AppSumo"
+    GOLD_TRIAL = "Gold Trial"
 
 
 class UsageType(str, Enum):
@@ -48,7 +49,7 @@ SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS: dict[
     # 50 free applications per month then blocked. 5 jobs, only 1 recruiter - all blocked after free tier
     SubscriptionPlan.SILVER: {
         UsageType.APPLICATIONS_PROCESSED: UsageDetail(
-            free_tier_limit_per_month=50,
+            free_tier_limit_per_month=250,
         ),
         UsageType.TOTAL_JOBS: UsageDetail(
             free_tier_limit_per_month=5,
@@ -73,12 +74,12 @@ SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS: dict[
     },
     # No limit plan
     SubscriptionPlan.PLATINUM: {
-        UsageType.APPLICATIONS_PROCESSED: UsageDetail(unlimited_use=True),
+        UsageType.APPLICATIONS_PROCESSED: UsageDetail(free_tier_limit_per_month=3000),
         UsageType.TOTAL_JOBS: UsageDetail(unlimited_use=True),
-        UsageType.TOTAL_RECRUITERS: UsageDetail(unlimited_use=True),
+        UsageType.TOTAL_RECRUITERS: UsageDetail(free_tier_limit_per_month=50),
     },
     SubscriptionPlan.APPSUMO: {
-        UsageType.APPLICATIONS_PROCESSED: UsageDetail(free_tier_limit_per_month=1000),
+        UsageType.APPLICATIONS_PROCESSED: UsageDetail(free_tier_limit_per_month=500),
         UsageType.TOTAL_JOBS: UsageDetail(free_tier_limit_per_month=20),
         UsageType.TOTAL_RECRUITERS: UsageDetail(free_tier_limit_per_month=10),
     },

@@ -5,14 +5,21 @@ This is a module to check if an action is within the usage limits of a subscript
 from datetime import datetime
 from cachetools import cached
 
-from ajb.base import BaseUseCase, RequestScope, Collection, RepoFilterParams
-from ajb.contexts.applications.models import ScanStatus
-from ajb.vendor.arango.models import Filter, Operator
+from ajb.base import BaseUseCase, RequestScope
+from ajb.contexts.billing.subscriptions.models import SubscriptionStatus
 from ajb.exceptions import TierLimitHitException, FeatureNotAvailableOnTier
 
 from .billing_models import UsageType, TierFeatures
 from .usecase import CompanyBillingUsecase
 from .subscription_cache import SUBSCRIPTION_CACHE
+
+
+class SubscriptionNotActiveException(Exception):
+    pass
+
+
+class SubscriptionExpiredException(Exception):
+    pass
 
 
 class BillingValidateUsageUseCase(BaseUseCase):
@@ -29,6 +36,7 @@ class BillingValidateUsageUseCase(BaseUseCase):
 
     @cached(SUBSCRIPTION_CACHE)
     def _get_company_subscription(self, company_id: str):
+        # AJBTODO the subscription can be changed, this cache should appropriately handle that
         return self.billing_usecase.get_company_subscription(company_id)
 
     def _get_company_current_usage(self, company_id: str):
@@ -42,25 +50,29 @@ class BillingValidateUsageUseCase(BaseUseCase):
         amount_of_new_usage: int,
         increment_usage: bool = True,
     ) -> None:
-        usage_detail = self.subscription.usage_cost_details[usage_type]
-        if usage_detail.unlimited_use:
-            # Do not block unlimited use
-            return
+        """
+        Generally the amount of new usage is just 1.
+        There is no handling if it is greater than 1 but could handle 1 more within the limit (for instance)
+        This could be added later if needed.
+        """
+        # Check subscription is active
+        if self.subscription.subscription_status != SubscriptionStatus.ACTIVE:
+            raise SubscriptionNotActiveException
+
+        # Check usage is not expired
+        if self.usage.usage_expires < datetime.now():
+            raise SubscriptionExpiredException
+
+        # Check if usage has hit tier limit
+        current_usage = self.usage.transaction_counts[usage_type]
+        current_usage_limit = self.subscription.usage_cost_details[
+            usage_type
+        ].free_tier_limit_per_month
 
         if (
-            self.subscription.gold_trial_expires
-            and datetime.now() < self.subscription.gold_trial_expires
+            current_usage_limit
+            and current_usage + amount_of_new_usage > current_usage_limit
         ):
-            # Do not block usage during pro trial
-            return
-
-        if usage_detail.blocked_after_free_tier is False:
-            # Allow usage to increment - incurs charge per use and doesn't matter what usage is
-            return
-
-        current_usage = self.usage.transaction_counts[usage_type]
-        if current_usage + amount_of_new_usage > usage_detail.free_tier_limit_per_month:
-            # Block usage if free tier limit hit
             raise TierLimitHitException
 
         # Allow action to continue and increment usage on subscription usage object
@@ -70,5 +82,8 @@ class BillingValidateUsageUseCase(BaseUseCase):
             )
 
     def validate_feature_access(self, feature: TierFeatures):
+        if TierFeatures.ALL_FEATURES in self.subscription.subscription_features:
+            return
+
         if feature not in self.subscription.subscription_features:
             raise FeatureNotAvailableOnTier

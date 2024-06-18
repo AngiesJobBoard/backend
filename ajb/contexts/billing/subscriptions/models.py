@@ -43,7 +43,6 @@ class CreateCompanySubscription(BaseModel):
     stripe_subscription_id: str | None = None
     usage_cost_details: dict[UsageType, UsageDetail]
     subscription_features: list[TierFeatures]
-    gold_trial_expires: datetime | None = None
     subscription_status: SubscriptionStatus
     checkout_session: StripeCheckoutSessionCreated | None
     current_usage_id: str | None = None
@@ -59,7 +58,6 @@ class CreateCompanySubscription(BaseModel):
                 SubscriptionPlan.GOLD
             ],
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[SubscriptionPlan.GOLD],
-            gold_trial_expires=datetime.now() + timedelta(days=14),
             subscription_status=SubscriptionStatus.ACTIVE,
             checkout_session=None,
         )
@@ -83,7 +81,6 @@ class CreateCompanySubscription(BaseModel):
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[
                 SubscriptionPlan.APPSUMO
             ],
-            gold_trial_expires=None,
             subscription_status=SubscriptionStatus.PENDING_FIRST_PAYMENT,
             checkout_session=checkout_session,
         )
@@ -104,7 +101,6 @@ class CreateCompanySubscription(BaseModel):
             stripe_customer_id=stripe_customer_id,
             usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[plan],
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[plan],
-            gold_trial_expires=None,
             subscription_status=SubscriptionStatus.PENDING_FIRST_PAYMENT,
             checkout_session=checkout_session,
         )

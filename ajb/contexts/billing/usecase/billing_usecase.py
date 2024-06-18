@@ -4,6 +4,7 @@ from ajb.contexts.billing.subscriptions.models import (
     SubscriptionPlan,
     UsageType,
 )
+from ajb.contexts.billing.usage.models import MonthlyUsage
 from ajb.vendor.stripe.repository import (
     StripeRepository,
 )
@@ -50,12 +51,12 @@ class CompanyBillingUsecase(BaseUseCase):
         """
         CreateSubscriptionUsage(self.request_scope).create_usage_from_paid_invoice(data)
 
-    def get_company_subscription(self, company_id: str):
+    def get_company_subscription(self, company_id: str) -> CompanySubscription:
         return self.get_repository(
             Collection.COMPANY_SUBSCRIPTIONS, self.request_scope, company_id
         ).get_sub_entity()
 
-    def get_current_company_usage(self, company_id: str):
+    def get_current_company_usage(self, company_id: str) -> MonthlyUsage:
         """Usage ID should be attached to current subscription object"""
         subscription: CompanySubscription = self.get_company_subscription(company_id)
         if subscription.current_usage_id is None:

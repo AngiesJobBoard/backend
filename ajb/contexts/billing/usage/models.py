@@ -21,7 +21,8 @@ class CreateMonthlyUsage(BaseModel):
         default_factory=lambda: {usage_type: 0 for usage_type in UsageType}
     )
     usage_expires: datetime
-    invoice_details: InvoicePaymentSucceeded
+    invoice_details: InvoicePaymentSucceeded | None
+    free_trial_usage: bool = False
 
 
 class MonthlyUsage(BaseDataModel, CreateMonthlyUsage):
