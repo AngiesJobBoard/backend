@@ -11,9 +11,6 @@ from datetime import datetime, timedelta
 
 from ajb.base import BaseUseCase, Collection
 from ajb.contexts.companies.models import Company
-from ajb.contexts.billing.subscriptions.models import (
-    CompanySubscription,
-)
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
 from ajb.contexts.billing.billing_audit_events.models import CreateAuditEvent
 from ajb.contexts.billing.usage.models import CreateMonthlyUsage

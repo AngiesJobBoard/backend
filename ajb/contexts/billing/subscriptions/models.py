@@ -26,12 +26,12 @@ class SubscriptionStatus(str, Enum):
     Trialing means the subscription is in the pro trial
     App Sumo is a special status for App Sumo users who have a single payment - lifetime access deal
     """
+
     PENDING_FIRST_PAYMENT = "pending_first_payment"
     ACTIVE = "active"
     INACTIVE = "inactive"
     CANCELLED = "cancelled"
     PAST_DUE = "past_due"
-    TRIALING = "trialing"
 
 
 class CreateCompanySubscription(BaseModel):
@@ -60,7 +60,7 @@ class CreateCompanySubscription(BaseModel):
             ],
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[SubscriptionPlan.GOLD],
             gold_trial_expires=datetime.now() + timedelta(days=14),
-            subscription_status=SubscriptionStatus.TRIALING,
+            subscription_status=SubscriptionStatus.ACTIVE,
             checkout_session=None,
         )
 
