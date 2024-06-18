@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Body
 
 from ajb.contexts.billing.subscriptions.models import (
     UserUpdateCompanySubscription,
@@ -24,6 +24,13 @@ def start_create_subscription(
 ):
     return CompanyBillingUsecase(scope(request)).start_create_subscription(
         company_id, subscription.plan
+    )
+
+
+@router.post("/cancel-subscription", response_model=CompanySubscription)
+def cancel_subscription(request: Request, company_id: str, reason: str = Body(...)):
+    return CompanyBillingUsecase(scope(request)).company_cancels_subscription(
+        company_id, reason
     )
 
 

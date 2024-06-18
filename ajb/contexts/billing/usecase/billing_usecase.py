@@ -15,6 +15,7 @@ from ajb.vendor.stripe.models import (
 from .start_create_subscription import StartCreateSubscription
 from .complete_create_subscription import CompleteCreateSubscription
 from .create_subscription_usage import CreateSubscriptionUsage
+from .cancel_subscription import CancelSubscription
 
 
 class NoSubscriptionUsageAllottedException(Exception):
@@ -64,7 +65,12 @@ class CompanyBillingUsecase(BaseUseCase):
             subscription.current_usage_id,
         )
 
-    def company_cancels_subscription(self, company_id: str): ...
+    def company_cancels_subscription(
+        self, company_id: str, reason: str | None
+    ) -> CompanySubscription:
+        return CancelSubscription(
+            self.request_scope, self.stripe
+        ).cancel_company_subscription(company_id, reason)
 
     def company_updates_subscription(
         self, company_id: str, new_plan: SubscriptionPlan
