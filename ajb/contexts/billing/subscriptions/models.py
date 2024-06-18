@@ -1,8 +1,9 @@
 from enum import Enum
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ajb.base import BaseDataModel
+from ajb.vendor.stripe.models import StripeCheckoutSessionCreated
 
 from ..billing_models import (
     SubscriptionPlan,
@@ -24,13 +25,12 @@ class SubscriptionStatus(str, Enum):
     Trialing means the subscription is in the pro trial
     App Sumo is a special status for App Sumo users who have a single payment - lifetime access deal
     """
-
+    PENDING_FIRST_PAYMENT = "pending_first_payment"
     ACTIVE = "active"
     INACTIVE = "inactive"
     CANCELLED = "cancelled"
     PAST_DUE = "past_due"
     TRIALING = "trialing"
-    APP_SUMO = "app_sumo"
 
 
 class CreateCompanySubscription(BaseModel):
@@ -44,6 +44,7 @@ class CreateCompanySubscription(BaseModel):
     subscription_features: list[TierFeatures]
     pro_trial_expires: datetime | None = None
     subscription_status: SubscriptionStatus
+    checkout_session: StripeCheckoutSessionCreated | None
 
     @classmethod
     def create_trial_subscription(cls, company_id: str) -> "CreateCompanySubscription":
@@ -58,11 +59,15 @@ class CreateCompanySubscription(BaseModel):
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[SubscriptionPlan.GOLD],
             pro_trial_expires=datetime.now() + timedelta(days=14),
             subscription_status=SubscriptionStatus.TRIALING,
+            checkout_session=None,
         )
 
     @classmethod
     def create_app_sumo_subscription(
-        cls, company_id: str, stripe_customer_id: str
+        cls,
+        company_id: str,
+        stripe_customer_id: str,
+        checkout_session: StripeCheckoutSessionCreated,
     ) -> "CreateCompanySubscription":
         return cls(
             company_id=company_id,
@@ -77,7 +82,8 @@ class CreateCompanySubscription(BaseModel):
                 SubscriptionPlan.APPSUMO
             ],
             pro_trial_expires=None,
-            subscription_status=SubscriptionStatus.APP_SUMO,
+            subscription_status=SubscriptionStatus.PENDING_FIRST_PAYMENT,
+            checkout_session=checkout_session,
         )
 
     @classmethod
@@ -85,8 +91,8 @@ class CreateCompanySubscription(BaseModel):
         cls,
         company_id: str,
         stripe_customer_id: str,
-        stripe_subscription_id: str,
         plan: SubscriptionPlan,
+        checkout_session: StripeCheckoutSessionCreated,
     ) -> "CreateCompanySubscription":
         return cls(
             company_id=company_id,
@@ -94,11 +100,11 @@ class CreateCompanySubscription(BaseModel):
             start_date=datetime.now(),
             end_date=None,
             stripe_customer_id=stripe_customer_id,
-            stripe_subscription_id=stripe_subscription_id,
             usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[plan],
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[plan],
             pro_trial_expires=None,
-            subscription_status=SubscriptionStatus.ACTIVE,
+            subscription_status=SubscriptionStatus.PENDING_FIRST_PAYMENT,
+            checkout_session=checkout_session,
         )
 
 

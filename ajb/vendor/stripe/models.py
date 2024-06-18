@@ -1,0 +1,39 @@
+from pydantic import BaseModel
+
+
+class CommonMetadata(BaseModel):
+    company_id: str
+
+
+class StripeCheckoutSessionCreated(BaseModel):
+    id: str
+    amount_subtotal: int
+    amount_total: int
+    created: int
+    customer: str
+    expires_at: int
+    metadata: CommonMetadata
+    url: str
+
+
+class StripeCheckoutSessionCompleted(BaseModel):
+    """
+    This is the data model that will be stored on the subscription object
+    When the user complete's their payment. We will have this data POSTED to us
+    from stripe whenever this event occurs. It will confirm and activate the company's subscription.
+    """
+
+    id: str
+    object: str  # Should always be checkout.session
+    amount_subtotal: int
+    amount_total: int
+    created: int
+    currency: str
+    customer: str  # customer id
+    invoice: str
+    livemode: bool  # indicates testing or not
+    metadata: CommonMetadata
+    payment_status: str  # Looking for status 'paid'
+    status: str  # Looking for status 'complete'
+    subscription: str  # This is the generated subscription id
+    success_url: str  # The url the user was sent to

@@ -4,6 +4,10 @@ from ajb.contexts.billing.subscriptions.models import (
     UserUpdateCompanySubscription,
     CompanySubscription,
 )
+from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
+from ajb.contexts.billing.usecase.start_create_subscription import (
+    StartCreateSubscription,
+)
 from ajb.contexts.billing.usecase import CompanyBillingUsecase
 from ajb.contexts.billing.usage.models import MonthlyUsage
 from api.middleware import scope
@@ -14,17 +18,15 @@ router = APIRouter(tags=["Company Billing"], prefix="/companies/{company_id}")
 
 @router.get("/subscription", response_model=CompanySubscription)
 def get_subscription(request: Request, company_id: str):
-    return CompanyBillingUsecase(scope(request)).get_or_create_company_subscription(
-        company_id
-    )
+    return CompanySubscriptionRepository(scope(request), company_id).get_sub_entity()
 
 
-@router.patch("/subscription")
-def update_subscription(
-    request: Request, company_id: str, updates: UserUpdateCompanySubscription
+@router.post("/subscription", response_model=CompanySubscription)
+def start_create_subscription(
+    request: Request, company_id: str, subscription: UserUpdateCompanySubscription
 ):
-    return CompanyBillingUsecase(scope(request)).update_company_subscription(
-        company_id, updates
+    return StartCreateSubscription(scope(request)).start_create_subscription(
+        company_id, subscription.plan
     )
 
 

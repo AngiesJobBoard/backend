@@ -1,5 +1,4 @@
 from ajb.base import Collection, SingleChildRepository, RepositoryRegistry
-from ajb.exceptions import EntityNotFound
 from .models import CreateCompanySubscription, CompanySubscription
 
 

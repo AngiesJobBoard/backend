@@ -4,7 +4,7 @@ from ajb.base import BaseDataModel
 
 
 class CreateAuditEvent(BaseModel):
-    company_id: str
+    company_id: str | None
     data: dict
 
 
