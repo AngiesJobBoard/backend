@@ -42,8 +42,26 @@ class StripeCheckoutSessionCompleted(BaseModel):
 class InvoicePaymentSucceeded(BaseModel):
     id: str
     created: int
+    amount_due: int
+    amount_paid: int
+    customer: str
+    customer_email: str
+    customer_name: str
+    hosted_invoice_url: str
+    livemode: bool
+    paid: bool
+    status: str
+    subscription: str  # This is the generated subscription id
 
 
 class InvoicePaymentFailed(BaseModel):
     id: str
     created: int
+    customer: str
+    customer_email: str
+    customer_name: str
+    hosted_invoice_url: str
+    livemode: bool
+    paid: bool
+    status: str
+    subscription: str  # This is the generated subscription id

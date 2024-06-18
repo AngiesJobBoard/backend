@@ -1,35 +1,23 @@
-from datetime import datetime
-
-from ajb.base import BaseUseCase, Collection, RepoFilterParams, Pagination, RequestScope
-from ajb.contexts.companies.models import Company
+from ajb.base import BaseUseCase, RequestScope, Collection
 from ajb.contexts.billing.subscriptions.models import (
     CompanySubscription,
-    CreateCompanySubscription,
-    UserUpdateCompanySubscription,
+    SubscriptionPlan,
+    UsageType,
 )
-from ajb.exceptions import EntityNotFound
-from ajb.vendor.arango.models import Filter
 from ajb.vendor.stripe.repository import (
     StripeRepository,
 )
-
-from ajb.contexts.billing.usage.models import (
-    CreateMonthlyUsage,
-    MonthlyUsage,
-    generate_billing_period_string,
+from ajb.vendor.stripe.models import (
+    StripeCheckoutSessionCompleted,
+    InvoicePaymentSucceeded,
 )
-from ajb.contexts.billing.billing_models import (
-    UsageType,
-    SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS,
-)
-from ..subscription_cache import SUBSCRIPTION_CACHE
+
+from .start_create_subscription import StartCreateSubscription
+from .complete_create_subscription import CompleteCreateSubscription
+from .create_subscription_usage import CreateSubscriptionUsage
 
 
-class NoLineItemsToInvoiceException(Exception):
-    pass
-
-
-class StripeCustomerIDMissingException(Exception):
+class NoSubscriptionUsageAllottedException(Exception):
     pass
 
 
@@ -40,124 +28,50 @@ class CompanyBillingUsecase(BaseUseCase):
         super().__init__(request_scope)
         self.stripe = stripe or StripeRepository()
 
-    def get_or_create_company_subscription(
-        self, company_id: str
+    def start_create_subscription(
+        self, company_id: str, plan: SubscriptionPlan
     ) -> CompanySubscription:
-        subscription_repo = self.get_repository(
+        """Initiated by user through the API - creates checkout session in stripe and attached subscription object to company pending the payment."""
+        return StartCreateSubscription(
+            self.request_scope, self.stripe
+        ).start_create_subscription(company_id, plan)
+
+    def complete_create_subscription(self, data: StripeCheckoutSessionCompleted):
+        """Webhook from Stripe - completes the subscription creation process after user completes checkout."""
+        return CompleteCreateSubscription(
+            self.request_scope, self.stripe
+        ).complete_create_subscription(data)
+
+    def create_company_usage(self, data: InvoicePaymentSucceeded):
+        """
+        This is a separate payment confirmation that comes with the checkout session.
+        Getting this confirms the payment was successful and will allot usage on the platform for the associated company
+        """
+        CreateSubscriptionUsage(self.request_scope).create_usage_from_paid_invoice(data)
+
+    def get_company_subscription(self, company_id: str):
+        return self.get_repository(
             Collection.COMPANY_SUBSCRIPTIONS, self.request_scope, company_id
-        )
-        return subscription_repo.get_one(company_id=company_id)
+        ).get_sub_entity()
 
-    def update_company_subscription(
-        self, company_id: str, data: UserUpdateCompanySubscription
-    ):
-        subscription_repo = self.get_repository(
-            Collection.COMPANY_SUBSCRIPTIONS, self.request_scope, company_id
-        )
-        subscription = self.get_or_create_company_subscription(company_id)
-        subscription.usage_cost_details = SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[
-            data.plan
-        ]
-        subscription.plan = data.plan
-        results = subscription_repo.update(subscription.id, subscription)
-        SUBSCRIPTION_CACHE[company_id] = results
-        return results
-
-    def _get_company_recruiter_count(self, company_id: str):
-        recruiter_repo = self.get_repository(
-            Collection.COMPANY_RECRUITERS, self.request_scope, company_id
-        )
-        return recruiter_repo.get_count(company_id=company_id)
-
-    def get_or_create_company_usage(
-        self, company_id: str, billing_period: str | None = None
-    ) -> MonthlyUsage:
-        """Default usage is current if not provided."""
-        usage_repo = self.get_repository(
+    def get_current_company_usage(self, company_id: str):
+        """Usage ID should be attached to current subscription object"""
+        subscription: CompanySubscription = self.get_company_subscription(company_id)
+        if subscription.current_usage_id is None:
+            raise NoSubscriptionUsageAllottedException
+        return self.get_object(
             Collection.COMPANY_SUBSCRIPTION_USAGE_AND_BILLING,
-            self.request_scope,
-            company_id,
+            subscription.current_usage_id,
         )
-        billing_period = billing_period or generate_billing_period_string()
 
-        try:
-            return usage_repo.get_one(
-                company_id=company_id, billing_period=billing_period
-            )
-        except EntityNotFound:
-            return usage_repo.create(
-                CreateMonthlyUsage.get_default_usage(
-                    company_id, self._get_company_recruiter_count(company_id)
-                )
-            )
+    def company_cancels_subscription(self, company_id: str): ...
 
-    def get_historic_company_usage(
-        self, company_id: str, page: int = 0, page_size: int = 10
-    ) -> tuple[list[MonthlyUsage], int]:
-        usage_repo = usage_repo = self.get_repository(
-            Collection.COMPANY_SUBSCRIPTION_USAGE_AND_BILLING,
-            self.request_scope,
-            company_id,
-        )
-        query = RepoFilterParams(
-            pagination=Pagination(page=page, page_size=page_size),
-            filters=[Filter(field="company_id", value=company_id)],
-        )
-        return usage_repo.query(repo_filters=query)
-
-    def create_or_update_month_usage(
-        self, company_id: str, usage: CreateMonthlyUsage
-    ) -> MonthlyUsage:
-        usage_repo = self.get_repository(
-            Collection.COMPANY_SUBSCRIPTION_USAGE_AND_BILLING,
-            self.request_scope,
-            company_id,
-        )
-        subscription = self.get_or_create_company_subscription(company_id)
-        current_usage = self.get_or_create_company_usage(company_id)
-        current_usage.add_usage(usage, subscription.usage_cost_details)
-        return usage_repo.update(current_usage.id, current_usage)
+    def company_updates_subscription(
+        self, company_id: str, new_plan: SubscriptionPlan
+    ): ...
 
     def increment_company_usage(
-        self, company_id: str, incremental_usages: dict[UsageType, int]
-    ):
-        return self.create_or_update_month_usage(
-            company_id,
-            CreateMonthlyUsage(
-                company_id=company_id, transaction_counts=incremental_usages
-            ),
-        )
-    
-    def set_company_usage(
-        self, company_id: str, usages_to_set: dict[UsageType, int]
-    ):
-        usage_repo = self.get_repository(
-            Collection.COMPANY_SUBSCRIPTION_USAGE_AND_BILLING,
-            self.request_scope,
-            company_id,
-        )
-        current_usage = self.get_or_create_company_usage(company_id)
-        current_usage.transaction_counts.update(usages_to_set)
-        return usage_repo.update(current_usage.id, current_usage)
-
-    def _get_company_name_with_id(self, company: Company):
-        return f"{company.name} - {company.id}"
-
-    def _get_or_update_company_with_created_stripe_company_id(
-        self, company_id: str
-    ) -> Company:
-        company_repo = self.get_repository(Collection.COMPANIES, self.request_scope)
-        company: Company = company_repo.get(company_id)
-        if company.stripe_customer_id is not None:
-            return company
-
-        new_stripe_customer = self.stripe.create_customer(
-            self._get_company_name_with_id(company), company.owner_email, company.id
-        )
-        return company_repo.update_fields(
-            company.id, stripe_customer_id=new_stripe_customer.id
-        )
-
-    def _convert_billing_period_to_date_range(self, billing_period: str):
-        period_as_dt = datetime.strptime(billing_period, "%Y-%m")
-        return period_as_dt.strftime("%B %Y")
+        self, company_id: str, usage_type: UsageType, amount_to_increment: int = 1
+    ) -> None:
+        """Increment usage for a company"""
+        pass

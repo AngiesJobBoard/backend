@@ -5,20 +5,12 @@ This module helps to route different messages posted to us from stripe to the co
 from enum import Enum
 
 from ajb.base import RequestScope
-from ajb.contexts.billing.usecase.complete_create_subscription import (
-    CompleteCreateSubscription,
-)
-from ajb.contexts.billing.usecase.subscription_payment_success import (
-    SubscriptionPaymentSuccess,
-)
-from ajb.contexts.billing.usecase.subscription_payment_failure import (
-    SubscriptionPaymentFailure,
-)
+from ajb.contexts.billing.usecase import CompanyBillingUsecase
 from ajb.vendor.stripe.models import (
     StripeCheckoutSessionCompleted,
     InvoicePaymentSucceeded,
-    InvoicePaymentFailed,
 )
+from ajb.vendor.stripe.repository import StripeRepository
 
 
 class StripeEventType(str, Enum):
@@ -28,24 +20,30 @@ class StripeEventType(str, Enum):
 
 
 class StripeBillingEventRouter:
-    def __init__(self, request_scope: RequestScope, payload: dict):
+    def __init__(
+        self,
+        request_scope: RequestScope,
+        payload: dict,
+        stripe: StripeRepository | None = None,
+    ):
         self.request_scope = request_scope
         self.payload = payload
+        self.stripe = stripe or StripeRepository()
 
     def handle_complete_subscription_setup(self) -> None:
-        CompleteCreateSubscription(self.request_scope).complete_subscription_setup(
-            data=StripeCheckoutSessionCompleted(**self.payload["data"]["object"])
+        CompanyBillingUsecase(
+            self.request_scope, self.stripe
+        ).complete_create_subscription(
+            StripeCheckoutSessionCompleted(**self.payload["data"]["object"])
         )
 
     def handle_invoice_payment_succeeded(self) -> None:
-        SubscriptionPaymentSuccess(self.request_scope).update_company_usage(
+        CompanyBillingUsecase(self.request_scope, self.stripe).create_company_usage(
             InvoicePaymentSucceeded(**self.payload["data"]["object"])
         )
 
     def handle_invoice_payment_failed(self) -> None:
-        SubscriptionPaymentFailure(self.request_scope).update_company_usage(
-            InvoicePaymentFailed(**self.payload["data"]["object"])
-        )
+        raise NotImplementedError("Invoice payment failed event not implemented")
 
     def route_event(self) -> None:
         """

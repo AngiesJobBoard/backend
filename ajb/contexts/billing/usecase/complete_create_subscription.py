@@ -60,7 +60,7 @@ class CompleteCreateSubscription(BaseUseCase):
         if data.status != "complete":
             raise CheckoutSessionStatusNotComplete()
 
-    def complete_subscription_setup(self, data: StripeCheckoutSessionCompleted) -> None:
+    def complete_create_subscription(self, data: StripeCheckoutSessionCompleted) -> None:
         self._store_raw_checkout_session_data(data)
         company: Company = self.get_repository(Collection.COMPANIES).get_one(
             stripe_customer_id=data.customer

@@ -18,6 +18,7 @@ from ..billing_models import (
 class SubscriptionStatus(str, Enum):
     """
     More details about each status:
+    pending first payment means the user has not yet paid their first payment for the subscription
     Active means good financial standing.
     Inactive means the payments were past 10 days late and the subscription is set to inavtive
     Cancelled means the subscription was cancelled by the user
@@ -38,13 +39,14 @@ class CreateCompanySubscription(BaseModel):
     plan: SubscriptionPlan
     start_date: datetime
     end_date: datetime | None = None
-    stripe_customer_id: str | None = None
+    stripe_customer_id: str | None = None  # Only none if plan type is free trial
     stripe_subscription_id: str | None = None
     usage_cost_details: dict[UsageType, UsageDetail]
     subscription_features: list[TierFeatures]
-    pro_trial_expires: datetime | None = None
+    gold_trial_expires: datetime | None = None
     subscription_status: SubscriptionStatus
     checkout_session: StripeCheckoutSessionCreated | None
+    current_usage_id: str | None = None
 
     @classmethod
     def create_trial_subscription(cls, company_id: str) -> "CreateCompanySubscription":
@@ -57,7 +59,7 @@ class CreateCompanySubscription(BaseModel):
                 SubscriptionPlan.GOLD
             ],
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[SubscriptionPlan.GOLD],
-            pro_trial_expires=datetime.now() + timedelta(days=14),
+            gold_trial_expires=datetime.now() + timedelta(days=14),
             subscription_status=SubscriptionStatus.TRIALING,
             checkout_session=None,
         )
@@ -81,7 +83,7 @@ class CreateCompanySubscription(BaseModel):
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[
                 SubscriptionPlan.APPSUMO
             ],
-            pro_trial_expires=None,
+            gold_trial_expires=None,
             subscription_status=SubscriptionStatus.PENDING_FIRST_PAYMENT,
             checkout_session=checkout_session,
         )
@@ -102,7 +104,7 @@ class CreateCompanySubscription(BaseModel):
             stripe_customer_id=stripe_customer_id,
             usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[plan],
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[plan],
-            pro_trial_expires=None,
+            gold_trial_expires=None,
             subscription_status=SubscriptionStatus.PENDING_FIRST_PAYMENT,
             checkout_session=checkout_session,
         )

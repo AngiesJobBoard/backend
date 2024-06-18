@@ -4,7 +4,6 @@ way to take a company's usage data and create a Stripe invoice for that usage da
 
 """
 
-from datetime import datetime, timedelta
 from stripe import StripeClient
 
 from ajb.vendor.stripe.client_factory import StripeClientFactory
@@ -23,14 +22,6 @@ class StripeRepository:
         }
         return self.client.customers.create(params=params)  # type: ignore
 
-    def _get_start_of_next_month_timestamp(self) -> int:
-        now = datetime.now()
-        return int(
-            (datetime(now.year, now.month, 1) + timedelta(days=32))
-            .replace(day=1)
-            .timestamp()
-        )
-
     def create_subscription_checkout_session(
         self,
         company_id: str,
@@ -48,10 +39,6 @@ class StripeRepository:
             ],
             "mode": "subscription",
             "success_url": "http://localhost:3000/subscription-success",
-            "subscription_data": {
-                "proration_behavior": "create_prorations",
-                "billing_cycle_anchor": self._get_start_of_next_month_timestamp(),
-            },
             "client_reference_id": company_id,
         }
         results = self.client.checkout.sessions.create(params=params)  # type: ignore

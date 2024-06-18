@@ -652,12 +652,6 @@ def test_email_application_ingress(request_scope):
     # Process email with multiple parts
     usecase.process_email_application_ingress(ingress_email, company_email_ingress)
 
-    # Check for company usage
-    usage = CompanyBillingUsecase(request_scope).get_historic_company_usage(company.id)
-    assert (
-        usage[1] == 1
-    )  # Company usage is incremented at the end of process_email_application_ingress, so we will make sure that happens here
-
 
 def test_create_application_from_raw_text(request_scope):
     company_fixture = CompanyFixture(request_scope)
