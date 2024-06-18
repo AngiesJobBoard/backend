@@ -1,15 +1,23 @@
+from datetime import datetime
 import asyncio
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from ajb.base.events import BaseKafkaMessage
-from ajb.common.models import AnswerEnum, ApplicationQuestion, Location, QuestionStatus
+from ajb.base import Collection
+from ajb.common.models import AnswerEnum, Location, QuestionStatus
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.applications.matching.ai_matching import ApplicantMatchScore
 from ajb.contexts.applications.models import CreateApplication
 from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.usecase.application_usecase import ApplicationUseCase
+from ajb.contexts.companies.api_egress_webhooks.models import (
+    CompanyAPIEgress,
+    EgressObjectType,
+    EgressWebhookEvent,
+)
 from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.repository import CompanyRepository
+from ajb.contexts.webhooks.egress.webhook_egress import BaseWebhookEgress
 from ajb.fixtures.companies import CompanyFixture
 from services.resolvers.applications import (
     ApplicationEventsResolver,
@@ -270,3 +278,85 @@ def test_answer_application_questions(request_scope):
     assert (
         retrieved_app.application_questions[0].reasoning == patched_json["reasoning"]
     )  # The reasoning should reflect the response from the patched JSON
+
+
+def test_application_events(request_scope):
+    # Create company & job
+    company_fixture = CompanyFixture(request_scope)
+    company = company_fixture.create_company()
+    job = company_fixture.create_company_job(company.id)
+
+    application_usecase = ApplicationUseCase(request_scope)
+
+    application = CreateApplication(
+        company_id=company.id,
+        job_id=job.id,
+        name=None,
+        email="applyguy@applicant.com",
+    )
+
+    created_application = application_usecase.create_application(
+        company.id, job.id, application
+    )
+
+    # Create resolver object
+    resolver = ApplicationEventsResolver(
+        BaseKafkaMessage(
+            data={
+                "company_id": company.id,
+                "job_id": job.id,
+                "application_id": created_application.id,
+            },
+            requesting_user_id="test",
+            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            event_type="test",
+            source_service="my_service_name",
+        ),
+        request_scope,
+    )
+
+    # Prepare for event testing
+    mock_egress_record = CompanyAPIEgress(
+        id="1",
+        company_id=company.id,
+        created_at=datetime.now(),
+        created_by="test",
+        updated_at=datetime.now(),
+        updated_by="test",
+        webhook_url="test.com",
+        headers={},
+        enabled_events=[
+            EgressWebhookEvent.CREATE_APPLICANT,
+            EgressWebhookEvent.UPDATE_APPLICANT,
+            EgressWebhookEvent.DELETE_APPLICANT,
+        ],
+        is_active=True,
+    )
+    base_webhook_egress = BaseWebhookEgress(request_scope)
+    egress_repo = base_webhook_egress.get_repository(
+        name=Collection.COMPANY_API_EGRESS_WEBHOOKS,
+        request_scope=request_scope,
+        parent_id=company.id,
+    )
+    egress_repo.create(
+        mock_egress_record
+    )  # An egress record is required otherwise the webhook methods abort.
+
+    with patch(
+        "ajb.contexts.webhooks.egress.webhook_egress.BaseWebhookEgress.send_request",
+        new_callable=MagicMock,
+    ) as mock_send_request:
+        # Test post application submission event
+        asyncio.run(resolver.post_application_submission())
+        mock_send_request.assert_called()  # Make sure that the webhook request was sent
+        mock_send_request.reset_mock()  # Reset the mock for next event
+
+        # Test application is updated event
+        asyncio.run(resolver.application_is_updated())
+        mock_send_request.assert_called()  # Make sure that the webhook request was sent
+        mock_send_request.reset_mock()  # Reset the mock for next event
+
+        # Test application is deleted event
+        asyncio.run(resolver.application_is_deleted())
+        mock_send_request.assert_called()  # Make sure that the webhook request was sent
+        mock_send_request.reset_mock()  # Reset the mock for next event
