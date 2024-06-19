@@ -126,6 +126,7 @@ class DataReducedJob(BaseDataModel):
     job_icon: str | None = None
     experience_required: ExperienceLevel | None = None
     job_score: int | None = None
+    job_is_public: bool | None = None
 
 
 class DataReducedCompany(BaseDataModel):

@@ -299,6 +299,7 @@ def test_convert_usage_to_stripe_invoice(request_scope):
     invoice = usecase.convert_usage_to_stripe_invoice_data(
         company, company_subscription, company_usage
     )
+    assert invoice is not None
 
     assert (
         invoice.stripe_customer_id == company.stripe_customer_id

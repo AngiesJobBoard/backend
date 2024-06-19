@@ -5,7 +5,7 @@ from ajb.base import RequestScope
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.webhooks.ingress.jobs.usecase import WebhookJobsUseCase
 from ajb.contexts.webhooks.ingress.applicants.usecase import WebhookApplicantsUseCase
-from api.vendors import db, storage, kafka_producer
+from api.vendors import db, kafka_producer
 
 from api.open.middleware import OpenRequestValidator
 from api.middleware import scope
@@ -24,6 +24,7 @@ router = APIRouter(
 
 @router.post("/api-ingress/jobs", status_code=status.HTTP_204_NO_CONTENT)
 async def jobs_api_webhook_handler(request: Request, payload: dict):
+    request.state.request_scope = WEBHOOK_REQUEST_SCOPE
     ingress_record = OpenRequestValidator(request).validate_api_ingress_request()
     WebhookJobsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
         ingress_record.company_id, payload  # type: ignore
@@ -33,6 +34,7 @@ async def jobs_api_webhook_handler(request: Request, payload: dict):
 
 @router.post("/api-ingress/applicants", status_code=status.HTTP_204_NO_CONTENT)
 async def applicants_api_webhook_handler(request: Request, payload: dict):
+    request.state.request_scope = WEBHOOK_REQUEST_SCOPE
     ingress_record = OpenRequestValidator(request).validate_api_ingress_request()
     WebhookApplicantsUseCase(WEBHOOK_REQUEST_SCOPE).handle_webhook_event(
         ingress_record, payload
@@ -46,6 +48,7 @@ async def jobs_email_webhook_handler(
     envelope: str = Form(...),
     email: str = Form(...),
 ):
+    request.state.request_scope = WEBHOOK_REQUEST_SCOPE
     # AJBTODO there is only handling for applicants coming in through email but jobs are technically also supported...
     ingress_record = OpenRequestValidator(request).validate_email_ingress_request(
         envelope

@@ -4,19 +4,24 @@ from ajb.contexts.applications.events import ApplicationEventProducer
 from ajb.contexts.applications.models import CreateApplication, Application, ScanStatus
 from ajb.contexts.resumes.models import UserCreateResume, Resume
 from ajb.contexts.resumes.usecase import ResumeUseCase
+from ajb.vendor.pdf_plumber import extract_text
 
 
 from .create_application import CreateApplicationResolver
 
 
 class CreateApplicationFromResumeResolver(BaseUseCase):
-    def _build_application_from_resume(self, resume: Resume) -> CreateApplication:
+    def _build_application_from_resume(
+        self, resume: Resume, resume_bytes: bytes
+    ) -> CreateApplication:
         return CreateApplication(
             company_id=resume.company_id,
             job_id=resume.job_id,
             resume_id=resume.id,
             resume_scan_status=ScanStatus.PENDING,
             match_score_status=ScanStatus.PENDING,
+            resume_url=resume.resume_url,
+            extracted_resume_text=extract_text(resume_bytes),
         )
 
     def _combine_additional_data(
@@ -28,7 +33,7 @@ class CreateApplicationFromResumeResolver(BaseUseCase):
             return partial_application
 
         partial_application_dict = partial_application.model_dump()
-        additional_partial_data_dict = additional_partial_data.model_dump()
+        additional_partial_data_dict = additional_partial_data.model_dump(exclude_none=True)
         partial_application_dict.update(additional_partial_data_dict)
         return CreateApplication(**partial_application_dict)
 
@@ -55,12 +60,16 @@ class CreateApplicationFromResumeResolver(BaseUseCase):
         )
 
     def _format_application_data(
-        self, resume: Resume, additional_partial_data: CreateApplication | None = None
+        self,
+        resume: Resume,
+        resume_bytes: bytes,
+        additional_partial_data: CreateApplication | None = None,
     ):
-        partial_application = self._build_application_from_resume(resume)
+        partial_application = self._build_application_from_resume(resume, resume_bytes)
         partial_application = self._combine_additional_data(
             partial_application, additional_partial_data
         )
+        print(partial_application)
         return partial_application
 
     def create_application_from_resume(
@@ -70,7 +79,7 @@ class CreateApplicationFromResumeResolver(BaseUseCase):
     ) -> Application:
         resume = ResumeUseCase(self.request_scope).create_resume(data)
         application_data = self._format_application_data(
-            resume, additional_partial_data
+            resume, data.resume_data, additional_partial_data
         )
         created_application = self._create_application(application_data)
         self._produce_resume_upload_event(resume, created_application)

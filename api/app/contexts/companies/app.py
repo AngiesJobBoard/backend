@@ -16,11 +16,10 @@ from api.app.contexts.companies import (
     recruiters,
     raw_api_ingress,
 )
-from api.app.middleware import verify_user, user_has_access_to_company
+from api.app.middleware import verify_user_and_company
 
 company_api_router = APIRouter(
-    tags=["Company"],
-    dependencies=[Depends(verify_user)],
+    dependencies=[Depends(verify_user_and_company)],
 )
 
 company_api_router.include_router(ai_generator.router)

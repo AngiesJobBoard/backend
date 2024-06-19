@@ -22,6 +22,10 @@ from ajb.contexts.applications.repository import (
 )
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.applications.events import ApplicationEventProducer
+from ajb.contexts.companies.jobs.public_application_forms.repository import (
+    JobPublicApplicationFormRepository,
+    PublicApplicationForm,
+)
 from ajb.vendor.arango.models import Filter, Operator
 
 from api.middleware import scope
@@ -59,6 +63,7 @@ def get_all_company_applications(
         resume_text_contains,
         has_required_skill,
         status_filter.split(",") if status_filter else None,
+        # completed_scans_only=False
     )
     return build_pagination_response(
         results,
@@ -238,3 +243,31 @@ def update_application_status(
     return ApplicationUseCase(scope(request)).recruiter_updates_application_status(
         company_id, job_id, application_id, new_status
     )
+
+
+@router.get(
+    "/jobs/{job_id}/{application_id}/public-application-form",
+    response_model=PublicApplicationForm,
+)
+def get_application_public_form_data(
+    request: Request,
+    company_id: str,
+    job_id: str,
+    application_id: str,
+    public_application_id: str | None = None,
+):
+    if public_application_id is None:
+        public_application_id = (
+            ApplicationRepository(scope(request))
+            .get(application_id)
+            .application_form_id
+        )
+    if public_application_id is None:
+        raise GenericHTTPException(
+            status_code=404, detail="Public application form does not exist"
+        )
+    res = JobPublicApplicationFormRepository(scope(request), job_id).get(
+        public_application_id
+    )
+    assert res.company_id == company_id  # mostly useless but need to use company id somehow
+    return res
