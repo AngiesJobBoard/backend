@@ -47,6 +47,7 @@ class CreateCompanySubscription(BaseModel):
     subscription_status: SubscriptionStatus
     checkout_session: StripeCheckoutSessionCreated | None
     current_usage_id: str | None = None
+    free_trial_ends: datetime | None = None
 
     @classmethod
     def create_trial_subscription(
@@ -54,7 +55,7 @@ class CreateCompanySubscription(BaseModel):
     ) -> "CreateCompanySubscription":
         return cls(
             company_id=company_id,
-            plan=SubscriptionPlan.GOLD,
+            plan=SubscriptionPlan.GOLD_TRIAL,
             start_date=datetime.now(),
             end_date=datetime.now() + timedelta(days=14),
             usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[
@@ -64,6 +65,7 @@ class CreateCompanySubscription(BaseModel):
             subscription_status=SubscriptionStatus.ACTIVE,
             checkout_session=None,
             current_usage_id=usage_id,
+            free_trial_ends = datetime.now() + timedelta(days=14)
         )
 
     @classmethod
