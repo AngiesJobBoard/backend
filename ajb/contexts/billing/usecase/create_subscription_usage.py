@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 
 from ajb.base import BaseUseCase, Collection
 from ajb.contexts.companies.models import Company
+from ajb.contexts.billing.subscriptions.models import SubscriptionPlan
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
 from ajb.contexts.billing.billing_audit_events.models import CreateAuditEvent
 from ajb.contexts.billing.usage.models import CreateMonthlyUsage
@@ -38,6 +39,17 @@ class CreateSubscriptionUsage(BaseUseCase):
         if data.paid is False or data.status != "paid":
             raise InvoiceNotPaid
 
+    def _get_usage_expiry(
+        self, subscription_start: datetime, subscription_plan: SubscriptionPlan
+    ) -> datetime:
+        if subscription_plan == SubscriptionPlan.APPSUMO:
+            return subscription_start + timedelta(
+                days=1000
+            )  # For me in ~2.7 years to figure out....
+        return subscription_start + timedelta(
+            days=40
+        )  # ~1 month plus 10 day grace period
+
     def create_usage_from_paid_invoice(self, data: InvoicePaymentSucceeded) -> None:
         self._store_raw_invoice_data(data)
         company: Company = self.get_repository(Collection.COMPANIES).get_one(
@@ -55,8 +67,10 @@ class CreateSubscriptionUsage(BaseUseCase):
         ).create(
             CreateMonthlyUsage(
                 company_id=company.id,
-                usage_expires=datetime.fromtimestamp(data.effective_at)
-                + timedelta(days=40),  # ~1 month plus 10 day grace period
+                usage_expires=self._get_usage_expiry(
+                    datetime.fromtimestamp(data.effective_at),
+                    company_subscription.plan,
+                ),
                 invoice_details=data,
             )
         )

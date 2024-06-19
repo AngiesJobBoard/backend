@@ -48,7 +48,7 @@ class CreateCompanySubscription(BaseModel):
     current_usage_id: str | None = None
 
     @classmethod
-    def create_trial_subscription(cls, company_id: str) -> "CreateCompanySubscription":
+    def create_trial_subscription(cls, company_id: str, usage_id: str) -> "CreateCompanySubscription":
         return cls(
             company_id=company_id,
             plan=SubscriptionPlan.GOLD,
@@ -60,6 +60,7 @@ class CreateCompanySubscription(BaseModel):
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[SubscriptionPlan.GOLD],
             subscription_status=SubscriptionStatus.ACTIVE,
             checkout_session=None,
+            current_usage_id=usage_id,
         )
 
     @classmethod

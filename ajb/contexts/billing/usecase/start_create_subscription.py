@@ -15,7 +15,7 @@ from ajb.contexts.billing.subscriptions.models import (
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
 from ajb.vendor.stripe.repository import StripeRepository
 from ajb.contexts.billing.billing_audit_events.models import CreateAuditEvent
-from ajb.contexts.billing.usage.models import CreateMonthlyUsage
+from ajb.contexts.billing.usage.models import CreateMonthlyUsage, MonthlyUsage
 from ajb.contexts.billing.usage.repository import CompanySubscriptionUsageRepository
 from ajb.vendor.stripe.models import StripeCheckoutSessionCreated
 from ajb.exceptions import EntityNotFound
@@ -98,6 +98,14 @@ class StartCreateSubscription(BaseUseCase):
             if potential_subscription.subscription_status in [
                 SubscriptionStatus.ACTIVE,
             ]:
+                current_usage: MonthlyUsage = self.get_object(
+                    Collection.COMPANY_SUBSCRIPTION_USAGE_AND_BILLING,
+                    str(potential_subscription.current_usage_id),
+                )
+                if current_usage.free_trial_usage:
+                    # Let them create a new subscription if they are on a free trial
+                    return
+
                 raise CompanyAlreadyHasSubscription
         except EntityNotFound:
             return
@@ -160,17 +168,22 @@ class StartCreateSubscription(BaseUseCase):
         to stripe or pay for anything. It will create an active free trial subscription object.
         This will expire in 2 weeks and become a pending first payment status.
         """
-        # Make subscription object
-        created_subscription = self.get_repository(
-            Collection.COMPANY_SUBSCRIPTIONS
-        ).create(CreateCompanySubscription.create_trial_subscription(company.id))
-        CompanySubscriptionUsageRepository(self.request_scope, company.id).create(
+        created_usage = CompanySubscriptionUsageRepository(
+            self.request_scope, company.id
+        ).create(
             CreateMonthlyUsage(
                 company_id=company.id,
                 usage_expires=datetime.now()
                 + timedelta(days=14),  # 14 days of free gold
                 invoice_details=None,
                 free_trial_usage=True,
+            )
+        )
+        created_subscription = CompanySubscriptionRepository(
+            self.request_scope, company.id
+        ).set_sub_entity(
+            CreateCompanySubscription.create_trial_subscription(
+                company.id, created_usage.id
             )
         )
         return created_subscription
