@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 from ajb.base import BaseUseCase, Collection
 from ajb.contexts.companies.models import Company
-from ajb.contexts.billing.subscriptions.models import SubscriptionPlan
+from ajb.contexts.billing.subscriptions.models import SubscriptionPlan, SubscriptionStatus
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
 from ajb.contexts.billing.billing_audit_events.models import CreateAuditEvent
 from ajb.contexts.billing.usage.models import CreateMonthlyUsage
@@ -107,4 +107,5 @@ class CreateSubscriptionUsage(BaseUseCase):
             )
         )
         company_subscription.current_usage_id = created_usage.id
+        company_subscription.subscription_status = SubscriptionStatus.ACTIVE
         subscription_repo.set_sub_entity(company_subscription)
