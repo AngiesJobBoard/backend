@@ -4,22 +4,27 @@ This is a module to check if an action is within the usage limits of a subscript
 
 from datetime import datetime
 from cachetools import cached
+from fastapi import HTTPException
 
 from ajb.base import BaseUseCase, RequestScope
 from ajb.contexts.billing.subscriptions.models import SubscriptionStatus
-from ajb.exceptions import TierLimitHitException, FeatureNotAvailableOnTier
+from ajb.contexts.billing.usecase.billing_usecase import (
+    NoSubscriptionUsageAllottedException,
+)
+from ajb.exceptions import (
+    TierLimitHitException,
+    FeatureNotAvailableOnTier,
+    EntityNotFound,
+)
 
 from .billing_models import UsageType, TierFeatures
 from .usecase import CompanyBillingUsecase
 from .subscription_cache import SUBSCRIPTION_CACHE
 
 
-class SubscriptionNotActiveException(Exception):
-    pass
-
-
-class SubscriptionExpiredException(Exception):
-    pass
+class SubscriptionValidationError(HTTPException):
+    def __init__(self, message: str):
+        super().__init__(status_code=402, detail=message)
 
 
 class BillingValidateUsageUseCase(BaseUseCase):
@@ -37,11 +42,17 @@ class BillingValidateUsageUseCase(BaseUseCase):
     @cached(SUBSCRIPTION_CACHE)
     def _get_company_subscription(self, company_id: str):
         # AJBTODO the subscription can be changed, this cache should appropriately handle that
-        return self.billing_usecase.get_company_subscription(company_id)
+        try:
+            return self.billing_usecase.get_company_subscription(company_id)
+        except EntityNotFound:
+            raise SubscriptionValidationError("No subscription found for company")
 
     def _get_company_current_usage(self, company_id: str):
         """Will raise NoUsageAllottedtoCompanyException if no usage found"""
-        return self.billing_usecase.get_current_company_usage(company_id)
+        try:
+            return self.billing_usecase.get_current_company_usage(company_id)
+        except NoSubscriptionUsageAllottedException:
+            raise SubscriptionValidationError("No usage found for company")
 
     def validate_usage(
         self,
@@ -60,11 +71,11 @@ class BillingValidateUsageUseCase(BaseUseCase):
             SubscriptionStatus.ACTIVE,
             SubscriptionStatus.PENDING_UPDATE_PAYMENT,
         ]:
-            raise SubscriptionNotActiveException
+            raise SubscriptionValidationError("Subscription is not active")
 
         # Check usage is not expired
         if self.usage.usage_expires < datetime.now():
-            raise SubscriptionExpiredException
+            raise SubscriptionValidationError("Usage has expired")
 
         # Check if usage has hit tier limit
         current_usage = self.usage.transaction_counts[usage_type]
@@ -89,4 +100,6 @@ class BillingValidateUsageUseCase(BaseUseCase):
             return
 
         if feature not in self.subscription.subscription_features:
-            raise FeatureNotAvailableOnTier
+            raise SubscriptionValidationError(
+                f"Feature {feature} is not available on this tier"
+            )
