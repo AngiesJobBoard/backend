@@ -41,9 +41,32 @@ class StripeRepository:
             "mode": "subscription" if charge_is_recurring else "payment",
             "success_url": "http://localhost:3000/subscription-success",
             "client_reference_id": company_id,
+            "description": "BLANFIHAWSDINASD"
         }
         results = self.client.checkout.sessions.create(params=params)  # type: ignore
         return StripeCheckoutSessionCreated(**results)
 
     def cancel_subscription(self, subscription_id: str):
         return self.client.subscriptions.cancel(subscription_id)
+
+    def get_original_subscription_item_id(self, subscription_id: str):
+        subscription_items = self.client.subscription_items.list({"subscription": subscription_id})  # type: ignore
+        return subscription_items.data[0].id
+
+    def update_subscription(self, subscription_id: str, new_price_id: str):
+        params = {
+            "items": [
+                {
+                    "price": new_price_id,
+                    "quantity": 1
+                },
+                {
+                    "id": self.get_original_subscription_item_id(subscription_id),
+                    "deleted": "true",
+                    "quantity": 1
+                }
+            ],
+            "proration_behavior": "always_invoice",
+            "billing_cycle_anchor": "now"
+        }
+        return self.client.subscriptions.update(subscription_id, params=params)  # type: ignore
