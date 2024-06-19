@@ -83,4 +83,6 @@ class StripeWebhookEventRouter:
             StripeEventType.INVOICE_PAYMENT_FAILED: self.handle_invoice_payment_failed,
             StripeEventType.CHARGE_SUCCEEDED: self.handle_charge_succeeded,
         }
-        ROUTER_MAP[StripeEventType(self.payload["type"])]()
+        payload_type = StripeEventType(self.payload["type"])
+        print(f"Routing stripe event: {payload_type}")
+        ROUTER_MAP[payload_type]()
