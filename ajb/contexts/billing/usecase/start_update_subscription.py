@@ -25,6 +25,12 @@ class NoInitialSubscriptionException(Exception):
     pass
 
 
+class CannotUpdateSubscriptionException(Exception):
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
+
 class BadSubscriptionChange(Exception):
     def __init__(self):
         self.message = "The provided subscription change is invalid"
@@ -47,6 +53,23 @@ class StartUpdateSubscription(BaseUseCase):
             )
         )
 
+    def validate_subscription_can_be_changed(
+        self, company_subscription: CompanySubscription
+    ):
+        if company_subscription.plan == SubscriptionPlan.APPSUMO:
+            raise CannotUpdateSubscriptionException(
+                "Cannot update an AppSumo subscription"
+            )
+        if company_subscription.plan == SubscriptionPlan.GOLD_TRIAL:
+            raise CannotUpdateSubscriptionException(
+                "Cannot update a Gold Trial subscription, new subscription must be created"
+            )
+        if (
+            company_subscription is None
+            or company_subscription.stripe_subscription_id is None
+        ):
+            raise NoInitialSubscriptionException
+
     def start_update_subscription(
         self, company_id: str, new_plan: SubscriptionPlan
     ) -> CompanySubscription:
@@ -61,15 +84,9 @@ class StartUpdateSubscription(BaseUseCase):
             self.request_scope, company_id
         )
         company_subscription = company_subscription_repo.get_sub_entity()
-        if (
-            company_subscription is None
-            or company_subscription.stripe_subscription_id is None
-        ):
-            # This will also be thrown if the user is on a free trial, because that has no subscription id in stripe
-            raise NoInitialSubscriptionException
-
+        self.validate_subscription_can_be_changed(company_subscription)
         results = self.stripe.update_subscription(
-            company_subscription.stripe_subscription_id,
+            str(company_subscription.stripe_subscription_id),
             SUBSCRIPTION_PRICE_MAP[new_plan],
         )
         company_subscription.update_to_new_subscription(new_plan, results.id)

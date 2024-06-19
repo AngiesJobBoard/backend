@@ -27,6 +27,12 @@ class CompanyAlreadyHasSubscription(Exception):
     pass
 
 
+class BadFirstSubscriptionPlan(Exception):
+    def __init__(self):
+        self.message = "The provided subscription is invalid, free trial or appsumo can only create standard subscriptions.s"
+        super().__init__(self.message)
+
+
 class StartCreateSubscription(BaseUseCase):
     def __init__(
         self, request_scope: RequestScope, stripe: StripeRepository | None = None
@@ -70,25 +76,30 @@ class StartCreateSubscription(BaseUseCase):
             checkout_session,
         )
 
-    def check_if_company_already_has_subscription(self, company_id: str):
+    def check_if_company_already_has_subscription(
+        self, company_id: str, plan_to_create: SubscriptionPlan
+    ):
+        """
+        You can create a new subscription if you don't have one already OR if you plan is appsumo or gold trial.
+        If you are on a trial you can not transfer to another trial or app sumo
+        If you are on app sumo you can not transfer to another trial or app sumo
+        """
         try:
             potential_subscription = CompanySubscriptionRepository(
                 self.request_scope, company_id
             ).get_sub_entity()
 
-            # Are there other statuses we want to handle??
-            if potential_subscription.subscription_status in [
-                SubscriptionStatus.ACTIVE,
+            if potential_subscription.plan in [
+                SubscriptionPlan.GOLD_TRIAL,
+                SubscriptionPlan.APPSUMO,
             ]:
-                current_usage: MonthlyUsage = self.get_object(
-                    Collection.COMPANY_SUBSCRIPTION_USAGE_AND_BILLING,
-                    str(potential_subscription.current_usage_id),
-                )
-                if current_usage.free_trial_usage:
-                    # Let them create a new subscription if they are on a free trial
-                    return
-
-                raise CompanyAlreadyHasSubscription
+                if plan_to_create in [
+                    SubscriptionPlan.GOLD_TRIAL,
+                    SubscriptionPlan.APPSUMO,
+                ]:
+                    raise BadFirstSubscriptionPlan
+                return
+            raise CompanyAlreadyHasSubscription
         except EntityNotFound:
             return
 
@@ -106,7 +117,7 @@ class StartCreateSubscription(BaseUseCase):
         and will finally activate the subscription for this company.
         """
         company: Company = self.get_object(Collection.COMPANIES, company_id)
-        self.check_if_company_already_has_subscription(company_id)
+        self.check_if_company_already_has_subscription(company_id, plan)
 
         if plan == SubscriptionPlan.GOLD_TRIAL:
             return self.create_free_trial_subscription(company)
