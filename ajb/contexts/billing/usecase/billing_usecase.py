@@ -11,6 +11,7 @@ from ajb.vendor.stripe.repository import (
 from ajb.vendor.stripe.models import (
     StripeCheckoutSessionCompleted,
     InvoicePaymentSucceeded,
+    ChargeSuccessful
 )
 
 from .start_create_subscription import StartCreateSubscription
@@ -50,6 +51,9 @@ class CompanyBillingUsecase(BaseUseCase):
         Getting this confirms the payment was successful and will allot usage on the platform for the associated company
         """
         CreateSubscriptionUsage(self.request_scope).create_usage_from_paid_invoice(data)
+    
+    def create_company_usage_from_charge(self, data: ChargeSuccessful):
+        CreateSubscriptionUsage(self.request_scope).create_usage_from_app_sumo_single_payment(data)
 
     def get_company_subscription(self, company_id: str) -> CompanySubscription:
         return self.get_repository(

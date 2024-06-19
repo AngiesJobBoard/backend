@@ -9,6 +9,7 @@ from ajb.contexts.billing.usecase import CompanyBillingUsecase
 from ajb.vendor.stripe.models import (
     StripeCheckoutSessionCompleted,
     InvoicePaymentSucceeded,
+    ChargeSuccessful,
 )
 from ajb.vendor.stripe.repository import StripeRepository
 
@@ -17,6 +18,7 @@ class StripeEventType(str, Enum):
     CHECKOUT_SESSION_COMPLETED = "checkout.session.completed"
     INVOICE_PAYMENT_SUCCEEDED = "invoice.payment_succeeded"
     INVOICE_PAYMENT_FAILED = "invoice.payment_failed"
+    CHARGE_SUCCEEDED = "charge.succeeded"
 
 
 class StripeBillingEventRouter:
@@ -45,6 +47,18 @@ class StripeBillingEventRouter:
     def handle_invoice_payment_failed(self) -> None:
         raise NotImplementedError("Invoice payment failed event not implemented")
 
+    def handle_charge_succeeded(self) -> None:
+        """
+        This is specific to the AppSumo deal.
+        They do not get a subscription but instead a single charge which is a different event in stripe.
+        The result still needs to create the usage object the same way.
+        """
+        CompanyBillingUsecase(
+            self.request_scope, self.stripe
+        ).create_company_usage_from_charge(
+            ChargeSuccessful(**self.payload["data"]["object"])
+        )
+
     def route_event(self) -> None:
         """
         There is an attribute 'type' on every payload from stripe that tells us what type of event it is.
@@ -54,5 +68,6 @@ class StripeBillingEventRouter:
             StripeEventType.CHECKOUT_SESSION_COMPLETED: self.handle_complete_subscription_setup,
             StripeEventType.INVOICE_PAYMENT_SUCCEEDED: self.handle_invoice_payment_succeeded,
             StripeEventType.INVOICE_PAYMENT_FAILED: self.handle_invoice_payment_failed,
+            StripeEventType.CHARGE_SUCCEEDED: self.handle_charge_succeeded,
         }
         ROUTER_MAP[StripeEventType(self.payload["type"])]()
