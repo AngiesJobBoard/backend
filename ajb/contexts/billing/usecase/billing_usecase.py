@@ -11,13 +11,15 @@ from ajb.vendor.stripe.repository import (
 from ajb.vendor.stripe.models import (
     StripeCheckoutSessionCompleted,
     InvoicePaymentSucceeded,
-    ChargeSuccessful
+    ChargeSuccessful,
 )
 
 from .start_create_subscription import StartCreateSubscription
 from .complete_create_subscription import CompleteCreateSubscription
 from .create_subscription_usage import CreateSubscriptionUsage
 from .cancel_subscription import CancelSubscription
+from .start_update_subscription import StartUpdateSubscription
+from .complete_update_subscription import CompleteUpdateSubscription
 
 
 class NoSubscriptionUsageAllottedException(Exception):
@@ -51,9 +53,11 @@ class CompanyBillingUsecase(BaseUseCase):
         Getting this confirms the payment was successful and will allot usage on the platform for the associated company
         """
         CreateSubscriptionUsage(self.request_scope).create_usage_from_paid_invoice(data)
-    
+
     def create_company_usage_from_charge(self, data: ChargeSuccessful):
-        CreateSubscriptionUsage(self.request_scope).create_usage_from_app_sumo_single_payment(data)
+        CreateSubscriptionUsage(
+            self.request_scope
+        ).create_usage_from_app_sumo_single_payment(data)
 
     def get_company_subscription(self, company_id: str) -> CompanySubscription:
         return self.get_repository(
@@ -77,12 +81,24 @@ class CompanyBillingUsecase(BaseUseCase):
             self.request_scope, self.stripe
         ).cancel_company_subscription(company_id, reason)
 
-    def company_updates_subscription(
+    def company_starts_update_subscription(
         self, company_id: str, new_plan: SubscriptionPlan
-    ): ...
+    ):
+        return StartUpdateSubscription(
+            self.request_scope, self.stripe
+        ).start_update_subscription(company_id, new_plan)
+
+    def company_completes_update_subscription(self, data):
+        return CompleteUpdateSubscription(
+            self.request_scope, self.stripe
+        ).complete_update_subscription(data)
 
     def increment_company_usage(
         self, company_id: str, usage_type: UsageType, amount_to_increment: int = 1
     ) -> None:
-        """Increment usage for a company"""
-        pass
+        """This assumes that the usage already exists. If there is no usage object the action should have failed already"""
+        usage = self.get_current_company_usage(company_id)
+        usage.transaction_counts[usage_type] += amount_to_increment
+        self.get_repository(Collection.COMPANY_SUBSCRIPTION_USAGE_AND_BILLING).update(
+            usage.id, usage
+        )

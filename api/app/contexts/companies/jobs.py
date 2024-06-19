@@ -11,7 +11,10 @@ from ajb.contexts.companies.jobs.usecase import JobsUseCase
 from ajb.exceptions import TierLimitHitException, FeatureNotAvailableOnTier
 
 from api.middleware import scope
-from api.exceptions import TierLimitHTTPException, FeatureNotAvailableOnTierHTTPException
+from api.exceptions import (
+    TierLimitHTTPException,
+    FeatureNotAvailableOnTierHTTPException,
+)
 
 
 router = APIRouter(tags=["Company Jobs"], prefix="/companies/{company_id}/jobs")

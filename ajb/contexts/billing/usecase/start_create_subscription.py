@@ -2,7 +2,6 @@
 This module contains the business action for starting to create a new subscription
 """
 
-import os
 from datetime import datetime, timedelta
 
 from ajb.base import BaseUseCase, Collection, RequestScope
@@ -20,25 +19,8 @@ from ajb.contexts.billing.usage.repository import CompanySubscriptionUsageReposi
 from ajb.vendor.stripe.models import StripeCheckoutSessionCreated
 from ajb.exceptions import EntityNotFound
 
+from .SUBSCRIPTION_PRICE_MAP import SUBSCRIPTION_PRICE_MAP
 from ..billing_models import SubscriptionPlan
-
-# Not sure the best way to reference this data... so for now it's hardcoded? Replaceable by env vars? Who knows
-APP_SUMO_PRICE_ID = os.getenv("APP_SUMO_PRICE_ID", "price_1PSmTMDd0dqh9J6nKDa2buRV")
-SILVER_TIER_PRICE_ID = os.getenv(
-    "SILVER_TIER_PRICE_ID", "price_1PSmOVDd0dqh9J6nPqTZWjG5"
-)
-GOLD_TIER_PRICE_ID = os.getenv("GOLD_TIER_PRICE_ID", "price_1PSmOwDd0dqh9J6nisDSnpYZ")
-PLATINUM_TIER_PRICE_ID = os.getenv(
-    "PLATINUM_TIER_PRICE_ID", "price_1PSmPHDd0dqh9J6nF16RWPbC"
-)
-
-
-SUBSCRIPTION_PRICE_MAP: dict[SubscriptionPlan, str] = {
-    SubscriptionPlan.APPSUMO: APP_SUMO_PRICE_ID,
-    SubscriptionPlan.SILVER: SILVER_TIER_PRICE_ID,
-    SubscriptionPlan.GOLD: GOLD_TIER_PRICE_ID,
-    SubscriptionPlan.PLATINUM: PLATINUM_TIER_PRICE_ID,
-}
 
 
 class CompanyAlreadyHasSubscription(Exception):

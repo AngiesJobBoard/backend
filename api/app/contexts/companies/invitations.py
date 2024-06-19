@@ -50,7 +50,10 @@ def create_invitation(request: Request, company_id: str, data: UserCreateInvitat
         raise GenericHTTPException(400, str(e))
 
 
-@router.post("/companies/{company_id}/invitations/{invitation_id}/resend", response_model=Invitation)
+@router.post(
+    "/companies/{company_id}/invitations/{invitation_id}/resend",
+    response_model=Invitation,
+)
 def resend_invitation(request: Request, company_id: str, invitation_id: str):
     """Resends an invitation for a company"""
     return CompanyInvitationUseCase(scope(request)).user_resends_invitation(

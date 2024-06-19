@@ -167,6 +167,4 @@ class JobsUseCase(BaseUseCase):
             self.request_scope, company_id
         ).validate_feature_access(TierFeatures.PUBLIC_APPLICATION_PAGE)
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
-        return job_repo.update_fields(
-            job_id, job_is_public=is_available
-        )
+        return job_repo.update_fields(job_id, job_is_public=is_available)

@@ -28,6 +28,7 @@ class SubscriptionStatus(str, Enum):
     """
 
     PENDING_FIRST_PAYMENT = "pending_first_payment"
+    PENDING_UPDATE_PAYMENT = "pending_update_payment"
     ACTIVE = "active"
     INACTIVE = "inactive"
     CANCELLED = "cancelled"
@@ -48,7 +49,9 @@ class CreateCompanySubscription(BaseModel):
     current_usage_id: str | None = None
 
     @classmethod
-    def create_trial_subscription(cls, company_id: str, usage_id: str) -> "CreateCompanySubscription":
+    def create_trial_subscription(
+        cls, company_id: str, usage_id: str
+    ) -> "CreateCompanySubscription":
         return cls(
             company_id=company_id,
             plan=SubscriptionPlan.GOLD,
@@ -111,4 +114,14 @@ class UserUpdateCompanySubscription(BaseModel):
     plan: SubscriptionPlan
 
 
-class CompanySubscription(CreateCompanySubscription, BaseDataModel): ...
+class CompanySubscription(CreateCompanySubscription, BaseDataModel):
+
+    def update_to_new_subscription(
+        self, new_plan: SubscriptionPlan, new_stripe_subscription_id: str
+    ):
+        self.plan = new_plan
+        self.stripe_subscription_id = new_stripe_subscription_id
+        self.subscription_status = SubscriptionStatus.PENDING_UPDATE_PAYMENT
+        self.checkout_session = None
+        self.usage_cost_details = SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[new_plan]
+        self.subscription_features = SUBSCRIPTION_FEATURE_DEFAULTS[new_plan]

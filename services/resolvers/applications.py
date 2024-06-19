@@ -26,8 +26,6 @@ from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.webhooks.egress.applicants.usecase import (
     CompanyApplicantsWebhookEgress,
 )
-from ajb.contexts.billing.usecase import UsageType
-from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase
 from ajb.vendor.sendgrid.repository import SendgridRepository
 from ajb.vendor.openai.repository import OpenAIRepository, AsyncOpenAIRepository
 from ajb.exceptions import RepositoryNotProvided
@@ -129,10 +127,8 @@ class ApplicationEventsResolver:
     async def answer_application_questions(self) -> None:
         data = ApplicantAndCompany.model_validate(self.message.data)
         question_usecase = ApplicantQuestionsUsecase(self.request_scope, self.openai)
-        answered_questions = (
-            await question_usecase.update_application_with_questions_answered(
-                data.application_id
-            )
+        await question_usecase.update_application_with_questions_answered(
+            data.application_id
         )
 
     async def post_application_submission(self, send_webhooks: bool = True) -> None:

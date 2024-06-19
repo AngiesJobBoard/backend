@@ -105,5 +105,7 @@ class CompanyFixture:
             self.request_scope, company_id
         )
         return subscription_repo.create(
-            CreateCompanySubscription.create_trial_subscription(company_id, "need to add real usage ID here later...")
+            CreateCompanySubscription.create_trial_subscription(
+                company_id, "need to add real usage ID here later..."
+            )
         )

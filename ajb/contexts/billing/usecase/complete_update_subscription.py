@@ -12,27 +12,46 @@ if they are at 100 dollars a month and want to downgrade to 50, they are set up 
 if the prorated amount is less than the amount already paid, then there is no immediate charge.
 
 """
+
 from datetime import datetime, timedelta
 
-from ajb.base import BaseUseCase, Collection
+from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.contexts.companies.models import Company
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
 from ajb.contexts.billing.billing_audit_events.models import CreateAuditEvent
 from ajb.contexts.billing.usage.models import CreateMonthlyUsage
 from ajb.contexts.billing.usage.repository import CompanySubscriptionUsageRepository
 from ajb.vendor.stripe.models import InvoicePaymentSucceeded
+from ajb.vendor.stripe.repository import StripeRepository
 
 
-class CreateSubscriptionUsage(BaseUseCase):
-    def _store_raw_invoice_data(self, data: InvoicePaymentSucceeded) -> None:
+class InvoiceNotPaid(Exception):
+    pass
+
+
+class CompleteUpdateSubscription(BaseUseCase):
+    def __init__(
+        self, request_scope: RequestScope, stripe: StripeRepository | None = None
+    ):
+        super().__init__(request_scope)
+        self.stripe = stripe or StripeRepository()
+
+    def _store_raw_data(self, data: InvoicePaymentSucceeded) -> None:
         self.get_repository(Collection.BILLING_AUDIT_EVENTS).create(
             CreateAuditEvent(
-                company_id=None, type="subscription_update_invoice_paid", data=data.model_dump()
+                company_id=None,
+                type="complete_update_subscription",
+                data=data.model_dump(),
             )
         )
 
-    def create_usage_from_paid_invoice(self, data: InvoicePaymentSucceeded) -> None:
-        self._store_raw_invoice_data(data)
+    def validate_invoice(self, data: InvoicePaymentSucceeded) -> None:
+        if data.paid is False or data.status != "paid":
+            raise InvoiceNotPaid
+
+    def complete_update_subscription(self, data: InvoicePaymentSucceeded):
+        self._store_raw_data(data)
+        self.validate_invoice(data)
         company: Company = self.get_repository(Collection.COMPANIES).get_one(
             stripe_customer_id=data.customer
         )
@@ -48,7 +67,7 @@ class CreateSubscriptionUsage(BaseUseCase):
             CreateMonthlyUsage(
                 company_id=company.id,
                 usage_expires=datetime.fromtimestamp(data.effective_at)
-                + timedelta(days=40),  # ~1 month plus 10 day grace period
+                + timedelta(days=40),
                 invoice_details=data,
             )
         )

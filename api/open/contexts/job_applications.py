@@ -59,9 +59,7 @@ async def apply_to_job(
     filename = resume.filename
     content_type = resume.content_type
     file_end = filename.split(".")[-1]  # type: ignore
-    ApplicationUseCase(
-        JOB_APPLICATIONS_REQUEST_SCOPE
-    ).create_application_from_resume(
+    ApplicationUseCase(JOB_APPLICATIONS_REQUEST_SCOPE).create_application_from_resume(
         data=UserCreateResume(
             file_type=content_type or file_end,
             file_name=filename or f"resume.{file_end}",

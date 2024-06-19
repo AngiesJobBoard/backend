@@ -56,7 +56,10 @@ class BillingValidateUsageUseCase(BaseUseCase):
         This could be added later if needed.
         """
         # Check subscription is active
-        if self.subscription.subscription_status != SubscriptionStatus.ACTIVE:
+        if self.subscription.subscription_status not in [
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.PENDING_UPDATE_PAYMENT,
+        ]:
             raise SubscriptionNotActiveException
 
         # Check usage is not expired

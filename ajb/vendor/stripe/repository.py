@@ -7,7 +7,7 @@ way to take a company's usage data and create a Stripe invoice for that usage da
 from stripe import StripeClient
 
 from ajb.vendor.stripe.client_factory import StripeClientFactory
-from ajb.vendor.stripe.models import StripeCheckoutSessionCreated
+from ajb.vendor.stripe.models import StripeCheckoutSessionCreated, Subscription
 
 
 class StripeRepository:
@@ -27,7 +27,7 @@ class StripeRepository:
         company_id: str,
         stripe_customer_id: str,
         price_id: str,
-        charge_is_recurring: bool = True
+        charge_is_recurring: bool = True,
     ) -> StripeCheckoutSessionCreated:
         params = {
             "customer": stripe_customer_id,
@@ -55,17 +55,21 @@ class StripeRepository:
     def update_subscription(self, subscription_id: str, new_price_id: str):
         params = {
             "items": [
-                {
-                    "price": new_price_id,
-                    "quantity": 1
-                },
+                {"price": new_price_id, "quantity": 1},
                 {
                     "id": self.get_original_subscription_item_id(subscription_id),
                     "deleted": "true",
-                    "quantity": 1
-                }
+                    "quantity": 1,
+                },
             ],
             "proration_behavior": "always_invoice",
-            "billing_cycle_anchor": "now"
+            "billing_cycle_anchor": "now",
         }
-        return self.client.subscriptions.update(subscription_id, params=params)  # type: ignore
+        results = self.client.subscriptions.update(subscription_id, params=params)  # type: ignore
+        return Subscription(**results)
+
+
+repo = StripeRepository()
+repo.update_subscription("sub_1PTDYIDd0dqh9J6nTkYm7aIe", "price_1PSmPHDd0dqh9J6nF16RWPbC")
+
+# Need to check invoice payment succeeded billing reason to correctly route it, thats it

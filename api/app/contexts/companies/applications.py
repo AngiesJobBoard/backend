@@ -63,7 +63,7 @@ def get_all_company_applications(
         resume_text_contains,
         has_required_skill,
         status_filter.split(",") if status_filter else None,
-        completed_scans_only=False
+        completed_scans_only=False,
     )
     return build_pagination_response(
         results,
@@ -269,5 +269,7 @@ def get_application_public_form_data(
     res = JobPublicApplicationFormRepository(scope(request), job_id).get(
         public_application_id
     )
-    assert res.company_id == company_id  # mostly useless but need to use company id somehow
+    assert (
+        res.company_id == company_id
+    )  # mostly useless but need to use company id somehow
     return res

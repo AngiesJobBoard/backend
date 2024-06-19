@@ -23,7 +23,6 @@ from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
     ScanStatus,
 )
-from ajb.contexts.billing.usecase import CompanyBillingUsecase
 from ajb.contexts.companies.email_ingress_webhooks.models import (
     CompanyEmailIngress,
     EmailIngressType,

@@ -1,19 +1,17 @@
 from typing import cast, Any
 import re
 from concurrent.futures import ThreadPoolExecutor
-from ajb.base import (
-    BaseUseCase,
-    Collection,
-    RepoFilterParams,
-    Pagination,
-    RequestScope
-)
+from ajb.base import BaseUseCase, Collection, RepoFilterParams, Pagination, RequestScope
 from ajb.contexts.companies.recruiters.models import CreateRecruiter, RecruiterRole
 from ajb.contexts.users.models import User
 from ajb.base.events import (
     SourceServices,
 )
-from ajb.contexts.billing.validate_usage import BillingValidateUsageUseCase, TierFeatures, FeatureNotAvailableOnTier
+from ajb.contexts.billing.validate_usage import (
+    BillingValidateUsageUseCase,
+    TierFeatures,
+    FeatureNotAvailableOnTier,
+)
 from ajb.vendor.arango.models import Filter, Operator, Join
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
 from ajb.exceptions import RepositoryNotProvided
@@ -27,7 +25,7 @@ from .models import (
     CompanyGlobalSearchApplications,
     CompanyGlobalSearchResults,
     UpdateCompany,
-    CompanyImageUpload
+    CompanyImageUpload,
 )
 from .events import CompanyEventProducer
 
@@ -172,9 +170,9 @@ class CompaniesUseCase(BaseUseCase):
     def _update_job_applications_by_email(self, company_id: str, enabled: bool) -> None:
         # Only if feature is available on current subscription
         try:
-            BillingValidateUsageUseCase(self.request_scope, company_id).validate_feature_access(
-                TierFeatures.EMAIL_INGRESS
-            )
+            BillingValidateUsageUseCase(
+                self.request_scope, company_id
+            ).validate_feature_access(TierFeatures.EMAIL_INGRESS)
         except FeatureNotAvailableOnTier:
             return
 
@@ -204,11 +202,9 @@ class CompaniesUseCase(BaseUseCase):
     def update_company_main_image(self, company_id: str, data: CompanyImageUpload):
         if not self.storage_repo:
             raise RepositoryNotProvided("Storage")
-        
+
         company_repo = self.get_repository(Collection.COMPANIES)
-        remote_file_path = self._create_profile_picture_path(
-            company_id, data.file_type
-        )
+        remote_file_path = self._create_profile_picture_path(company_id, data.file_type)
         main_image_url = self.storage_repo.upload_bytes(
             data.picture_data, data.file_type, remote_file_path, True
         )

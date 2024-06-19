@@ -12,6 +12,7 @@ WEBHOOK_REQUEST_SCOPE = RequestScope(
 
 async def verify_stripe_webhook_event(request: Request) -> dict:
     # AJBTODO More validation later...
+    # Stripe sends us a signature in the header that we can use to verify the payload
     return await request.json()
 
 
