@@ -41,7 +41,6 @@ class StripeRepository:
             "mode": "subscription" if charge_is_recurring else "payment",
             "success_url": "http://localhost:3000/subscription-success",
             "client_reference_id": company_id,
-            "description": "BLANFIHAWSDINASD"
         }
         results = self.client.checkout.sessions.create(params=params)  # type: ignore
         return StripeCheckoutSessionCreated(**results)
