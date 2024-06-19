@@ -63,6 +63,7 @@ class StripeWebhookEventRouter:
         The result still needs to create the usage object the same way.
         """
         structured_data = ChargeSuccessful(**self.payload["data"]["object"])
+        print(structured_data)
         if structured_data.description == "Subscription update":
             # We are getting both a charge successful AND an invoice payment succeeded event for the same action - update subscription
             # We only want to handle the invoice payment succeeded event
@@ -84,5 +85,4 @@ class StripeWebhookEventRouter:
             StripeEventType.CHARGE_SUCCEEDED: self.handle_charge_succeeded,
         }
         payload_type = StripeEventType(self.payload["type"])
-        print(f"Routing stripe event: {payload_type}")
         ROUTER_MAP[payload_type]()
