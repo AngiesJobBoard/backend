@@ -21,7 +21,7 @@ class StripeEventType(str, Enum):
     CHARGE_SUCCEEDED = "charge.succeeded"
 
 
-class StripeBillingEventRouter:
+class StripeWebhookEventRouter:
     def __init__(
         self,
         request_scope: RequestScope,

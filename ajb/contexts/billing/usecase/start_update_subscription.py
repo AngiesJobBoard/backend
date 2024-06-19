@@ -65,6 +65,7 @@ class StartUpdateSubscription(BaseUseCase):
             company_subscription is None
             or company_subscription.stripe_subscription_id is None
         ):
+            # This will also be thrown if the user is on a free trial, because that has no subscription id in stripe
             raise NoInitialSubscriptionException
 
         results = self.stripe.update_subscription(

@@ -87,7 +87,7 @@ class ChargeSuccessful(BaseModel):
     paid: bool
     receipt_url: str
     status: str
-    description: str  # Currently only looking for 'Subscription update'
+    description: str | None = None  # Currently only looking for 'Subscription update'
 
 
 class Subscription(BaseModel):

@@ -1,3 +1,9 @@
+"""
+If a user is on a free trial they will have a subscription object BUT with no stripe customer ID or anything.
+
+When their trial expires they are asked to create a subscription
+"""
+
 from ajb.base import BaseUseCase, RequestScope, Collection
 from ajb.contexts.billing.subscriptions.models import (
     CompanySubscription,
@@ -55,6 +61,7 @@ class CompanyBillingUsecase(BaseUseCase):
         CreateSubscriptionUsage(self.request_scope).create_usage_from_paid_invoice(data)
 
     def create_company_usage_from_charge(self, data: ChargeSuccessful):
+        """This is only used for appsumo to handle processing the one time charge that creates some usage"""
         CreateSubscriptionUsage(
             self.request_scope
         ).create_usage_from_app_sumo_single_payment(data)
