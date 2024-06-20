@@ -96,6 +96,12 @@ class StartCreateSubscription(BaseUseCase):
             ):
                 raise BadFirstSubscriptionPlan
 
+            if potential_subscription.plan in [
+                SubscriptionPlan.GOLD_TRIAL,
+                SubscriptionPlan.APPSUMO,
+            ]:
+                return
+
             # If you're on a real plan, you can not create an additional subscription it has to be updated
             raise CompanyAlreadyHasSubscription
 

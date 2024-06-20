@@ -40,7 +40,7 @@ class StripeRepository:
                 }
             ],
             "mode": "subscription" if charge_is_recurring else "payment",
-            "success_url": f"{SETTINGS.APP_URL}/subscription?status=confirm",
+            "success_url": f"{SETTINGS.APP_URL}/subscription/confirm",
             "client_reference_id": company_id,
         }
         results = self.client.checkout.sessions.create(params=params)  # type: ignore
