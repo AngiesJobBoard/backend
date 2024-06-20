@@ -58,7 +58,7 @@ class StartUpdateSubscription(BaseUseCase):
     ):
         if company_subscription.plan == SubscriptionPlan.APPSUMO:
             raise CannotUpdateSubscriptionException(
-                "Cannot update an AppSumo subscription"
+                "Cannot update an App Sumo subscription, new subscription must be created"
             )
         if company_subscription.plan == SubscriptionPlan.GOLD_TRIAL:
             raise CannotUpdateSubscriptionException(

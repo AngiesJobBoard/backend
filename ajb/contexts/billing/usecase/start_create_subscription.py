@@ -78,17 +78,27 @@ class StartCreateSubscription(BaseUseCase):
                 self.request_scope, company_id
             ).get_sub_entity()
 
-            if potential_subscription.plan in [
-                SubscriptionPlan.GOLD_TRIAL,
-                SubscriptionPlan.APPSUMO,
-            ]:
-                if plan_to_create in [
+            # If you on a trial, you can go to app sumo deal or a real plan
+            if (
+                potential_subscription.plan == SubscriptionPlan.GOLD_TRIAL
+                and plan_to_create == SubscriptionPlan.GOLD_TRIAL
+            ):
+                raise BadFirstSubscriptionPlan
+
+            # If you're an app sumo, you can only go up to a real plan
+            if (
+                potential_subscription.plan == SubscriptionPlan.APPSUMO
+                and plan_to_create
+                in [
                     SubscriptionPlan.GOLD_TRIAL,
                     SubscriptionPlan.APPSUMO,
-                ]:
-                    raise BadFirstSubscriptionPlan
-                return
+                ]
+            ):
+                raise BadFirstSubscriptionPlan
+
+            # If you're on a real plan, you can not create an additional subscription it has to be updated
             raise CompanyAlreadyHasSubscription
+
         except EntityNotFound:
             return
 
