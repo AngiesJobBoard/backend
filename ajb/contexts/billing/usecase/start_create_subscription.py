@@ -33,6 +33,12 @@ class BadFirstSubscriptionPlan(Exception):
         super().__init__(self.message)
 
 
+class BadAppSumoCode(Exception):
+    def __init__(self):
+        self.message = "The provided appsumo code is invalid."
+        super().__init__(self.message)
+
+
 class StartCreateSubscription(BaseUseCase):
     def __init__(
         self, request_scope: RequestScope, stripe: StripeRepository | None = None
@@ -57,23 +63,6 @@ class StartCreateSubscription(BaseUseCase):
         )
         return self.get_repository(Collection.COMPANIES).update_fields(
             company.id, stripe_customer_id=results.id
-        )
-
-    def _create_subscription_object(
-        self,
-        company: Company,
-        plan: SubscriptionPlan,
-        checkout_session: StripeCheckoutSessionCreated,
-    ) -> CreateCompanySubscription:
-        if plan == SubscriptionPlan.APPSUMO:
-            return CreateCompanySubscription.create_app_sumo_subscription(
-                company.id, str(company.stripe_customer_id), checkout_session
-            )
-        return CreateCompanySubscription.create_subscription(
-            company.id,
-            str(company.stripe_customer_id),
-            plan,
-            checkout_session,
         )
 
     def check_if_company_already_has_subscription(
@@ -104,7 +93,7 @@ class StartCreateSubscription(BaseUseCase):
             return
 
     def start_create_subscription(
-        self, company_id: str, plan: SubscriptionPlan
+        self, company_id: str, plan: SubscriptionPlan, appsumo_code: str | None
     ) -> CompanySubscription:
         """
         This starts the subscription process by making sure the company is registered in stripe
@@ -121,6 +110,10 @@ class StartCreateSubscription(BaseUseCase):
 
         if plan == SubscriptionPlan.GOLD_TRIAL:
             return self.create_free_trial_subscription(company)
+        if plan == SubscriptionPlan.APPSUMO:
+            if not appsumo_code:
+                raise BadAppSumoCode
+            return self.create_appsumo_subscription(company, appsumo_code)
 
         # Ensure the company is established in stripe as a customer
         if company.stripe_customer_id is None:
@@ -150,8 +143,11 @@ class StartCreateSubscription(BaseUseCase):
         return CompanySubscriptionRepository(
             self.request_scope, company_id
         ).set_sub_entity(
-            self._create_subscription_object(
-                company_with_stripe, plan, checkout_session
+            CreateCompanySubscription.create_subscription(
+                company.id,
+                str(company.stripe_customer_id),
+                plan,
+                checkout_session,
             )
         )
 
@@ -176,6 +172,38 @@ class StartCreateSubscription(BaseUseCase):
             self.request_scope, company.id
         ).set_sub_entity(
             CreateCompanySubscription.create_trial_subscription(
+                company.id, created_usage.id
+            )
+        )
+        return created_subscription
+
+    def _validate_appsumo_code(self, appsumo_code: str) -> bool:
+        # Where are codes stored? How are they generated? How are they validated?
+        ...
+
+    def create_appsumo_subscription(
+        self, company: Company, appsumo_code: str
+    ) -> CompanySubscription:
+        """
+        The user has an option to elect for an appsumo subscription. This will no require them to go
+        to stripe or pay for anything. Their subscription will be validated from a code they've provided.
+        If the code is correct the usage will not expire and the subscription will become active immediately.
+        """
+        self._validate_appsumo_code(appsumo_code)  # Will throw an exception if invalid
+        created_usage = CompanySubscriptionUsageRepository(
+            self.request_scope, company.id
+        ).create(
+            CreateMonthlyUsage(
+                company_id=company.id,
+                usage_expires=None,
+                invoice_details=None,
+                free_trial_usage=False,
+            )
+        )
+        created_subscription = CompanySubscriptionRepository(
+            self.request_scope, company.id
+        ).set_sub_entity(
+            CreateCompanySubscription.create_app_sumo_subscription(
                 company.id, created_usage.id
             )
         )

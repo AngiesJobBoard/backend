@@ -9,7 +9,6 @@ from ajb.contexts.billing.usecase import CompanyBillingUsecase
 from ajb.vendor.stripe.models import (
     StripeCheckoutSessionCompleted,
     InvoicePaymentSucceeded,
-    ChargeSuccessful,
 )
 from ajb.vendor.stripe.repository import StripeRepository
 
@@ -54,24 +53,6 @@ class StripeWebhookEventRouter:
     def handle_invoice_payment_failed(self) -> None:
         raise NotImplementedError("Invoice payment failed event not implemented")
 
-    def handle_charge_succeeded(self) -> None:
-        """
-        Comes from the charge succeeded event.
-
-        This is specific to the AppSumo deal.
-        They do not get a subscription but instead a single charge which is a different event in stripe.
-        The result still needs to create the usage object the same way.
-        """
-        structured_data = ChargeSuccessful(**self.payload["data"]["object"])
-        if structured_data.description == "Subscription update":
-            # We are getting both a charge successful AND an invoice payment succeeded event for the same action - update subscription
-            # We only want to handle the invoice payment succeeded event
-            return
-
-        CompanyBillingUsecase(
-            self.request_scope, self.stripe
-        ).create_company_usage_from_charge(structured_data)
-
     def route_event(self) -> None:
         """
         There is an attribute 'type' on every payload from stripe that tells us what type of event it is.
@@ -81,7 +62,5 @@ class StripeWebhookEventRouter:
             StripeEventType.CHECKOUT_SESSION_COMPLETED: self.handle_complete_subscription_setup,
             StripeEventType.INVOICE_PAYMENT_SUCCEEDED: self.handle_invoice_payment_succeeded,
             StripeEventType.INVOICE_PAYMENT_FAILED: self.handle_invoice_payment_failed,
-            StripeEventType.CHARGE_SUCCEEDED: self.handle_charge_succeeded,
         }
-        payload_type = StripeEventType(self.payload["type"])
-        ROUTER_MAP[payload_type]()
+        ROUTER_MAP[StripeEventType(self.payload["type"])]()

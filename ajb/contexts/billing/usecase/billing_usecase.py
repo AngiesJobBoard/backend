@@ -17,7 +17,6 @@ from ajb.vendor.stripe.repository import (
 from ajb.vendor.stripe.models import (
     StripeCheckoutSessionCompleted,
     InvoicePaymentSucceeded,
-    ChargeSuccessful,
 )
 
 from .start_create_subscription import StartCreateSubscription
@@ -40,12 +39,12 @@ class CompanyBillingUsecase(BaseUseCase):
         self.stripe = stripe or StripeRepository()
 
     def start_create_subscription(
-        self, company_id: str, plan: SubscriptionPlan
+        self, company_id: str, plan: SubscriptionPlan, appsumo_code: str | None
     ) -> CompanySubscription:
         """Initiated by user through the API - creates checkout session in stripe and attached subscription object to company pending the payment."""
         return StartCreateSubscription(
             self.request_scope, self.stripe
-        ).start_create_subscription(company_id, plan)
+        ).start_create_subscription(company_id, plan, appsumo_code)
 
     def complete_create_subscription(self, data: StripeCheckoutSessionCompleted):
         """Webhook from Stripe - completes the subscription creation process after user completes checkout."""
@@ -59,12 +58,6 @@ class CompanyBillingUsecase(BaseUseCase):
         Getting this confirms the payment was successful and will allot usage on the platform for the associated company
         """
         CreateSubscriptionUsage(self.request_scope).create_usage_from_paid_invoice(data)
-
-    def create_company_usage_from_charge(self, data: ChargeSuccessful):
-        """This is only used for appsumo to handle processing the one time charge that creates some usage"""
-        CreateSubscriptionUsage(
-            self.request_scope
-        ).create_usage_from_app_sumo_single_payment(data)
 
     def get_company_subscription(self, company_id: str) -> CompanySubscription:
         return self.get_repository(

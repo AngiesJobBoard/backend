@@ -65,30 +65,27 @@ class CreateCompanySubscription(BaseModel):
             subscription_status=SubscriptionStatus.ACTIVE,
             checkout_session=None,
             current_usage_id=usage_id,
-            free_trial_ends = datetime.now() + timedelta(days=14)
+            free_trial_ends=datetime.now() + timedelta(days=14),
         )
 
     @classmethod
     def create_app_sumo_subscription(
-        cls,
-        company_id: str,
-        stripe_customer_id: str,
-        checkout_session: StripeCheckoutSessionCreated,
+        cls, company_id: str, usage_id: str
     ) -> "CreateCompanySubscription":
         return cls(
             company_id=company_id,
             plan=SubscriptionPlan.APPSUMO,
             start_date=datetime.now(),
             end_date=None,
-            stripe_customer_id=stripe_customer_id,
             usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[
                 SubscriptionPlan.APPSUMO
             ],
             subscription_features=SUBSCRIPTION_FEATURE_DEFAULTS[
                 SubscriptionPlan.APPSUMO
             ],
-            subscription_status=SubscriptionStatus.PENDING_FIRST_PAYMENT,
-            checkout_session=checkout_session,
+            subscription_status=SubscriptionStatus.ACTIVE,
+            checkout_session=None,
+            current_usage_id=usage_id,
         )
 
     @classmethod
@@ -114,6 +111,7 @@ class CreateCompanySubscription(BaseModel):
 
 class UserUpdateCompanySubscription(BaseModel):
     plan: SubscriptionPlan
+    appsumo_code: str | None = None
 
 
 class CompanySubscription(CreateCompanySubscription, BaseDataModel):

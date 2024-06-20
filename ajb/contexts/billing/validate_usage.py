@@ -74,7 +74,7 @@ class BillingValidateUsageUseCase(BaseUseCase):
             raise SubscriptionValidationError("Subscription is not active")
 
         # Check usage is not expired
-        if self.usage.usage_expires < datetime.now():
+        if self.usage.usage_expires and self.usage.usage_expires < datetime.now():
             raise SubscriptionValidationError("Usage has expired")
 
         # Check if usage has hit tier limit

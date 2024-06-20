@@ -29,7 +29,7 @@ def start_create_subscription(
     request: Request, company_id: str, subscription: UserUpdateCompanySubscription
 ):
     return CompanyBillingUsecase(scope(request)).start_create_subscription(
-        company_id, subscription.plan
+        company_id, subscription.plan, subscription.appsumo_code
     )
 
 

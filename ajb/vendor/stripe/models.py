@@ -56,12 +56,13 @@ class InvoicePaymentSucceeded(BaseModel):
     livemode: bool
     paid: bool
     status: str
-    billing_reason: str  # Currently expect 'subscription_create', 'subscription_cycle', or 'subscription_update', 
+    billing_reason: str  # Currently expect 'subscription_create', 'subscription_cycle', or 'subscription_update',
     subscription: str  # This is the generated subscription id
 
 
 class InvoicePaymentFailed(BaseModel):
     """Not currently used..."""
+
     id: str
     created: int
     customer: str
@@ -72,22 +73,6 @@ class InvoicePaymentFailed(BaseModel):
     paid: bool
     status: str
     subscription: str  # This is the generated subscription id
-
-
-class ChargeSuccessful(BaseModel):
-    """
-    This is used exclusively for AppSumo single payments.
-    We also recieve and event when a subscription is updated but we ignore that because we only want to process the invoice payment successful event.
-    """
-    id: str
-    created: int
-    amount: int
-    amount_captured: int
-    customer: str
-    paid: bool
-    receipt_url: str
-    status: str
-    description: str | None = None  # Currently only looking for 'Subscription update'
 
 
 class Subscription(BaseModel):

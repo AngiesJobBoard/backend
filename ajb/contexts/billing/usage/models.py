@@ -10,7 +10,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from ajb.base import BaseDataModel
-from ajb.vendor.stripe.models import InvoicePaymentSucceeded, ChargeSuccessful
+from ajb.vendor.stripe.models import InvoicePaymentSucceeded
 
 from ..billing_models import UsageType
 
@@ -20,8 +20,8 @@ class CreateMonthlyUsage(BaseModel):
     transaction_counts: dict[UsageType, int] = Field(
         default_factory=lambda: {usage_type: 0 for usage_type in UsageType}
     )
-    usage_expires: datetime
-    invoice_details: InvoicePaymentSucceeded | ChargeSuccessful | None
+    usage_expires: datetime | None
+    invoice_details: InvoicePaymentSucceeded | None
     free_trial_usage: bool = False
 
 

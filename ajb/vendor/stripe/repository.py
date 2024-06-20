@@ -8,6 +8,7 @@ from stripe import StripeClient
 
 from ajb.vendor.stripe.client_factory import StripeClientFactory
 from ajb.vendor.stripe.models import StripeCheckoutSessionCreated, Subscription
+from ajb.config.settings import SETTINGS
 
 
 class StripeRepository:
@@ -39,7 +40,7 @@ class StripeRepository:
                 }
             ],
             "mode": "subscription" if charge_is_recurring else "payment",
-            "success_url": "http://localhost:3000/subscription?status=confirm",
+            "success_url": f"{SETTINGS.APP_URL}/subscription?status=confirm",
             "client_reference_id": company_id,
         }
         results = self.client.checkout.sessions.create(params=params)  # type: ignore
@@ -67,9 +68,3 @@ class StripeRepository:
         }
         results = self.client.subscriptions.update(subscription_id, params=params)  # type: ignore
         return Subscription(**results)
-
-
-repo = StripeRepository()
-repo.update_subscription("sub_1PTDYIDd0dqh9J6nTkYm7aIe", "price_1PSmPHDd0dqh9J6nF16RWPbC")
-
-# Need to check invoice payment succeeded billing reason to correctly route it, thats it

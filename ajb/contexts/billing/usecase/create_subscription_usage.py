@@ -11,12 +11,14 @@ from datetime import datetime, timedelta
 
 from ajb.base import BaseUseCase, Collection
 from ajb.contexts.companies.models import Company
-from ajb.contexts.billing.subscriptions.models import SubscriptionPlan, SubscriptionStatus
+from ajb.contexts.billing.subscriptions.models import (
+    SubscriptionPlan,
+)
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
 from ajb.contexts.billing.billing_audit_events.models import CreateAuditEvent
 from ajb.contexts.billing.usage.models import CreateMonthlyUsage
 from ajb.contexts.billing.usage.repository import CompanySubscriptionUsageRepository
-from ajb.vendor.stripe.models import InvoicePaymentSucceeded, ChargeSuccessful
+from ajb.vendor.stripe.models import InvoicePaymentSucceeded
 
 
 class InvoiceNotPaid(Exception):
@@ -28,14 +30,12 @@ class MismatchedSubscription(Exception):
 
 
 class CreateSubscriptionUsage(BaseUseCase):
-    def _store_raw_invoice_data(
-        self, data: InvoicePaymentSucceeded | ChargeSuccessful, app_sumo: bool = False
-    ) -> None:
+    def _store_raw_invoice_data(self, data: InvoicePaymentSucceeded) -> None:
         self.get_repository(Collection.BILLING_AUDIT_EVENTS).create(
             CreateAuditEvent(
                 company_id=None,
                 type="invoice_paid",
-                data={"app_sumo_invoice": app_sumo, **data.model_dump()},
+                data=data.model_dump(),
             )
         )
 
@@ -79,33 +79,4 @@ class CreateSubscriptionUsage(BaseUseCase):
             )
         )
         company_subscription.current_usage_id = created_usage.id
-        subscription_repo.set_sub_entity(company_subscription)
-
-    def create_usage_from_app_sumo_single_payment(self, data: ChargeSuccessful) -> None:
-        self._store_raw_invoice_data(data, app_sumo=True)
-        assert data.status == "succeeded"
-        assert data.paid is True
-
-        company: Company = self.get_repository(Collection.COMPANIES).get_one(
-            stripe_customer_id=data.customer
-        )
-        subscription_repo = CompanySubscriptionRepository(
-            self.request_scope, company.id
-        )
-        company_subscription = subscription_repo.get_sub_entity()
-
-        created_usage = CompanySubscriptionUsageRepository(
-            self.request_scope, company.id
-        ).create(
-            CreateMonthlyUsage(
-                company_id=company.id,
-                usage_expires=self._get_usage_expiry(
-                    datetime.now(),
-                    company_subscription.plan,
-                ),
-                invoice_details=data,
-            )
-        )
-        company_subscription.current_usage_id = created_usage.id
-        company_subscription.subscription_status = SubscriptionStatus.ACTIVE
         subscription_repo.set_sub_entity(company_subscription)
