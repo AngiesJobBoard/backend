@@ -14,8 +14,9 @@ from ajb.contexts.billing.subscriptions.models import (
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
 from ajb.vendor.stripe.repository import StripeRepository
 from ajb.contexts.billing.billing_audit_events.models import CreateAuditEvent
-from ajb.contexts.billing.usage.models import CreateMonthlyUsage, MonthlyUsage
+from ajb.contexts.billing.usage.models import CreateMonthlyUsage
 from ajb.contexts.billing.usage.repository import CompanySubscriptionUsageRepository
+from ajb.contexts.billing.discount_codes.models import DiscountCode, CodeType
 from ajb.vendor.stripe.models import StripeCheckoutSessionCreated
 from ajb.exceptions import EntityNotFound
 
@@ -25,6 +26,12 @@ from ..billing_models import SubscriptionPlan
 
 class CompanyAlreadyHasSubscription(Exception):
     pass
+
+
+class InvalidDiscountCode(Exception):
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
 
 
 class BadFirstSubscriptionPlan(Exception):
@@ -96,6 +103,7 @@ class StartCreateSubscription(BaseUseCase):
             ):
                 raise BadFirstSubscriptionPlan
 
+            # Otherwise these plans can create a new subscription
             if potential_subscription.plan in [
                 SubscriptionPlan.GOLD_TRIAL,
                 SubscriptionPlan.APPSUMO,
@@ -193,9 +201,25 @@ class StartCreateSubscription(BaseUseCase):
         )
         return created_subscription
 
-    def _validate_appsumo_code(self, appsumo_code: str) -> bool:
-        # Where are codes stored? How are they generated? How are they validated?
-        ...
+    def _validate_appsumo_code(self, appsumo_code: str) -> None:
+        discount_repo = self.get_repository(Collection.DISCOUNT_CODES)
+        try:
+            discount_object: DiscountCode = discount_repo.get_one(code=appsumo_code)
+
+            if discount_object.has_been_used:
+                raise InvalidDiscountCode("Code has been used")
+
+            if discount_object.expires and discount_object.expires < datetime.now():
+                raise InvalidDiscountCode("Code is expired")
+
+            if discount_object.code_type != CodeType.APP_SUMO:
+                raise InvalidDiscountCode("Not an app sumo code")
+
+            # SUCCESS! The codee is valid and we will set it to used
+            discount_repo.update_fields(discount_object.id, has_been_used=True)
+
+        except EntityNotFound:
+            raise InvalidDiscountCode("Code not found")
 
     def create_appsumo_subscription(
         self, company: Company, appsumo_code: str
@@ -223,4 +247,5 @@ class StartCreateSubscription(BaseUseCase):
                 company.id, created_usage.id
             )
         )
+
         return created_subscription
