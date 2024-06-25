@@ -1,6 +1,6 @@
 import asyncio
 from unittest.mock import patch
-from ajb.base.events import BaseKafkaMessage
+from ajb.base.events import BaseKafkaMessage, KafkaTopic
 from ajb.config.settings import SETTINGS
 from ajb.contexts.companies.jobs.job_score.ai_job_score import JobScore
 from ajb.contexts.companies.jobs.repository import JobRepository
@@ -25,7 +25,7 @@ def test_company_job_resolvers(request_scope):
                 "job_id": job.id,
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),

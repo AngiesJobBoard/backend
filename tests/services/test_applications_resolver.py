@@ -2,7 +2,7 @@ from datetime import datetime
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from ajb.base.events import BaseKafkaMessage
+from ajb.base.events import BaseKafkaMessage, KafkaTopic
 from ajb.base import Collection
 from ajb.common.models import AnswerEnum, Location, QuestionStatus
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
@@ -12,7 +12,6 @@ from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.usecase.application_usecase import ApplicationUseCase
 from ajb.contexts.companies.api_egress_webhooks.models import (
     CompanyAPIEgress,
-    EgressObjectType,
     EgressWebhookEvent,
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
@@ -58,7 +57,7 @@ def test_upload_resume(request_scope):
                 "resume_id": "1",
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
@@ -116,7 +115,7 @@ def test_company_gets_match_score(request_scope):
                 "application_id": created_application.id,
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
@@ -176,7 +175,7 @@ def test_extract_application_filters(request_scope):
                 "application_id": created_application.id,
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
@@ -192,6 +191,7 @@ def test_extract_application_filters(request_scope):
 
     # Check application filters
     retrieved_application = application_repository.get(created_application.id)
+    assert retrieved_application.additional_filters
     assert (
         retrieved_application.additional_filters.in_same_state_as_location == True
     )  # Validate that the patched result was saved to filters
@@ -239,7 +239,7 @@ def test_answer_application_questions(request_scope):
                 "application_id": created_application.id,
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
@@ -262,6 +262,7 @@ def test_answer_application_questions(request_scope):
 
     # Assertions here
     retrieved_app = application_repository.get(created_application.id)
+    assert retrieved_app.application_questions
     assert (
         len(retrieved_app.application_questions) == 1
     )  # There should be 1 application question
@@ -308,7 +309,7 @@ def test_application_events(request_scope):
                 "application_id": created_application.id,
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
