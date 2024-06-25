@@ -1,5 +1,6 @@
-import asyncio
+import pytest
 from unittest.mock import patch
+
 from ajb.base.events import BaseKafkaMessage, KafkaTopic
 from ajb.config.settings import SETTINGS
 from ajb.contexts.companies.jobs.job_score.ai_job_score import JobScore
@@ -9,7 +10,8 @@ from ajb.fixtures.companies import CompanyFixture
 from services.resolvers.companies import CompanyEventsResolver
 
 
-def test_company_job_resolvers(request_scope):
+@pytest.mark.asyncio
+async def test_company_job_resolvers(request_scope):
     # Create company & job
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
@@ -38,7 +40,7 @@ def test_company_job_resolvers(request_scope):
         "ajb.contexts.companies.jobs.job_score.ai_job_score.AIJobScore.get_job_score",
         return_value=mock_return_value,
     ):
-        asyncio.run(resolver.company_creates_job())
+        await resolver.company_creates_job()
 
     # Validate job creation
     retrieved_job = job_repo.get(job.id)
@@ -57,7 +59,7 @@ def test_company_job_resolvers(request_scope):
         "ajb.contexts.companies.jobs.job_score.ai_job_score.AIJobScore.get_job_score",
         return_value=mock_return_value,
     ):
-        asyncio.run(resolver.company_updates_job())
+        await resolver.company_updates_job()
 
     # Validate job updates
     retrieved_job = job_repo.get(job.id)
