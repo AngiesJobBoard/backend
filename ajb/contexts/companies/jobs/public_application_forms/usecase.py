@@ -48,8 +48,10 @@ class JobPublicApplicationFormUsecase(BaseUseCase):
             # Only update if the field is null? Hmmmmm.... business logic..
             if match.application_form_id is not None:
                 continue
-            application_repo.update_fields(match.id, application_form_id=created_application.id)
-        
+            application_repo.update_fields(
+                match.id, application_form_id=created_application.id
+            )
+
         return len(potential_matches) > 0
 
     def submit_public_job_application(

@@ -33,7 +33,9 @@ class CreateApplicationFromResumeResolver(BaseUseCase):
             return partial_application
 
         partial_application_dict = partial_application.model_dump()
-        additional_partial_data_dict = additional_partial_data.model_dump(exclude_none=True)
+        additional_partial_data_dict = additional_partial_data.model_dump(
+            exclude_none=True
+        )
         partial_application_dict.update(additional_partial_data_dict)
         return CreateApplication(**partial_application_dict)
 

@@ -269,5 +269,7 @@ def get_application_public_form_data(
     res = JobPublicApplicationFormRepository(scope(request), job_id).get(
         public_application_id
     )
-    assert res.company_id == company_id  # mostly useless but need to use company id somehow
+    assert (
+        res.company_id == company_id
+    )  # mostly useless but need to use company id somehow
     return res

@@ -1,8 +1,8 @@
 from datetime import datetime
-import asyncio
+import pytest
 from unittest.mock import MagicMock, patch
 
-from ajb.base.events import BaseKafkaMessage
+from ajb.base.events import BaseKafkaMessage, KafkaTopic
 from ajb.base import Collection
 from ajb.common.models import AnswerEnum, Location, QuestionStatus
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
@@ -12,7 +12,6 @@ from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.usecase.application_usecase import ApplicationUseCase
 from ajb.contexts.companies.api_egress_webhooks.models import (
     CompanyAPIEgress,
-    EgressObjectType,
     EgressWebhookEvent,
 )
 from ajb.contexts.companies.jobs.repository import JobRepository
@@ -26,7 +25,8 @@ from services.resolvers.applications import (
 from ajb.config.settings import SETTINGS
 
 
-def test_upload_resume(request_scope):
+@pytest.mark.asyncio
+async def test_upload_resume(request_scope):
     # Create company & job
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
@@ -58,7 +58,7 @@ def test_upload_resume(request_scope):
                 "resume_id": "1",
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
@@ -76,7 +76,7 @@ def test_upload_resume(request_scope):
         "ajb.contexts.applications.extract_data.usecase.ResumeExtractorUseCase.extract_resume_information",
         return_value=example_resume,
     ):
-        asyncio.run(resolver.upload_resume())
+        await resolver.upload_resume()
 
     # Assertions
     assert (
@@ -84,7 +84,8 @@ def test_upload_resume(request_scope):
     )  # The application name should be pulled in from the resume now
 
 
-def test_company_gets_match_score(request_scope):
+@pytest.mark.asyncio
+async def test_company_gets_match_score(request_scope):
     # Create company & job
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
@@ -116,7 +117,7 @@ def test_company_gets_match_score(request_scope):
                 "application_id": created_application.id,
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
@@ -130,7 +131,7 @@ def test_company_gets_match_score(request_scope):
             match_score=99, match_reason="Apply guy is the best."
         ),
     ):
-        asyncio.run(resolver.company_gets_match_score())
+        await resolver.company_gets_match_score()
 
     # Assert match score & high matching applicants
     assert (
@@ -140,7 +141,8 @@ def test_company_gets_match_score(request_scope):
     assert job_repo.get(job.id).high_matching_applicants == 1
 
 
-def test_extract_application_filters(request_scope):
+@pytest.mark.asyncio
+async def test_extract_application_filters(request_scope):
     # Create company & job
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
@@ -176,7 +178,7 @@ def test_extract_application_filters(request_scope):
                 "application_id": created_application.id,
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
@@ -188,10 +190,11 @@ def test_extract_application_filters(request_scope):
         "ajb.contexts.applications.models.Application.applicant_is_in_same_state_as_job",
         return_value=True,
     ):
-        asyncio.run(resolver.extract_application_filters())
+        await resolver.extract_application_filters()
 
     # Check application filters
     retrieved_application = application_repository.get(created_application.id)
+    assert retrieved_application.additional_filters
     assert (
         retrieved_application.additional_filters.in_same_state_as_location == True
     )  # Validate that the patched result was saved to filters
@@ -200,7 +203,8 @@ def test_extract_application_filters(request_scope):
     )  # Validate distance between two given locations is correct
 
 
-def test_answer_application_questions(request_scope):
+@pytest.mark.asyncio
+async def test_answer_application_questions(request_scope):
     # Create company & job
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
@@ -239,7 +243,7 @@ def test_answer_application_questions(request_scope):
                 "application_id": created_application.id,
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
@@ -258,10 +262,11 @@ def test_answer_application_questions(request_scope):
         "ajb.vendor.openai.repository.AsyncOpenAIRepository.json_prompt",
         return_value=patched_json,
     ):
-        asyncio.run(resolver.answer_application_questions())
+        await resolver.answer_application_questions()
 
     # Assertions here
     retrieved_app = application_repository.get(created_application.id)
+    assert retrieved_app.application_questions
     assert (
         len(retrieved_app.application_questions) == 1
     )  # There should be 1 application question
@@ -280,7 +285,8 @@ def test_answer_application_questions(request_scope):
     )  # The reasoning should reflect the response from the patched JSON
 
 
-def test_application_events(request_scope):
+@pytest.mark.asyncio
+async def test_application_events(request_scope):
     # Create company & job
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
@@ -308,7 +314,7 @@ def test_application_events(request_scope):
                 "application_id": created_application.id,
             },
             requesting_user_id="test",
-            topic=SETTINGS.KAFKA_APPLICATIONS_TOPIC,
+            topic=KafkaTopic(SETTINGS.KAFKA_APPLICATIONS_TOPIC),
             event_type="test",
             source_service="my_service_name",
         ),
@@ -347,16 +353,16 @@ def test_application_events(request_scope):
         new_callable=MagicMock,
     ) as mock_send_request:
         # Test post application submission event
-        asyncio.run(resolver.post_application_submission())
+        await resolver.post_application_submission()
         mock_send_request.assert_called()  # Make sure that the webhook request was sent
         mock_send_request.reset_mock()  # Reset the mock for next event
 
         # Test application is updated event
-        asyncio.run(resolver.application_is_updated())
+        await resolver.application_is_updated()
         mock_send_request.assert_called()  # Make sure that the webhook request was sent
         mock_send_request.reset_mock()  # Reset the mock for next event
 
         # Test application is deleted event
-        asyncio.run(resolver.application_is_deleted())
+        await resolver.application_is_deleted()
         mock_send_request.assert_called()  # Make sure that the webhook request was sent
         mock_send_request.reset_mock()  # Reset the mock for next event
