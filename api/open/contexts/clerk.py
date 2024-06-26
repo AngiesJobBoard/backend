@@ -16,6 +16,7 @@ WEBHOOK_REQUEST_SCOPE = RequestScope(
 
 
 async def verify_clerk_webhook_event(request: Request) -> dict:
+    # AJBTODO More validation later...
     return await request.json()
 
 
