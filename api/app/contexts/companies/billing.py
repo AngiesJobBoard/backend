@@ -6,6 +6,7 @@ from ajb.contexts.billing.subscriptions.models import (
 )
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
 from ajb.contexts.billing.usecase import CompanyBillingUsecase
+from ajb.contexts.billing.usage.repository import CompanySubscriptionUsageRepository
 from ajb.contexts.billing.usage.models import MonthlyUsage
 from ajb.contexts.billing.usecase.start_update_subscription import (
     CannotUpdateSubscriptionException,
@@ -57,3 +58,10 @@ def change_subscription(
         raise GenericHTTPException(400, str(e))
     except CannotUpdateSubscriptionException as e:
         raise GenericHTTPException(400, str(e))
+
+
+@router.get("/all-usages", response_model=list[MonthlyUsage])
+def get_all_usages(request: Request, company_id: str):
+    return CompanySubscriptionUsageRepository(scope(request), company_id).get_all(
+        company_id=company_id
+    )
