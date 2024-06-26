@@ -1,9 +1,16 @@
-from ajb.base import MultipleChildrenRepository, RepositoryRegistry, Collection, RequestScope
+from ajb.base import (
+    MultipleChildrenRepository,
+    RepositoryRegistry,
+    Collection,
+    RequestScope,
+)
 
 from .models import CreatePublicApplicationForm, PublicApplicationForm
 
 
-class JobPublicApplicationFormRepository(MultipleChildrenRepository[CreatePublicApplicationForm, PublicApplicationForm]):
+class JobPublicApplicationFormRepository(
+    MultipleChildrenRepository[CreatePublicApplicationForm, PublicApplicationForm]
+):
     collection = Collection.PUBLIC_APPLICATION_FORMS
     entity_model = PublicApplicationForm
 

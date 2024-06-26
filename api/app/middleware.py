@@ -13,6 +13,7 @@ from api.vendors import db, kafka_producer
 
 RECRUITER_CACHE = TTLCache(maxsize=1000, ttl=60 * 5)  # 5 minutes cache ttl
 
+
 class NoCompanyIdInPath(Exception):
     pass
 
@@ -37,14 +38,13 @@ def get_company_recruiter(request_scope: RequestScope, company_id: str, user_id:
     recruiter = RECRUITER_CACHE.get(cache_key)
     if recruiter:
         return recruiter
-    
+
     # If not in cache, fetch from the database
     recruiter = RecruiterRepository(request_scope).get_recruiter_by_company_and_user(
         company_id, user_id
     )
     RECRUITER_CACHE[cache_key] = recruiter
     return recruiter
-
 
 
 async def verify_user_and_company(

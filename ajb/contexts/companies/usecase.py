@@ -1,13 +1,7 @@
 from typing import cast, Any
 import re
 from concurrent.futures import ThreadPoolExecutor
-from ajb.base import (
-    BaseUseCase,
-    Collection,
-    RepoFilterParams,
-    Pagination,
-    RequestScope
-)
+from ajb.base import BaseUseCase, Collection, RepoFilterParams, Pagination, RequestScope
 from ajb.contexts.companies.recruiters.models import CreateRecruiter, RecruiterRole
 from ajb.contexts.users.models import User
 from ajb.base.events import (
@@ -26,7 +20,7 @@ from .models import (
     CompanyGlobalSearchApplications,
     CompanyGlobalSearchResults,
     UpdateCompany,
-    CompanyImageUpload
+    CompanyImageUpload,
 )
 from .events import CompanyEventProducer
 
@@ -195,11 +189,9 @@ class CompaniesUseCase(BaseUseCase):
     def update_company_main_image(self, company_id: str, data: CompanyImageUpload):
         if not self.storage_repo:
             raise RepositoryNotProvided("Storage")
-        
+
         company_repo = self.get_repository(Collection.COMPANIES)
-        remote_file_path = self._create_profile_picture_path(
-            company_id, data.file_type
-        )
+        remote_file_path = self._create_profile_picture_path(company_id, data.file_type)
         main_image_url = self.storage_repo.upload_bytes(
             data.picture_data, data.file_type, remote_file_path, True
         )
