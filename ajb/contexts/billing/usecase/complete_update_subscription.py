@@ -21,6 +21,7 @@ from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRep
 from ajb.contexts.billing.billing_audit_events.models import CreateAuditEvent
 from ajb.contexts.billing.usage.models import CreateMonthlyUsage
 from ajb.contexts.billing.usage.repository import CompanySubscriptionUsageRepository
+from ajb.contexts.billing.subscriptions.models import SubscriptionStatus
 from ajb.vendor.stripe.models import InvoicePaymentSucceeded
 from ajb.vendor.stripe.repository import StripeRepository
 
@@ -72,4 +73,5 @@ class CompleteUpdateSubscription(BaseUseCase):
             )
         )
         company_subscription.current_usage_id = created_usage.id
+        company_subscription.subscription_status = SubscriptionStatus.ACTIVE
         subscription_repo.set_sub_entity(company_subscription)
