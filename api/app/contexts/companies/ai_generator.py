@@ -11,11 +11,10 @@ from ajb.contexts.companies.jobs.models import UserCreateJob
 from ajb.contexts.billing.validate_usage import (
     BillingValidateUsageUseCase,
     TierFeatures,
-    FeatureNotAvailableOnTier,
 )
 from ajb.common.models import PreferredTone
 from ajb.vendor.pdf_plumber import extract_text, BadFileTypeException
-
+from ajb.exceptions import FeatureNotAvailableOnTier
 from api.exceptions import GenericHTTPException, FeatureNotAvailableOnTierHTTPException
 from api.middleware import scope
 from api.vendors import openai

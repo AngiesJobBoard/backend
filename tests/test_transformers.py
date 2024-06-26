@@ -59,8 +59,8 @@ def test_postcardmania_transformer(request_scope):
         ingress_id="123",
         company_id=company.id,
         application_id=None,
-        resume_bytes=encoded_resume_data,
-        contact_information=contact_info,
+        # resume_bytes=encoded_resume_data,
+        # contact_information=contact_info,
         data={
             "contact_information": contact_info,
             "resume_bytes": encoded_resume_data,

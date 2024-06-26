@@ -10,8 +10,8 @@ from ajb.contexts.companies.email_ingress_webhooks.models import (
 from ajb.contexts.billing.validate_usage import (
     BillingValidateUsageUseCase,
     TierFeatures,
-    FeatureNotAvailableOnTier,
 )
+from ajb.exceptions import FeatureNotAvailableOnTier
 from api.exceptions import FeatureNotAvailableOnTierHTTPException
 from api.middleware import scope
 

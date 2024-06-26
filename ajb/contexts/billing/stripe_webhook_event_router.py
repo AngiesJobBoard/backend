@@ -48,7 +48,9 @@ class StripeWebhookEventRouter:
         structured_data = InvoicePaymentSucceeded(**self.payload["data"]["object"])
         if structured_data.billing_reason == "subscription_update":
             return usecase.company_completes_update_subscription(structured_data)
-        return usecase.create_company_usage(structured_data)
+        elif structured_data.billing_reason == "subscription_create":
+            return usecase.create_company_usage(structured_data)
+        raise ValueError("Unknown billing reason")
 
     def handle_invoice_payment_failed(self) -> None:
         raise NotImplementedError("Invoice payment failed event not implemented")

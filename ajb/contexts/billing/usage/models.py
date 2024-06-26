@@ -18,7 +18,11 @@ from ..billing_models import UsageType
 class CreateMonthlyUsage(BaseModel):
     company_id: str
     transaction_counts: dict[UsageType, int] = Field(
-        default_factory=lambda: {usage_type: 0 for usage_type in UsageType}
+        default_factory=lambda: {
+            UsageType.APPLICATIONS_PROCESSED: 0,
+            UsageType.TOTAL_JOBS: 0,
+            UsageType.TOTAL_RECRUITERS: 1
+        }
     )
     usage_expires: datetime | None
     invoice_details: InvoicePaymentSucceeded | None

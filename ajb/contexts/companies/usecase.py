@@ -10,11 +10,10 @@ from ajb.base.events import (
 from ajb.contexts.billing.validate_usage import (
     BillingValidateUsageUseCase,
     TierFeatures,
-    FeatureNotAvailableOnTier,
 )
 from ajb.vendor.arango.models import Filter, Operator, Join
 from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
-from ajb.exceptions import RepositoryNotProvided
+from ajb.exceptions import RepositoryNotProvided, FeatureNotAvailableOnTier
 from ajb.utils import random_salt
 
 from .models import (

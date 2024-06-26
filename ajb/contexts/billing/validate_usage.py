@@ -13,7 +13,6 @@ from ajb.contexts.billing.usecase.billing_usecase import (
 )
 from ajb.exceptions import (
     TierLimitHitException,
-    FeatureNotAvailableOnTier,
     EntityNotFound,
 )
 
