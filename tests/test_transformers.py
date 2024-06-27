@@ -10,6 +10,9 @@ from ajb.contexts.companies.api_ingress_webhooks.models import (
 from ajb.contexts.companies.api_ingress_webhooks.repository import (
     CompanyAPIIngressRepository,
 )
+from ajb.contexts.companies.jobs.public_application_forms.repository import (
+    JobPublicApplicationFormRepository,
+)
 from ajb.contexts.webhooks.ingress.applicants.application_raw_storage.models import (
     RawIngressApplication,
 )
@@ -33,18 +36,48 @@ def test_postcardmania_transformer(request_scope):
     # Prepare mock data
     contact_info = {
         "job_name": "Software Engineer",
-        "full_name": {"first_name": "Apply", "last_name": "Guy"},
-        "email": "applyguy@example.com",
-        "city": "Tampa",
-        "state": "FL",
-        "zip": "33602",
-        "prior_application_details": "None",
-        "conviction_details": "N/A",
-        "terminated": "No",
-        "terminated_details": "None",
-        "drivers_license_num": "12345678",
-        "drivers_license_state": "FL",
-        "drivers_license_issued": "2024-06-20",
+        "name": "John Wick",
+        "full_name": {"first_name": "John", "middle_name": "", "last_name": "Wick"},
+        "first_name": "John",
+        "last_name": "Wick",
+        "email": "ababab@nice.com",
+        "phone": "555-555-4713",
+        "phone_alt": "555554713",
+        "address": "125 ISLAND WAY",
+        "city": "Dover",
+        "state": "NH",
+        "zip": "03820",
+        "full_address": "125 Island way, Dover NH",
+        "position_discovered": "LinkedIn",
+        "position_referral": "",
+        "seen_billboard": None,
+        "date_available": "2024-07-08",
+        "wage_amount": "10000",
+        "wage_frequency": "Yearly",
+        "age_18": "yes",
+        "currently_employed": "no",
+        "us_work_authorized": "yes",
+        "smoker": "no",
+        "drug_screening": "yes",
+        "drug_test": "yes",
+        "prior_application": "no",
+        "prior_application_details": "",
+        "transportation": "yes",
+        "transportation_details": "",
+        "conviction": "no",
+        "conviction_details": "",
+        "terminated": None,
+        "terminated_details": None,
+        "drivers_license_num": None,
+        "drivers_license_state": None,
+        "drivers_license_issued": None,
+        "signed_consent_refereces": "checked",
+        "signed_consent_testing": "checked",
+        "signed_consent_drug_testing": "checked",
+        "signed_consent_bg_check": "checked",
+        "signed_auth_investigation": "checked",
+        "signed_answers_true": "checked",
+        "digital_signature": "John Wick",
     }
 
     # Encode mock data
@@ -59,8 +92,8 @@ def test_postcardmania_transformer(request_scope):
         ingress_id="123",
         company_id=company.id,
         application_id=None,
-        # resume_bytes=encoded_resume_data,
-        # contact_information=contact_info,
+        resume_bytes=encoded_resume_data,
+        contact_information=contact_info,
         data={
             "contact_information": contact_info,
             "resume_bytes": encoded_resume_data,
@@ -117,10 +150,10 @@ def test_postcardmania_transformer(request_scope):
         retrieved_application.job_id == job.id
     )  # Application should now be assigned to the Software Engineer job
     assert (
-        retrieved_application.name == "Apply Guy"
+        retrieved_application.name == "John Wick"
     )  # Name should have been pulled from the contact information
     assert (
-        retrieved_application.email == "applyguy@example.com"
+        retrieved_application.email == "ababab@nice.com"
     )  # Email should also have been pulled from the contact info
     assert (
         retrieved_application.extracted_resume_text == "Example resume content"
@@ -134,11 +167,28 @@ def test_postcardmania_transformer(request_scope):
         transformed_application.job_id == job.id
     )  # Application should now be assigned to the Software Engineer job
     assert (
-        transformed_application.name == "Apply Guy"
+        transformed_application.name == "John Wick"
     )  # Name should have been pulled from the contact information
     assert (
-        transformed_application.email == "applyguy@example.com"
+        transformed_application.email == "ababab@nice.com"
     )  # Email should also have been pulled from the contact info
+
+    # Check for proper transformation of public application form data
+    application = application_repo.get(new_application_id)
+    public_app_repo = JobPublicApplicationFormRepository(request_scope, job.id)
+    public_app = public_app_repo.get(application.application_form_id)
+
+    assert public_app.valid_drivers_license is False
+    assert public_app.over_18_years_old is True
+    assert public_app.legally_authorized_to_work_in_us is True
+    assert public_app.smoke_vape_chew_thc_products is False
+    assert public_app.willing_and_able_to_pass_drug_test is True
+    assert public_app.arrested_charged_convicted_of_felony is False
+    assert public_app.has_reliable_transportation is True
+    assert public_app.willing_to_submit_to_background_check is True
+    assert public_app.willing_to_submit_to_drug_test is True
+    assert public_app.confirm_all_statements_true is True
+    assert public_app.willing_to_submit_to_reference_check is True
 
     # Cleanup
     maps_patcher.stop()
