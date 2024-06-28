@@ -4,6 +4,7 @@ from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.fixtures.companies import CompanyFixture
 from ajb.contexts.applications.usecase import ApplicationUseCase
+from ajb.fixtures.subscriptions import SubscriptionFixture
 from ajb.vendor.arango.models import Filter, Operator
 from api.app.contexts.companies.jobs import mark_job_as_active, mark_job_as_inactive
 
@@ -99,6 +100,12 @@ def test_mark_job_active(request_scope):
     job1 = company_fixture.create_company_job(company.id)
     job2 = company_fixture.create_company_job(company.id)
 
+    # Setup company subscription
+    SubscriptionFixture().setup_company_subscription(
+        request_scope=request_scope, company_id=company.id
+    )
+
+    # Prepare to mock starlette request
     request = MockRequest(request_scope)
 
     usecase = ApplicationUseCase(request_scope)

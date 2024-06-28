@@ -20,6 +20,7 @@ from ajb.contexts.webhooks.ingress.applicants.application_raw_storage.repository
     RawIngressApplicationRepository,
 )
 from ajb.fixtures.companies import CompanyFixture
+from ajb.fixtures.subscriptions import SubscriptionFixture
 from transformers.incoming.postcardmania import IncomingPostCardManiaTransformer
 from transformers.router import route_transformer_request
 
@@ -32,6 +33,11 @@ def test_postcardmania_transformer(request_scope):
     api_ingress_repo = CompanyAPIIngressRepository(request_scope, company.id)
     application_repo = ApplicationRepository(request_scope)
     job = company_fixture.create_company_job(company.id)
+
+    # Setup company subscription
+    SubscriptionFixture().setup_company_subscription(
+        request_scope=request_scope, company_id=company.id
+    )
 
     # Prepare mock data
     contact_info = {

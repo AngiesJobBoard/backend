@@ -2,7 +2,6 @@
 import time
 from unittest.mock import MagicMock
 from pydantic import BaseModel
-from ajb.vendor.stripe.models import InvoicePaymentSucceeded
 from ajb.vendor.stripe.repository import StripeRepository
 
 
@@ -46,21 +45,3 @@ class MockStripeRepository(StripeRepository):
             "invoice": "1",
             "subscription": "1",
         }
-
-    def create_invoice_payment_suceeded(self):
-        return InvoicePaymentSucceeded(
-            id=self.company_id,
-            created=1622547800,
-            effective_at=self.creation_time,
-            amount_due=1000,
-            amount_paid=1000,
-            customer=self.company_id,
-            customer_email="rcg@example.com",
-            customer_name="recruiting guy",
-            hosted_invoice_url="invoices.test.com",
-            livemode=False,
-            paid=True,
-            status="paid",
-            billing_reason="subscription_create",
-            subscription="sub_1234567890",
-        )

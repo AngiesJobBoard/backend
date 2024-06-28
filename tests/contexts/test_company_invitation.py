@@ -10,6 +10,7 @@ from ajb.exceptions import RecruiterCreateException
 
 
 from ajb.fixtures.companies import CompanyFixture
+from ajb.fixtures.subscriptions import SubscriptionFixture
 from ajb.fixtures.users import UserFixture
 
 
@@ -21,6 +22,12 @@ def test_create_invitation(request_scope):
     usecase = CompanyInvitationUseCase(request_scope)
     user, company = CompanyFixture(request_scope).create_company_with_owner()
 
+    # Setup company subscription
+    SubscriptionFixture().setup_company_subscription(
+        request_scope=request_scope, company_id=company.id
+    )
+
+    # Test invite creation
     usecase.user_creates_invite(
         UserCreateInvitation(
             email=TEST_EMAIL,
@@ -35,7 +42,13 @@ def test_cancel_invitation(request_scope):
     usecase = CompanyInvitationUseCase(request_scope)
     user, company = CompanyFixture(request_scope).create_company_with_owner()
 
-    usecase.user_creates_invite(
+    # Setup company subscription
+    SubscriptionFixture().setup_company_subscription(
+        request_scope=request_scope, company_id=company.id
+    )
+
+    # First create an invite
+    created_invite = usecase.user_creates_invite(
         UserCreateInvitation(
             email=TEST_EMAIL,
             role=RecruiterRole.ADMIN,
@@ -44,10 +57,23 @@ def test_cancel_invitation(request_scope):
         company_id=company.id,
     )
 
+    # Then try to cancel it
+    success = usecase.user_cancels_invitation(
+        cancelling_user_id=user.id,
+        invitation_id=created_invite.id,
+        company_id=company.id,
+    )
+    assert success is True
+
 
 def test_accept_invitation(request_scope):
     usecase = CompanyInvitationUseCase(request_scope)
     user, company = CompanyFixture(request_scope).create_company_with_owner()
+
+    # Setup company subscription
+    SubscriptionFixture().setup_company_subscription(
+        request_scope=request_scope, company_id=company.id
+    )
 
     # Create new user to accept invitation
     new_user = UserFixture(request_scope).create_user(email=TEST_EMAIL)
@@ -88,6 +114,11 @@ def test_accept_invitation(request_scope):
 def test_accept_invitation_failures(request_scope):
     usecase = CompanyInvitationUseCase(request_scope)
     user, company = CompanyFixture(request_scope).create_company_with_owner()
+
+    # Setup company subscription
+    SubscriptionFixture().setup_company_subscription(
+        request_scope=request_scope, company_id=company.id
+    )
 
     # Create new user to accept invitation
     new_user = UserFixture(request_scope).create_user(email=TEST_EMAIL)

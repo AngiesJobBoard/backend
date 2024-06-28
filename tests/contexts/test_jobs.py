@@ -5,11 +5,19 @@ from ajb.base.models import QueryFilterParams
 
 from ajb.fixtures.companies import CompanyFixture
 from ajb.fixtures.applications import ApplicationFixture
+from ajb.fixtures.subscriptions import SubscriptionFixture
 
 
 def test_create_job(request_scope, mock_openai):
     company = CompanyFixture(request_scope).create_company()
     job_to_create = UserCreateJob(position_title="test")
+
+    # Setup company subscription
+    SubscriptionFixture().setup_company_subscription(
+        request_scope=request_scope, company_id=company.id
+    )
+
+    # Create job
     created_job = JobsUseCase(request_scope, mock_openai).create_job(
         company.id, job_to_create
     )
