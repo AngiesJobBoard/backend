@@ -57,7 +57,7 @@ async def upload_application_from_text_dump(
     request: Request, company_id: str, job_id: str, text: str = Body(...)
 ):
     try:
-        return ApplicationUseCase(scope(request)).application_is_created_from_raw_text(
+        return ApplicationUseCase(scope(request)).create_application_from_raw_text(
             company_id, job_id, text
         )
     except TierLimitHitException:

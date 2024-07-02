@@ -667,7 +667,7 @@ def test_create_application_from_raw_text(request_scope):
         "ajb.contexts.applications.extract_data.ai_extractor.SyncronousAIResumeExtractor.get_candidate_profile_from_resume_text",
         return_value=example_resume,
     ):
-        usecase.application_is_created_from_raw_text(company.id, job.id, "test")
+        usecase.create_application_from_raw_text(company.id, job.id, "test")
 
     # Check that the application creation event was fired
     assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 1

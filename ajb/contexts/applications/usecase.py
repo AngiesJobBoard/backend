@@ -262,7 +262,7 @@ class ApplicationUseCase(BaseUseCase):
             created_applications.append(created_application)
         return created_applications
 
-    def application_is_created_from_raw_text(
+    def create_application_from_raw_text(
         self, company_id: str, job_id: str, raw_text: str
     ):
         partial_application = CreateApplication(
