@@ -18,7 +18,6 @@ from ajb.contexts.companies.jobs.repository import JobRepository
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.webhooks.egress.webhook_egress import BaseWebhookEgress
 from ajb.fixtures.companies import CompanyFixture
-from ajb.fixtures.subscriptions import SubscriptionFixture
 from services.resolvers.applications import (
     ApplicationEventsResolver,
 )
@@ -32,11 +31,6 @@ async def test_upload_resume(request_scope):
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
     job = company_fixture.create_company_job(company.id)
-
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
 
     # Create application
     application_repository = ApplicationRepository(request_scope)
@@ -100,11 +94,6 @@ async def test_company_gets_match_score(request_scope):
     company_repo = CompanyRepository(request_scope)
     job_repo = JobRepository(request_scope, company.id)
 
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
-
     # Create application
     application_repository = ApplicationRepository(request_scope)
     application_usecase = ApplicationUseCase(request_scope)
@@ -160,11 +149,6 @@ async def test_extract_application_filters(request_scope):
     job = company_fixture.create_company_job(company.id)
 
     job_repo = JobRepository(request_scope, company.id)
-
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
 
     # Add a location to the job
     job.location_override = Location(lat=36.4635, lng=138.969)
@@ -228,11 +212,6 @@ async def test_answer_application_questions(request_scope):
 
     company_repo = CompanyRepository(request_scope)
     job_repo = JobRepository(request_scope, company.id)
-
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
 
     # Add job questions
     job_repo.update_fields(
@@ -313,12 +292,6 @@ async def test_application_events(request_scope):
     company = company_fixture.create_company()
     job = company_fixture.create_company_job(company.id)
 
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
-
-    # Create application
     application_usecase = ApplicationUseCase(request_scope)
 
     application = CreateApplication(

@@ -40,7 +40,6 @@ from ajb.contexts.companies.notifications.repository import (
     CompanyNotificationRepository,
 )
 from ajb.contexts.resumes.models import UserCreateResume
-from ajb.fixtures.subscriptions import SubscriptionFixture
 from ajb.vendor.arango.models import Filter, Operator
 from ajb.vendor.openai.repository import AsyncOpenAIRepository
 from ajb.fixtures.companies import CompanyFixture
@@ -218,11 +217,6 @@ def test_application_counts(request_scope):
     company_repo = CompanyRepository(request_scope)
     job_repo = JobRepository(request_scope, company.id)
 
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
-
     # Company and job should counts of 0
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
@@ -280,13 +274,6 @@ async def test_high_matching_applicants(request_scope):
     company = company_fixture.create_company()
     job = company_fixture.create_company_job(company.id)
     usecase = ApplicationUseCase(request_scope)
-
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
-
-    # Create application
     created_application = usecase.create_application(
         company.id,
         job.id,
@@ -590,11 +577,6 @@ def test_create_application_from_resume(request_scope):
 
     usecase = ApplicationUseCase(request_scope)
 
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
-
     # Prepare data
     resume = UserCreateResume(
         file_type="pdf",
@@ -634,11 +616,6 @@ def test_email_application_ingress(request_scope):
     company = company_fixture.create_company()
     job = company_fixture.create_company_job(company.id)
     usecase = ApplicationUseCase(request_scope)
-
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
 
     # Prepare data
     ingress_email = MIMEMultipart()
@@ -681,11 +658,6 @@ def test_create_application_from_raw_text(request_scope):
     job = company_fixture.create_company_job(company.id)
 
     usecase = ApplicationUseCase(request_scope)
-
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
 
     # Prepare data
     example_resume = ExtractedResume()

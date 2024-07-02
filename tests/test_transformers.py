@@ -34,11 +34,6 @@ def test_postcardmania_transformer(request_scope):
     application_repo = ApplicationRepository(request_scope)
     job = company_fixture.create_company_job(company.id)
 
-    # Setup company subscription
-    SubscriptionFixture().setup_company_subscription(
-        request_scope=request_scope, company_id=company.id
-    )
-
     # Prepare mock data
     contact_info = {
         "job_name": "Software Engineer",
