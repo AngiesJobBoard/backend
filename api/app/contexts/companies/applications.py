@@ -10,7 +10,6 @@ from ajb.base.events import SourceServices
 from ajb.contexts.applications.models import (
     CompanyApplicationView,
     PaginatedDataReducedApplication,
-    DataReducedApplication,
 )
 from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
@@ -230,7 +229,7 @@ async def update_resume_scan_text(
 
 @router.post(
     "/jobs/{job_id}/applications/{application_id}/status",
-    response_model=DataReducedApplication,
+    response_model=CompanyApplicationView,
 )
 def update_application_status(
     request: Request,

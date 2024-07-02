@@ -56,6 +56,14 @@ class RecruiterUpdateStatusResolver(BaseUseCase):
             application_repo.update_fields(
                 application_id, application_status=new_status.application_status
             )
+            RecruiterUpdatesUseCase(transaction_scope).update_application_status(
+                company_id,
+                job_id,
+                application_id,
+                self.request_scope.user_id,
+                new_status.application_status,
+                new_status.update_reason,
+            )
             response = CompanyApplicationRepository(
                 transaction_scope
             ).get_company_view_single(application_id)
