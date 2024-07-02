@@ -35,6 +35,7 @@ class UserCreatePublicApplicationForm(BaseModel):
     willing_to_submit_to_reference_check: bool | None
     confirm_all_statements_true: bool | None
     e_signature: str
+    resume_text: str | None
 
 
 class CreatePublicApplicationForm(UserCreatePublicApplicationForm):
