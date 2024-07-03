@@ -20,7 +20,6 @@ from ajb.contexts.webhooks.ingress.applicants.application_raw_storage.repository
     RawIngressApplicationRepository,
 )
 from ajb.fixtures.companies import CompanyFixture
-from ajb.fixtures.subscriptions import SubscriptionFixture
 from transformers.incoming.postcardmania import IncomingPostCardManiaTransformer
 from transformers.router import route_transformer_request
 
