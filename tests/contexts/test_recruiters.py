@@ -1,7 +1,6 @@
 from ajb.contexts.applications.models import CreateApplication
 from ajb.contexts.applications.recruiter_updates.models import UpdateType
 from ajb.contexts.applications.recruiter_updates.usecase import RecruiterUpdatesUseCase
-from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.companies.jobs.models import UserCreateJob
 from ajb.contexts.companies.jobs.usecase import JobsUseCase
@@ -130,7 +129,7 @@ def test_recruiter_updates(request_scope, mock_openai):
     company = CompanyFixture(request_scope).create_company()
 
     repo = RecruiterRepository(request_scope, company.id)
-    created_recruiter = repo.create(
+    repo.create(
         CreateRecruiter(
             company_id=company.id, user_id=user.id, role=RecruiterRole.OWNER
         )
