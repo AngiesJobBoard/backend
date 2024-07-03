@@ -88,11 +88,16 @@ def company_has_subsription(request_scope: RequestScope, company_id: str) -> boo
     if SUBSCRIPTION_CACHE.get(company_id):
         return True
     try:
-        subscription = CompanySubscriptionRepository(request_scope, company_id).get_sub_entity()
+        subscription = CompanySubscriptionRepository(
+            request_scope, company_id
+        ).get_sub_entity()
         assert subscription.subscription_status == SubscriptionStatus.ACTIVE
         SUBSCRIPTION_CACHE[company_id] = True
         return True
-    except (EntityNotFound, AssertionError, ):
+    except (
+        EntityNotFound,
+        AssertionError,
+    ):
         return False
 
 
@@ -119,6 +124,6 @@ async def verify_company_subscription_exists(
     if not company_id:
         # Company ID must be in all paths in the company app
         raise NoCompanyIdInPath
-    
+
     if not company_has_subsription(request_scope, company_id):
         raise NoSubscription
