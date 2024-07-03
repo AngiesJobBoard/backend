@@ -54,7 +54,7 @@ def test_company_with_existing_slug(request_scope):
     assert company_1.id != company_2.id
 
 
-def test_api_ingress_webhooks(request_scope):
+def test_company_api_ingress_webhooks(request_scope):
     company_fixture = CompanyFixture(request_scope)
     company = company_fixture.create_company()
     api_ingress_repo = CompanyAPIIngressRepository(request_scope, company.id)
