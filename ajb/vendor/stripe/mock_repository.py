@@ -15,6 +15,7 @@ class MockStripeRepository(StripeRepository):
     def __init__(self, *args, **kwargs):
         self.client = MagicMock()  # Initialize mock stripe client
         self.client.checkout.sessions.create = self.create_session
+        self.client.subscriptions.update = self.subscription_update
         self.creation_time = int(round(time.time()))
         self.company_id = "1"
 
@@ -44,4 +45,14 @@ class MockStripeRepository(StripeRepository):
             "success_url": "success.test.com",
             "invoice": "1",
             "subscription": "1",
+        }
+
+    def subscription_update(self, *args, **kwargs):
+        return {
+            "id": self.company_id,
+            "created": str(self.creation_time),
+            "customer": self.company_id,
+            "latest_invoice": "invoice",
+            "livemode": False,
+            "status": "complete",
         }
