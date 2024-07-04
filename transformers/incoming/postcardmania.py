@@ -1,7 +1,14 @@
 from base64 import b64decode
 from pydantic import BaseModel
+from dateutil import parser as date_parser
 
 from ajb.common.models import Location
+from ajb.contexts.companies.jobs.public_application_forms.models import (
+    UserCreatePublicApplicationForm,
+)
+from ajb.contexts.companies.jobs.public_application_forms.usecase import (
+    JobPublicApplicationFormUsecase,
+)
 from ajb.contexts.resumes.models import UserCreateResume
 from ajb.contexts.applications.models import CreateApplication
 from ajb.contexts.applications.usecase import ApplicationUseCase
@@ -77,18 +84,70 @@ class IncomingPostCardManiaTransformer(BaseIncomingTransformer[PostCardManiaRawD
         # AJBTODO complete the work history and education history which is sometimes ? included ?
         if not self.job_id:
             raise CouldNotInferJobError
-        return CreateApplication(
+
+        # Create application object
+        info = self.data.contact_information
+        application_data = CreateApplication(
             company_id=self.raw_data.company_id,
             job_id=self.job_id,
-            name=f"{self.data.contact_information.full_name.first_name} {self.data.contact_information.full_name.last_name}",
-            email=self.data.contact_information.email,
-            phone=self.data.contact_information.phone,
+            name=f"{info.full_name.first_name} {info.full_name.last_name}",
+            email=info.email,
+            phone=info.phone,
             user_location=Location(
-                city=self.data.contact_information.city,
-                state=self.data.contact_information.state,
-                zipcode=self.data.contact_information.zip,
+                city=info.city,
+                state=info.state,
+                zipcode=info.zip,
             ),
         )
+
+        # Transform data into application form submission
+        yes_values = [
+            "yes",
+            "true",
+            "checked",
+            "1",
+        ]  # For converting unknown yes/no strings to boolean values
+
+        application_form_data = UserCreatePublicApplicationForm(
+            full_legal_name=f"{info.full_name.first_name} {info.full_name.last_name}",
+            email=info.email,
+            phone=info.phone,
+            worked_at_company_before=info.prior_application.lower() in yes_values,
+            valid_drivers_license=info.drivers_license_num is not None,
+            over_18_years_old=info.age_18.lower() in yes_values,
+            legally_authorized_to_work_in_us=info.us_work_authorized.lower()
+            in yes_values,
+            smoke_vape_chew_thc_products=info.smoker.lower() in yes_values,
+            willing_and_able_to_pass_drug_test=info.drug_test.lower() in yes_values,
+            arrested_charged_convicted_of_felony=info.conviction in yes_values,
+            felony_details=info.conviction_details,
+            references=[],
+            how_did_you_hear_about_us=info.position_discovered,
+            referral_name=info.position_referral,
+            other_referral_source="",
+            when_available_to_start=date_parser.parse(info.date_available),
+            has_reliable_transportation=info.transportation.lower() in yes_values,
+            alternative_to_reliable_transportation=info.transportation_details,
+            willing_to_submit_to_background_check=info.signed_consent_bg_check.lower()
+            in yes_values,
+            willing_to_submit_to_drug_test=info.signed_consent_drug_testing.lower()
+            in yes_values,
+            confirm_all_statements_true=info.signed_answers_true.lower() in yes_values,
+            willing_to_submit_to_reference_check=info.signed_consent_refereces.lower()
+            in yes_values,
+            e_signature=info.digital_signature,
+            job_id=self.job_id,
+            company_id=self.raw_data.company_id,
+        )
+
+        # Create application form object in the repository
+        usecase = JobPublicApplicationFormUsecase(self.request_scope)
+        usecase.submit_public_job_application(
+            data=application_form_data, job_id=self.job_id
+        )
+
+        # Return the CreateApplication object as expected
+        return application_data
 
     def create_application_from_resume(self):
         if not self.job_id:
