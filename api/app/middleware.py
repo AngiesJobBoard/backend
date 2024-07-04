@@ -45,11 +45,11 @@ def get_company_recruiter(request_scope: RequestScope, company_id: str, user_id:
         return recruiter
 
     # If not in cache, fetch from the database
-    recruiter = RecruiterRepository(request_scope).get_recruiter_by_company_and_user(
+    retrieved_recruiter = RecruiterRepository(request_scope).get_recruiter_by_company_and_user(
         company_id, user_id
     )
-    RECRUITER_CACHE[cache_key] = recruiter
-    return recruiter
+    RECRUITER_CACHE[cache_key] = retrieved_recruiter
+    return retrieved_recruiter
 
 
 async def verify_user_and_company(
@@ -109,11 +109,6 @@ async def verify_company_subscription_exists(
     Assuming the user validation has passed,
     just check that the company being accessed has a subscription yes or no
     """
-    CHECK_EXCLUDED_PATHS = []
-    if request.url.path in CHECK_EXCLUDED_PATHS:
-        # Do not need to verify subscription for these endpoints
-        return
-
     user = decode_user_token(credentials.credentials)
     request_scope = RequestScope(
         user_id=user.id,

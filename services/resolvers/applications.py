@@ -100,7 +100,7 @@ class ApplicationEventsResolver:
                 resume_scan_status=ScanStatus.FAILED,
                 resume_scan_error_text=str(e),
             )
-            return
+            raise e
 
     async def company_gets_match_score(self) -> None:
         data = ApplicantAndCompany.model_validate(self.message.data)

@@ -1,3 +1,4 @@
+from datetime import datetime
 from base64 import b64decode
 from pydantic import BaseModel
 from dateutil import parser as date_parser
@@ -73,6 +74,12 @@ class PostCardManiaRawData(BaseModel):
     resume_bytes: list[str]
 
 
+def get_bool_from_value(value: str | None) -> bool:
+    if value is None:
+        return False
+    return value.lower() in ["yes", "true", "checked", "1"]
+
+
 class IncomingPostCardManiaTransformer(BaseIncomingTransformer[PostCardManiaRawData]):
     entity_model = PostCardManiaRawData
 
@@ -101,43 +108,42 @@ class IncomingPostCardManiaTransformer(BaseIncomingTransformer[PostCardManiaRawD
         )
 
         # Transform data into application form submission
-        yes_values = [
-            "yes",
-            "true",
-            "checked",
-            "1",
-        ]  # For converting unknown yes/no strings to boolean values
-
         application_form_data = UserCreatePublicApplicationForm(
             full_legal_name=f"{info.full_name.first_name} {info.full_name.last_name}",
             email=info.email,
-            phone=info.phone,
-            worked_at_company_before=info.prior_application.lower() in yes_values,
+            phone=info.phone or "",
+            worked_at_company_before=get_bool_from_value(info.prior_application),
             valid_drivers_license=info.drivers_license_num is not None,
-            over_18_years_old=info.age_18.lower() in yes_values,
-            legally_authorized_to_work_in_us=info.us_work_authorized.lower()
-            in yes_values,
-            smoke_vape_chew_thc_products=info.smoker.lower() in yes_values,
-            willing_and_able_to_pass_drug_test=info.drug_test.lower() in yes_values,
-            arrested_charged_convicted_of_felony=info.conviction in yes_values,
-            felony_details=info.conviction_details,
+            over_18_years_old=get_bool_from_value(info.age_18),
+            legally_authorized_to_work_in_us=get_bool_from_value(
+                info.us_work_authorized
+            ),
+            smoke_vape_chew_thc_products=get_bool_from_value(info.smoker),
+            willing_and_able_to_pass_drug_test=get_bool_from_value(info.drug_test),
+            arrested_charged_convicted_of_felony=get_bool_from_value(info.conviction),
+            felony_details=info.conviction_details or "",
             references=[],
-            how_did_you_hear_about_us=info.position_discovered,
-            referral_name=info.position_referral,
+            how_did_you_hear_about_us=info.position_discovered or "",
+            referral_name=info.position_referral or "",
             other_referral_source="",
-            when_available_to_start=date_parser.parse(info.date_available),
-            has_reliable_transportation=info.transportation.lower() in yes_values,
-            alternative_to_reliable_transportation=info.transportation_details,
-            willing_to_submit_to_background_check=info.signed_consent_bg_check.lower()
-            in yes_values,
-            willing_to_submit_to_drug_test=info.signed_consent_drug_testing.lower()
-            in yes_values,
-            confirm_all_statements_true=info.signed_answers_true.lower() in yes_values,
-            willing_to_submit_to_reference_check=info.signed_consent_refereces.lower()
-            in yes_values,
-            e_signature=info.digital_signature,
-            job_id=self.job_id,
-            company_id=self.raw_data.company_id,
+            when_available_to_start=(
+                date_parser.parse(info.date_available)
+                if info.date_available
+                else datetime.now()
+            ),
+            has_reliable_transportation=get_bool_from_value(info.transportation),
+            alternative_to_reliable_transportation=info.transportation_details or "",
+            willing_to_submit_to_background_check=get_bool_from_value(
+                info.signed_consent_bg_check
+            ),
+            willing_to_submit_to_drug_test=get_bool_from_value(
+                info.signed_consent_drug_testing
+            ),
+            confirm_all_statements_true=get_bool_from_value(info.signed_answers_true),
+            willing_to_submit_to_reference_check=get_bool_from_value(
+                info.signed_consent_refereces
+            ),
+            e_signature=info.digital_signature or "",
         )
 
         # Create application form object in the repository

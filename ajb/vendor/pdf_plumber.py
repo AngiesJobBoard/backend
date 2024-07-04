@@ -76,8 +76,10 @@ def extract_text(file_bytes: bytes):
     """
     try:
         return extract_pdf_text_by_file(file_bytes)
+    # pylint: disable=broad-except
     except Exception:
         try:
             return extract_text_file(file_bytes)
+        # pylint: disable=broad-except
         except Exception:
             return extract_docx_text_by_file(file_bytes)
