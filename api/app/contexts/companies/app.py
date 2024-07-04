@@ -4,7 +4,6 @@ from api.app.contexts.companies import (
     ai_generator,
     application_recruiter_updates,
     applications,
-    billing,
     companies,
     create_applications,
     egress_webhooks,
@@ -15,6 +14,7 @@ from api.app.contexts.companies import (
     notifications,
     recruiters,
     raw_api_ingress,
+    subscriptions,
 )
 from api.app.middleware import (
     verify_user_and_company,
@@ -28,7 +28,7 @@ company_api_router.include_router(
 )
 company_api_router.include_router(application_recruiter_updates.router)
 company_api_router.include_router(applications.router)
-company_api_router.include_router(billing.router)
+company_api_router.include_router(subscriptions.router)
 company_api_router.include_router(companies.router)
 company_api_router.include_router(
     egress_webhooks.router, dependencies=[Depends(verify_company_subscription_exists)]

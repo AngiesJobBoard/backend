@@ -39,7 +39,10 @@ class CompanyBillingUsecase(BaseUseCase):
         self.stripe = stripe or StripeRepository()
 
     def start_create_subscription(
-        self, company_id: str, plan: SubscriptionPlan, appsumo_code: str | None
+        self,
+        company_id: str,
+        plan: SubscriptionPlan,
+        appsumo_code: str | None = None,
     ) -> CompanySubscription:
         """Initiated by user through the API - creates checkout session in stripe and attached subscription object to company pending the payment."""
         return StartCreateSubscription(

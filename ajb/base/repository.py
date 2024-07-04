@@ -389,8 +389,13 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             format_to_schema(result, self.entity_model) for result in results
         ], count
 
-    def get_all(self, **kwargs) -> list[DataSchema]:
-        repo_filters = RepoFilterParams(pagination=None)
+    def get_all(
+        self, page: int = 0, page_size: int | None = None, **kwargs
+    ) -> list[DataSchema]:
+        pagination_params = {"page": page}
+        if page_size:
+            pagination_params["page_size"] = page_size
+        repo_filters = RepoFilterParams(pagination=Pagination(**pagination_params))
         response = build_and_execute_query(
             db=self.request_scope.db,
             collection_name=self.collection.value,
@@ -595,7 +600,7 @@ class ParentRepository(BaseRepository[CreateDataSchema, DataSchema]):
         When a parent record is deleted, this will delete all of the
         children records that are associated with it.
         """
-        return True
+        raise NotImplementedError
 
 
 def check_if_parent_exists(
