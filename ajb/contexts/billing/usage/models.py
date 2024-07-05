@@ -21,7 +21,7 @@ class CreateMonthlyUsage(BaseModel):
         default_factory=lambda: {
             UsageType.APPLICATIONS_PROCESSED: 0,
             UsageType.TOTAL_JOBS: 0,
-            UsageType.TOTAL_RECRUITERS: 1
+            UsageType.TOTAL_RECRUITERS: 1,
         }
     )
     usage_expires: datetime | None

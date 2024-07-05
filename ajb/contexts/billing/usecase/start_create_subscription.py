@@ -3,6 +3,7 @@ This module contains the business action for starting to create a new subscripti
 """
 
 from datetime import datetime, timedelta
+from tabnanny import check
 
 from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.contexts.companies.models import Company
@@ -117,7 +118,7 @@ class StartCreateSubscription(BaseUseCase):
             return
 
     def start_create_subscription(
-        self, company_id: str, plan: SubscriptionPlan, appsumo_code: str | None
+        self, company_id: str, plan: SubscriptionPlan, appsumo_code: str | None = None
     ) -> CompanySubscription:
         """
         This starts the subscription process by making sure the company is registered in stripe
@@ -153,6 +154,7 @@ class StartCreateSubscription(BaseUseCase):
             recurring = False
         else:
             recurring = True
+
         checkout_session = self.stripe.create_subscription_checkout_session(
             company_id,
             company_with_stripe.stripe_customer_id,

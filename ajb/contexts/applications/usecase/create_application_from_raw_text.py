@@ -12,8 +12,27 @@ from .helpers import ApplicationHelpersUseCase
 
 
 class CreateApplicationFromRawTextResolver(BaseUseCase):
+    def _combine_additional_data(
+        self,
+        partial_application: CreateApplication,
+        additional_partial_data: CreateApplication | None,
+    ) -> CreateApplication:
+        if not additional_partial_data:
+            return partial_application
+
+        partial_application_dict = partial_application.model_dump()
+        additional_partial_data_dict = additional_partial_data.model_dump(
+            exclude_none=True
+        )
+        partial_application_dict.update(additional_partial_data_dict)
+        return CreateApplication(**partial_application_dict)
+
     def _get_application_with_questions(
-        self, company_id: str, job_id: str, raw_text: str
+        self,
+        company_id: str,
+        job_id: str,
+        raw_text: str,
+        additional_partial_data: CreateApplication | None = None,
     ) -> CreateApplication:
         partial_application = CreateApplication(
             company_id=company_id,
@@ -24,13 +43,21 @@ class CreateApplicationFromRawTextResolver(BaseUseCase):
         partial_application.application_questions = ApplicationHelpersUseCase(
             self.request_scope
         ).get_job_questions(job_id)
+        if additional_partial_data:
+            partial_application = self._combine_additional_data(
+                partial_application, additional_partial_data
+            )
         return partial_application
 
     def _create_application(
-        self, company_id: str, job_id: str, raw_text: str
+        self,
+        company_id: str,
+        job_id: str,
+        raw_text: str,
+        additional_partial_data: CreateApplication | None = None,
     ) -> Application:
         application_data = self._get_application_with_questions(
-            company_id, job_id, raw_text
+            company_id, job_id, raw_text, additional_partial_data
         )
         return CreateApplicationResolver(self.request_scope).create_application(
             company_id, job_id, application_data, produce_submission_event=False
@@ -59,10 +86,17 @@ class CreateApplicationFromRawTextResolver(BaseUseCase):
             application_id=application.id,
         )
 
-    def application_is_created_from_raw_text(
-        self, company_id: str, job_id: str, raw_text: str
+    def create_application_from_raw_text(
+        self,
+        company_id: str,
+        job_id: str,
+        raw_text: str,
+        additional_partial_data: CreateApplication | None = None,
     ) -> Application:
-        created_application = self._create_application(company_id, job_id, raw_text)
+        # AJBTODO - the additional partial data is passed around a little too much...
+        created_application = self._create_application(
+            company_id, job_id, raw_text, additional_partial_data
+        )
         updated_application = self._update_application_with_resume_information(
             created_application
         )

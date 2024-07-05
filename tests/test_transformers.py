@@ -20,7 +20,6 @@ from ajb.contexts.webhooks.ingress.applicants.application_raw_storage.repository
     RawIngressApplicationRepository,
 )
 from ajb.fixtures.companies import CompanyFixture
-from ajb.fixtures.subscriptions import SubscriptionFixture
 from transformers.incoming.postcardmania import IncomingPostCardManiaTransformer
 from transformers.router import route_transformer_request
 
@@ -93,8 +92,6 @@ def test_postcardmania_transformer(request_scope):
         ingress_id="123",
         company_id=company.id,
         application_id=None,
-        resume_bytes=encoded_resume_data,
-        contact_information=contact_info,
         data={
             "contact_information": contact_info,
             "resume_bytes": encoded_resume_data,
@@ -177,7 +174,7 @@ def test_postcardmania_transformer(request_scope):
     # Check for proper transformation of public application form data
     application = application_repo.get(new_application_id)
     public_app_repo = JobPublicApplicationFormRepository(request_scope, job.id)
-    public_app = public_app_repo.get(application.application_form_id)
+    public_app = public_app_repo.get(str(application.application_form_id))
 
     assert public_app.valid_drivers_license is False
     assert public_app.over_18_years_old is True

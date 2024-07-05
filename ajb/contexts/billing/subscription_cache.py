@@ -5,5 +5,8 @@ it is kept in its own module.
 """
 
 from cachetools import TTLCache
+from ajb.contexts.billing.subscriptions.models import CompanySubscription
 
-SUBSCRIPTION_CACHE = TTLCache(maxsize=100, ttl=60 * 5)
+SUBSCRIPTION_CACHE: TTLCache[str, CompanySubscription] = TTLCache(
+    maxsize=100, ttl=60 * 5
+)
