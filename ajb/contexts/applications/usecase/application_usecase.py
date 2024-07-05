@@ -62,12 +62,18 @@ class ApplicationUseCase(BaseUseCase):
             self.request_scope
         ).create_application_from_resume(data, additional_partial_data)
 
-    def application_is_created_from_raw_text(
-        self, company_id: str, job_id: str, raw_text: str
+    def create_application_from_raw_text(
+        self,
+        company_id: str,
+        job_id: str,
+        raw_text: str,
+        additional_partial_data: CreateApplication | None = None,
     ):
         return CreateApplicationFromRawTextResolver(
             self.request_scope
-        ).application_is_created_from_raw_text(company_id, job_id, raw_text)
+        ).create_application_from_raw_text(
+            company_id, job_id, raw_text, additional_partial_data
+        )
 
     def process_email_application_ingress(
         self,

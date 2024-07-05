@@ -48,8 +48,8 @@ class CreateSubscriptionUsage(BaseUseCase):
     ) -> datetime:
         if subscription_plan == SubscriptionPlan.APPSUMO:
             return subscription_start + timedelta(
-                days=1000
-            )  # For me in ~2.7 years to figure out....
+                days=365
+            )  # App sumo subscriptions expire after 1 year
         return subscription_start + timedelta(
             days=40
         )  # ~1 month plus 10 day grace period

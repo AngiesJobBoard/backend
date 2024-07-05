@@ -53,6 +53,32 @@ class BillingValidateUsageUseCase(BaseUseCase):
         except NoSubscriptionUsageAllottedException:
             raise SubscriptionValidationError("No usage found for company")
 
+    def _validate_subscription(self):
+        # Check subscription is active
+        if self.subscription.subscription_status not in [
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.PENDING_UPDATE_PAYMENT,
+        ]:
+            raise SubscriptionValidationError("Subscription is not active")
+
+        # Check usage is not expired
+        if self.usage.usage_expires and self.usage.usage_expires < datetime.now():
+            raise SubscriptionValidationError("Usage has expired")
+
+    def _validate_usage(self, usage_type: UsageType, amount_of_new_usage: int):
+        # Check if usage has hit tier
+        current_usage = self.usage.transaction_counts[usage_type]
+
+        current_usage_limit = self.subscription.usage_cost_details[
+            usage_type
+        ].free_tier_limit_per_month
+
+        if (
+            current_usage_limit
+            and current_usage + amount_of_new_usage > current_usage_limit
+        ):
+            raise TierLimitHitException
+
     def validate_usage(
         self,
         company_id: str,
@@ -65,28 +91,8 @@ class BillingValidateUsageUseCase(BaseUseCase):
         There is no handling if it is greater than 1 but could handle 1 more within the limit (for instance)
         This could be added later if needed.
         """
-        # Check subscription is active
-        if self.subscription.subscription_status not in [
-            SubscriptionStatus.ACTIVE,
-            SubscriptionStatus.PENDING_UPDATE_PAYMENT,
-        ]:
-            raise SubscriptionValidationError("Subscription is not active")
-
-        # Check usage is not expired
-        if self.usage.usage_expires and self.usage.usage_expires < datetime.now():
-            raise SubscriptionValidationError("Usage has expired")
-
-        # Check if usage has hit tier limit
-        current_usage = self.usage.transaction_counts[usage_type]
-        current_usage_limit = self.subscription.usage_cost_details[
-            usage_type
-        ].free_tier_limit_per_month
-
-        if (
-            current_usage_limit
-            and current_usage + amount_of_new_usage > current_usage_limit
-        ):
-            raise TierLimitHitException
+        self._validate_subscription()
+        self._validate_usage(usage_type, amount_of_new_usage)
 
         # Allow action to continue and increment usage on subscription usage object
         if increment_usage:

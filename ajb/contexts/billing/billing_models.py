@@ -79,14 +79,16 @@ SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS: dict[
         UsageType.TOTAL_RECRUITERS: UsageDetail(free_tier_limit_per_month=50),
     },
     SubscriptionPlan.APPSUMO: {
-        UsageType.APPLICATIONS_PROCESSED: UsageDetail(free_tier_limit_per_month=500),
-        UsageType.TOTAL_JOBS: UsageDetail(free_tier_limit_per_month=20),
-        UsageType.TOTAL_RECRUITERS: UsageDetail(free_tier_limit_per_month=10),
+        UsageType.APPLICATIONS_PROCESSED: UsageDetail(free_tier_limit_per_month=12000),
+        UsageType.TOTAL_JOBS: UsageDetail(unlimited_use=True),
+        UsageType.TOTAL_RECRUITERS: UsageDetail(free_tier_limit_per_month=5),
     },
 }
 
 SUBSCRIPTION_FEATURE_DEFAULTS: dict[SubscriptionPlan, list[TierFeatures]] = {
-    SubscriptionPlan.SILVER: [],
+    SubscriptionPlan.SILVER: [
+        TierFeatures.ALL_FEATURES,
+    ],
     SubscriptionPlan.GOLD: [
         TierFeatures.ALL_FEATURES,
     ],

@@ -36,7 +36,9 @@ class Collection(str, Enum):
     COMPANY_SUBSCRIPTIONS = "company_subscriptions"
     COMPANY_SUBSCRIPTION_USAGE_AND_BILLING = "company_subscription_usage_and_billing"
     BILLING_AUDIT_EVENTS = "billing_audit_events"
-    DISCOUNT_CODES = "discount_codes"  # Mainly used for app sumo but can be a little generalized
+    DISCOUNT_CODES = (
+        "discount_codes"  # Mainly used for app sumo but can be a little generalized
+    )
 
     # System
     SCHEDULED_EVENTS = "scheduled_events"
