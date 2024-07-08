@@ -11,15 +11,13 @@ from ajb.contexts.companies.invitations.usecase import CompanyInvitationUseCase
 from api.app.middleware import verify_user
 from api.middleware import scope
 
-portal_api_router = APIRouter(
-    dependencies=[Depends(verify_user)],
-)
+portal_api_router = APIRouter()
 
 portal_api_router.include_router(company_api_router)
-portal_api_router.include_router(enumerations.router)
+portal_api_router.include_router(enumerations.router, dependencies=[Depends(verify_user)])
 portal_api_router.include_router(health.router)
-portal_api_router.include_router(static_data.router)
-portal_api_router.include_router(users.router)
+portal_api_router.include_router(static_data.router, dependencies=[Depends(verify_user)])
+portal_api_router.include_router(users.router, dependencies=[Depends(verify_user)])
 
 
 @portal_api_router.post("/confirm-recruiter-invitation")
