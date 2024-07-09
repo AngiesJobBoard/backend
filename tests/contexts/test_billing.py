@@ -1,5 +1,7 @@
 from datetime import datetime
 import time
+
+import pytest
 from ajb.contexts.billing.billing_models import SubscriptionPlan, TierFeatures
 from ajb.contexts.billing.discount_codes.models import CodeType, CreateDiscountCode
 from ajb.contexts.billing.discount_codes.repository import DiscountCodeRepository
@@ -56,19 +58,10 @@ def test_billing_usecases(request_scope):
     )
 
     # Errenously attempt to upgrade gold trial
-    error_received = False
-    try:
+    with pytest.raises(CannotUpdateSubscriptionException):
         billing.company_starts_update_subscription(
             company.id, SubscriptionPlan.PLATINUM
         )
-    except CannotUpdateSubscriptionException:
-        error_received = (
-            True  # We are expecting to get this error as you can't upgrade a trial plan
-        )
-
-    assert (
-        error_received is True
-    ), "Attempting to upgrade a Gold Trial should have raised an CannotUpdateSubscriptionException"
 
     # Cancel current subscription
     billing.company_cancels_subscription(
@@ -150,12 +143,11 @@ def test_create_subscription_usage(request_scope):
     usage.validate_invoice(MOCK_PAYMENT)
 
     # Test run get usage expiry
-    assert isinstance(
-        usage._get_usage_expiry(datetime.now(), SubscriptionPlan.APPSUMO), datetime
-    )
-    assert isinstance(
-        usage._get_usage_expiry(datetime.now(), SubscriptionPlan.GOLD), datetime
-    )
+    start_date = datetime(2024, 1, 1)
+    regular_end = datetime(2024, 2, 10)
+    appsumo_end = datetime(2024, 12, 31)
+    assert usage._get_usage_expiry(start_date, SubscriptionPlan.APPSUMO) == appsumo_end
+    assert usage._get_usage_expiry(start_date, SubscriptionPlan.GOLD) == regular_end
 
     # Test usage creation
     usage.create_usage_from_paid_invoice(MOCK_PAYMENT)

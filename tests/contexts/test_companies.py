@@ -1,8 +1,17 @@
+from ajb.contexts.companies.api_ingress_webhooks.models import (
+    CreateCompanyAPIIngress,
+    IngressSourceType,
+)
+from ajb.contexts.companies.api_ingress_webhooks.repository import (
+    CompanyAPIIngressRepository,
+)
+from ajb.contexts.companies.api_ingress_webhooks.usecase import APIIngressUsecase
 from ajb.contexts.companies.usecase import CompaniesUseCase, UserCreateCompany
 from ajb.contexts.companies.repository import CompanyRepository
 from ajb.contexts.companies.recruiters.repository import RecruiterRepository
 from ajb.contexts.companies.recruiters.models import RecruiterRole
 
+from ajb.fixtures.companies import CompanyFixture
 from ajb.fixtures.users import UserFixture
 
 
@@ -43,3 +52,31 @@ def test_company_with_existing_slug(request_scope):
     assert company_1.name == company_2.name
     assert company_1.slug != company_2.slug
     assert company_1.id != company_2.id
+
+
+def test_api_ingress_webhooks(request_scope):
+    company_fixture = CompanyFixture(request_scope)
+    company = company_fixture.create_company()
+    api_ingress_repo = CompanyAPIIngressRepository(request_scope, company.id)
+    job = company_fixture.create_company_job(company.id)
+
+    # Create API Ingress Record
+    api_ingress_data = CreateCompanyAPIIngress(
+        integration_name="test",
+        source_type=IngressSourceType.COMPANY_WEBSITE,
+        source="PostCardMania Website",
+        company_id=company.id,
+        secret_key="123",
+        salt="456",
+        expected_jwt="n/a",
+        allowed_ips=[],
+    )
+    api_ingress_record = api_ingress_repo.create(data=api_ingress_data)
+
+    # Retrieve record and make assertions
+    results, count = APIIngressUsecase(request_scope).get_ingress_records_with_count(
+        company.id, job.id
+    )
+
+    assert count == 1
+    assert results[0].id == api_ingress_record.id
