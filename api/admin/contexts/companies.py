@@ -9,7 +9,12 @@ from ajb.contexts.companies.invitations.models import Invitation, UserCreateInvi
 from ajb.contexts.companies.invitations.usecase import CompanyInvitationUseCase
 from ajb.contexts.companies.models import Company, CreateCompany, RecruiterRole
 
-from ajb.contexts.companies.recruiters.models import CreateRecruiter, PaginatedRecruiterAndUser, Recruiter, UserCreateRecruiter
+from ajb.contexts.companies.recruiters.models import (
+    CreateRecruiter,
+    PaginatedRecruiterAndUser,
+    Recruiter,
+    UserCreateRecruiter,
+)
 from ajb.contexts.companies.recruiters.repository import RecruiterRepository
 from ajb.exceptions import RecruiterCreateException, TierLimitHitException
 from api.exceptions import GenericHTTPException, TierLimitHTTPException
@@ -20,9 +25,15 @@ router = APIRouter(tags=["Admin Create Company"], prefix="/companies")
 
 
 @router.post("/", response_model=Company)
-def admin_create_company(request: Request, company: CreateCompany = Body(...), subscription: CreateCompanySubscription = Body(...)):
+def admin_create_company(
+    request: Request,
+    company: CreateCompany = Body(...),
+    subscription: CreateCompanySubscription = Body(...),
+):
     """Creates a new company with an active subscription"""
-    return AdminCompanyUseCase(scope(request)).create_company_with_subscription(company, subscription)
+    return AdminCompanyUseCase(scope(request)).create_company_with_subscription(
+        company, subscription
+    )
 
 
 @router.post("/{company_id}/recruiters", response_model=Recruiter)
@@ -30,7 +41,9 @@ def admin_create_recruiter(request: Request, company_id: str, email: str = Body(
     """Adds a recruiter to a company"""
     try:
         response = CompanyInvitationUseCase(scope(request)).user_creates_invite(
-            UserCreateInvitation(email=email, role=RecruiterRole.ADMIN), scope(request).user_id, company_id
+            UserCreateInvitation(email=email, role=RecruiterRole.ADMIN),
+            scope(request).user_id,
+            company_id,
         )
         return response
     except TierLimitHitException as e:
