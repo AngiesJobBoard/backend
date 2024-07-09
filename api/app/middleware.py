@@ -45,9 +45,9 @@ def get_company_recruiter(request_scope: RequestScope, company_id: str, user_id:
         return recruiter
 
     # If not in cache, fetch from the database
-    retrieved_recruiter = RecruiterRepository(request_scope).get_recruiter_by_company_and_user(
-        company_id, user_id
-    )
+    retrieved_recruiter = RecruiterRepository(
+        request_scope
+    ).get_recruiter_by_company_and_user(company_id, user_id)
     RECRUITER_CACHE[cache_key] = retrieved_recruiter
     return retrieved_recruiter
 
