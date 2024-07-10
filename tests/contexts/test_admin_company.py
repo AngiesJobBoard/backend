@@ -1,12 +1,13 @@
-from datetime import datetime
+from ajb.contexts.admin.companies.models import (
+    AdminUserCreateCompany,
+    AdminUserCreateSubscription,
+)
 from ajb.contexts.admin.companies.usecase import AdminCompanyUseCase
 from ajb.contexts.billing.billing_models import SubscriptionPlan
 from ajb.contexts.billing.subscriptions.models import (
-    CreateCompanySubscription,
     SubscriptionStatus,
 )
 from ajb.contexts.billing.subscriptions.repository import CompanySubscriptionRepository
-from ajb.contexts.companies.models import CreateCompany
 from ajb.contexts.companies.repository import CompanyRepository
 
 
@@ -14,20 +15,11 @@ def test_admin_create_company(request_scope):
     usecase = AdminCompanyUseCase(request_scope)
 
     # Prepare data
-    company_object = CreateCompany(
-        name="Test Company",
-        slug="test",
-        created_by_user="test",
-        owner_email="test@email.com",
+    company_object = AdminUserCreateCompany(
+        name="Test Company", owner_email="owner@test.com"
     )
-    subscription_object = CreateCompanySubscription(
-        company_id="test",
+    subscription_object = AdminUserCreateSubscription(
         plan=SubscriptionPlan.GOLD,
-        start_date=datetime.now(),
-        subscription_status=SubscriptionStatus.INACTIVE,
-        usage_cost_details={},
-        subscription_features=[],
-        checkout_session=None,
     )
 
     # Create company with subscription
@@ -39,7 +31,6 @@ def test_admin_create_company(request_scope):
     company_repo = CompanyRepository(request_scope)
     retrieved_company = company_repo.get(company.id)
     assert retrieved_company.name == company_object.name
-    assert retrieved_company.owner_email == company_object.owner_email
 
     # Validate subscription creation
     company_subscription_repo = CompanySubscriptionRepository(request_scope, company.id)

@@ -1,15 +1,21 @@
 from fastapi import APIRouter, Depends, Request, Body
 
 from ajb.base.models import QueryFilterParams, build_pagination_response
+from ajb.contexts.admin.companies.models import (
+    AdminUserCreateCompany,
+    AdminUserCreateSubscription,
+)
 from ajb.contexts.admin.companies.usecase import AdminCompanyUseCase
 from ajb.contexts.billing.billing_models import UsageType
-from ajb.contexts.billing.subscriptions.models import CreateCompanySubscription
 from ajb.contexts.billing.usecase.billing_usecase import CompanyBillingUsecase
-from ajb.contexts.companies.invitations.models import Invitation, UserCreateInvitation
+from ajb.contexts.companies.invitations.models import UserCreateInvitation
 from ajb.contexts.companies.invitations.usecase import CompanyInvitationUseCase
-from ajb.contexts.companies.models import Company, CreateCompany, RecruiterRole
+from ajb.contexts.companies.models import Company, RecruiterRole
 
-from ajb.contexts.companies.recruiters.models import CreateRecruiter, PaginatedRecruiterAndUser, Recruiter, UserCreateRecruiter
+from ajb.contexts.companies.recruiters.models import (
+    PaginatedRecruiterAndUser,
+    Recruiter,
+)
 from ajb.contexts.companies.recruiters.repository import RecruiterRepository
 from ajb.exceptions import RecruiterCreateException, TierLimitHitException
 from api.exceptions import GenericHTTPException, TierLimitHTTPException
@@ -20,9 +26,15 @@ router = APIRouter(tags=["Admin Create Company"], prefix="/companies")
 
 
 @router.post("/", response_model=Company)
-def admin_create_company(request: Request, company: CreateCompany = Body(...), subscription: CreateCompanySubscription = Body(...)):
+def admin_create_company(
+    request: Request,
+    company: AdminUserCreateCompany = Body(...),
+    subscription: AdminUserCreateSubscription = Body(...),
+):
     """Creates a new company with an active subscription"""
-    return AdminCompanyUseCase(scope(request)).create_company_with_subscription(company, subscription)
+    return AdminCompanyUseCase(scope(request)).create_company_with_subscription(
+        company, subscription
+    )
 
 
 @router.post("/{company_id}/recruiters", response_model=Recruiter)
@@ -30,7 +42,9 @@ def admin_create_recruiter(request: Request, company_id: str, email: str = Body(
     """Adds a recruiter to a company"""
     try:
         response = CompanyInvitationUseCase(scope(request)).user_creates_invite(
-            UserCreateInvitation(email=email, role=RecruiterRole.ADMIN), scope(request).user_id, company_id
+            UserCreateInvitation(email=email, role=RecruiterRole.ADMIN),
+            scope(request).user_id,
+            company_id,
         )
         return response
     except TierLimitHitException as e:

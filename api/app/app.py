@@ -14,9 +14,13 @@ from api.middleware import scope
 portal_api_router = APIRouter()
 
 portal_api_router.include_router(company_api_router)
-portal_api_router.include_router(enumerations.router, dependencies=[Depends(verify_user)])
+portal_api_router.include_router(
+    enumerations.router, dependencies=[Depends(verify_user)]
+)
 portal_api_router.include_router(health.router)
-portal_api_router.include_router(static_data.router, dependencies=[Depends(verify_user)])
+portal_api_router.include_router(
+    static_data.router, dependencies=[Depends(verify_user)]
+)
 portal_api_router.include_router(users.router, dependencies=[Depends(verify_user)])
 
 
