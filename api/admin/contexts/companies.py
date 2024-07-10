@@ -78,3 +78,13 @@ def admin_delete_recruiter(request: Request, company_id: str, recruiter_id: str)
         company_id, UsageType.TOTAL_RECRUITERS, amount_to_increment=-1
     )
     return res
+
+
+@router.put("/{company_id}/subscription")
+def admin_update_company_subscription(
+    request: Request, company_id: str, new_subscription: AdminUserCreateSubscription
+):
+    """Replaces the subscription of the selected company"""
+    return AdminCompanyUseCase(scope(request)).update_company_subscription(
+        company_id, new_subscription
+    )
