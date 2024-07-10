@@ -16,10 +16,14 @@ def test_admin_create_company(request_scope):
 
     # Prepare data
     company_object = AdminUserCreateCompany(
-        name="Test Company", owner_email="owner@test.com"
+        name="Test Company", 
+        owner_email="owner@test.com"
     )
     subscription_object = AdminUserCreateSubscription(
         plan=SubscriptionPlan.GOLD,
+        usage_cost_details={},
+        subscription_features=[],
+        subscription_status=SubscriptionStatus.ACTIVE,
     )
 
     # Create company with subscription

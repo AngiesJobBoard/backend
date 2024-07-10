@@ -25,16 +25,16 @@ class AdminCompanyUseCase(BaseUseCase):
     ):
         company_repo = CompanyRepository(self.request_scope)
 
-        # Create the company
+        # Prepare company data
         company_data = CreateCompany(
-            name=company.name,
-            slug=company.slug,
-            website=company.website,
-            num_employees=company.num_employees,
-            owner_email=company.owner_email,
+            **company.model_dump(),
             created_by_user=self.request_scope.user_id,
         )
+
+        # Create company
         created_company = company_repo.create(company_data)
+
+        # Access subscription repositories
         company_subscription_repo = CompanySubscriptionRepository(
             self.request_scope, created_company.id
         )
@@ -42,24 +42,25 @@ class AdminCompanyUseCase(BaseUseCase):
             self.request_scope, created_company.id
         )
 
-        # Create the subscription
+        # Determine subscription expiration
         usage_expiration = CreateSubscriptionUsage(
             self.request_scope
         )._get_usage_expiry(
-            subscription.start_date or datetime.now(),
+            datetime.now(),
             subscription.plan,
         )
         subscription_expiration = subscription.end_date or usage_expiration
 
+        # Create subscription
         company_subscription = CreateCompanySubscription(
+            subscription_status=subscription.subscription_status,
+            start_date=datetime.now(),
             company_id=created_company.id,
-            subscription_status=SubscriptionStatus.ACTIVE,
             plan=subscription.plan,
-            start_date=subscription.start_date or datetime.now(),
             end_date=subscription_expiration,
             checkout_session=None,
-            usage_cost_details={},
-            subscription_features=[TierFeatures.ALL_FEATURES],
+            usage_cost_details=subscription.usage_cost_details,
+            subscription_features=subscription.subscription_features,
         )
         company_subscription_repo.create(company_subscription)
 
