@@ -11,6 +11,13 @@ from ajb.contexts.billing.validate_usage import (
     UsageType,
     TierFeatures,
 )
+from ajb.contexts.companies.email_ingress_webhooks.repository import (
+    CompanyEmailIngressRepository,
+)
+from ajb.contexts.companies.email_ingress_webhooks.models import (
+    CreateCompanyEmailIngress,
+    EmailIngressType,
+)
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.config.settings import SETTINGS
 
@@ -41,6 +48,16 @@ class JobsUseCase(BaseUseCase):
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         created_job: Job = job_repo.create(
             CreateJob(**job.model_dump(), company_id=company_id)
+        )
+
+        # Create the email ingress
+        CompanyEmailIngressRepository(self.request_scope).create(
+            CreateCompanyEmailIngress.generate(
+                company_id,
+                EmailIngressType.CREATE_APPLICATION,
+                created_job.id,
+                True
+            )
         )
 
         # Create event
