@@ -28,10 +28,11 @@ class RecruiterUpdatesUseCase(BaseUseCase):
             company_id=company_id,
             user_id=recruiter_user_id,
         )
+        current_application_status = self.get_object(Collection.APPLICATIONS, application_id).application_status
         return recruiter_update_repo.create(
             CreateApplicationUpdate(
                 comment=comment,
-                new_application_status=None,
+                new_application_status=current_application_status,
                 added_by_ajb_admin=added_by_ajb_admin,
                 type=UpdateType.NOTE,
                 company_id=company_id,

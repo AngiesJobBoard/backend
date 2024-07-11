@@ -71,7 +71,6 @@ class CreateApplicationFromResumeResolver(BaseUseCase):
         partial_application = self._combine_additional_data(
             partial_application, additional_partial_data
         )
-        print(partial_application)
         return partial_application
 
     def create_application_from_resume(

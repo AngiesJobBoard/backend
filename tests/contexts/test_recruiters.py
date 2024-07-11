@@ -167,8 +167,8 @@ def test_recruiter_updates(request_scope, mock_openai):
     assert (
         len(timeline) == 1
     )  # We should have one timeline entry from the add recruiter comment call
-    assert timeline[0].type == UpdateType.NOTE
-    assert timeline[0].comment == "Apply guy is a great fit for this position."
+    assert timeline[0].type == UpdateType.NOTE  # type: ignore
+    assert timeline[0].comment == "Apply guy is a great fit for this position."  # type: ignore
 
     # Update application status
     usecase.update_application_status(
@@ -189,17 +189,17 @@ def test_recruiter_updates(request_scope, mock_openai):
 
     # Find the new timeline entry (just in case the order in which they are returned is not deterministic)
     update_status_entry = 0
-    if timeline[0].type == UpdateType.NOTE:
+    if timeline[0].type == UpdateType.NOTE:  # type: ignore
         # We are looking for the update status entry, so use the other one
         update_status_entry = 1
 
     # Check for update application status entry
-    assert timeline[update_status_entry].type == UpdateType.STATUS_CHANGE
+    assert timeline[update_status_entry].type == UpdateType.STATUS_CHANGE  # type: ignore
     assert (
-        timeline[update_status_entry].new_application_status
+        timeline[update_status_entry].new_application_status  # type: ignore
         == ApplicationStatusRepresents.INTERESTED
     )
     assert (
-        timeline[update_status_entry].comment
+        timeline[update_status_entry].comment  # type: ignore
         == "I'd like to move forward to interview Apply guy"
     )
