@@ -117,3 +117,15 @@ class RepositoryNotProvided(Exception):
     def __init__(self, repository_name: str):
         self.message = f"{repository_name} not provided"
         super().__init__(self.message)
+
+
+class TierLimitHitException(Exception):
+    def __init__(self, message="Tier limit hit"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class FeatureNotAvailableOnTier(Exception):
+    def __init__(self, message="Feature not available on tier"):
+        self.message = message
+        super().__init__(self.message)

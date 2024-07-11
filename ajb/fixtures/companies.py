@@ -26,8 +26,12 @@ from ajb.contexts.billing.subscriptions.models import (
     CreateCompanySubscription,
     SubscriptionPlan,
 )
-from ajb.contexts.billing.billing_models import SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS
+from ajb.contexts.billing.billing_models import (
+    SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS,
+    SUBSCRIPTION_FEATURE_DEFAULTS,
+)
 
+from ajb.fixtures.subscriptions import SubscriptionFixture
 from ajb.fixtures.users import UserFixture
 
 
@@ -35,8 +39,9 @@ class CompanyFixture:
     def __init__(self, request_scope: RequestScope):
         self.request_scope = request_scope
 
-    def create_company(self) -> Company:
-        return CompanyRepository(self.request_scope).create(
+    def create_company(self, create_subscription: bool = True) -> Company:
+        # Create the company
+        company = CompanyRepository(self.request_scope).create(
             CreateCompany(
                 name="Test Company",
                 slug="test",
@@ -45,6 +50,14 @@ class CompanyFixture:
             ),
             overridden_id="test",
         )
+
+        # Register a subscription for the company
+        if create_subscription:
+            SubscriptionFixture().setup_company_subscription(
+                self.request_scope, company.id
+            )
+
+        return company
 
     def create_company_with_owner(self) -> tuple[User, Company]:
         user = UserFixture(self.request_scope).create_user()
@@ -102,11 +115,7 @@ class CompanyFixture:
             self.request_scope, company_id
         )
         return subscription_repo.create(
-            CreateCompanySubscription(
-                company_id=company_id,
-                plan=plan,
-                start_date=datetime(2021, 1, 1),
-                stripe_subscription_id="sub_123",
-                usage_cost_details=SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS[plan],
+            CreateCompanySubscription.create_trial_subscription(
+                company_id, "need to add real usage ID here later..."
             )
         )

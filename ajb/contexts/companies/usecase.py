@@ -1,19 +1,20 @@
 from typing import cast, Any
 import re
 from concurrent.futures import ThreadPoolExecutor
-from ajb.base import (
-    BaseUseCase,
-    Collection,
-    RepoFilterParams,
-    Pagination,
-)
-from ajb.exceptions import CompanyCreateException
+from ajb.base import BaseUseCase, Collection, RepoFilterParams, Pagination, RequestScope
 from ajb.contexts.companies.recruiters.models import CreateRecruiter, RecruiterRole
 from ajb.contexts.users.models import User
 from ajb.base.events import (
     SourceServices,
 )
+from ajb.contexts.billing.validate_usage import (
+    BillingValidateUsageUseCase,
+    TierFeatures,
+)
 from ajb.vendor.arango.models import Filter, Operator, Join
+from ajb.vendor.firebase_storage.repository import FirebaseStorageRepository
+from ajb.exceptions import RepositoryNotProvided, FeatureNotAvailableOnTier
+from ajb.utils import random_salt
 
 from .models import (
     UserCreateCompany,
@@ -23,6 +24,7 @@ from .models import (
     CompanyGlobalSearchApplications,
     CompanyGlobalSearchResults,
     UpdateCompany,
+    CompanyImageUpload,
 )
 from .events import CompanyEventProducer
 
@@ -38,6 +40,14 @@ def make_arango_safe_key(slug: str) -> str:
 
 
 class CompaniesUseCase(BaseUseCase):
+    def __init__(
+        self,
+        request_scope: RequestScope,
+        storage: FirebaseStorageRepository | None = None,
+    ):
+        self.request_scope = request_scope
+        self.storage_repo = storage
+
     def user_create_company(
         self, data: UserCreateCompany, creating_user_id: str
     ) -> Company:
@@ -157,6 +167,14 @@ class CompaniesUseCase(BaseUseCase):
         )
 
     def _update_job_applications_by_email(self, company_id: str, enabled: bool) -> None:
+        # Only if feature is available on current subscription
+        try:
+            BillingValidateUsageUseCase(
+                self.request_scope, company_id
+            ).validate_feature_access(TierFeatures.EMAIL_INGRESS)
+        except FeatureNotAvailableOnTier:
+            return
+
         email_ingress_repository = self.get_repository(
             Collection.COMPANY_EMAIL_INGRESS_WEBHOOKS
         )
@@ -176,3 +194,17 @@ class CompaniesUseCase(BaseUseCase):
                     company_id, updates.settings.enable_all_email_ingress
                 )
         return company_repo.update(company_id, updates, merge=False)
+
+    def _create_profile_picture_path(self, company_id: str, file_type: str) -> str:
+        return f"companies/{company_id}/profile_picture-{random_salt()}.{file_type}"
+
+    def update_company_main_image(self, company_id: str, data: CompanyImageUpload):
+        if not self.storage_repo:
+            raise RepositoryNotProvided("Storage")
+
+        company_repo = self.get_repository(Collection.COMPANIES)
+        remote_file_path = self._create_profile_picture_path(company_id, data.file_type)
+        main_image_url = self.storage_repo.upload_bytes(
+            data.picture_data, data.file_type, remote_file_path, True
+        )
+        return company_repo.update_fields(company_id, main_image=main_image_url)

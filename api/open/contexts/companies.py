@@ -5,7 +5,7 @@ from ajb.base import RequestScope
 from ajb.contexts.applications.usecase import ApplicationUseCase
 from ajb.contexts.webhooks.ingress.jobs.usecase import WebhookJobsUseCase
 from ajb.contexts.webhooks.ingress.applicants.usecase import WebhookApplicantsUseCase
-from api.vendors import db, storage, kafka_producer
+from api.vendors import db, kafka_producer
 
 from api.open.middleware import OpenRequestValidator
 from api.middleware import scope
@@ -54,7 +54,7 @@ async def jobs_email_webhook_handler(
         envelope
     )
     ingress_email = message_from_string(email)
-    ApplicationUseCase(scope(request), storage).process_email_application_ingress(
+    ApplicationUseCase(scope(request)).process_email_application_ingress(
         ingress_email, ingress_record
     )
     return status.HTTP_204_NO_CONTENT

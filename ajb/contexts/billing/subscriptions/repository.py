@@ -1,5 +1,4 @@
 from ajb.base import Collection, SingleChildRepository, RepositoryRegistry
-
 from .models import CreateCompanySubscription, CompanySubscription
 
 

@@ -83,17 +83,7 @@ class CompanyEventsResolver:
 
         # Inremenet company count
         company_repo = CompanyRepository(self.request_scope)
-        updated_company = company_repo.increment_field(data.company_id, "total_jobs", 1)
-
-        # Create email ingress record
-        CompanyEmailIngressRepository(self.request_scope).create(
-            CreateCompanyEmailIngress.generate(
-                data.company_id,
-                EmailIngressType.CREATE_APPLICATION,
-                data.job_id,
-                updated_company.settings.enable_all_email_ingress,
-            )
-        )
+        company_repo.increment_field(data.company_id, "total_jobs", 1)
 
         # Send out job creation webhooks
         CompanyJobWebhookEgress(self.request_scope).send_create_job_webhook(

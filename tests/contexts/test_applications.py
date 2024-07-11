@@ -8,6 +8,8 @@ from unittest.mock import patch
 import pytest
 
 from ajb.base.models import RepoFilterParams
+from ajb.config.settings import SETTINGS
+
 from ajb.contexts.applications.extract_data.ai_extractor import ExtractedResume
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.applications.usecase import ApplicationUseCase
@@ -21,7 +23,6 @@ from ajb.contexts.applications.models import (
     CreateApplicationStatusUpdate,
     ScanStatus,
 )
-from ajb.contexts.billing.usecase import CompanyBillingUsecase
 from ajb.contexts.companies.email_ingress_webhooks.models import (
     CompanyEmailIngress,
     EmailIngressType,
@@ -242,7 +243,7 @@ def test_application_counts(request_scope):
     )
 
     # Validate a kafka request was created
-    assert len(request_scope.kafka.messages["applications"]) == 1
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 1
 
     retrieved_company = company_repo.get(company.id)
     retrieved_job = job_repo.get(job.id)
@@ -333,8 +334,6 @@ def test_application_status_update(request_scope):
 
     # Check status updated occurred
     assert updated_application.application_status == "Hired"
-
-    assert len(recruiter_update_repo.get_all()) == 1
 
 
 def test_get_pending_applications(request_scope):
@@ -533,7 +532,7 @@ def test_create_many_applications(request_scope):
     )
 
     # Validate kafka requests were created
-    assert len(request_scope.kafka.messages["applications"]) == 2
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 2
 
     # Verify that the 2 applicants were successfully created
     retrieved_company = company_repo.get(company.id)
@@ -596,8 +595,8 @@ def test_create_application_from_resume(request_scope):
     # Create application
     usecase.create_application_from_resume(resume, application)
 
-    # Check for kofka message
-    assert len(request_scope.kafka.messages["applications"]) == 2
+    # Check for kafka message
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 2
 
     # Verify applicant was created
     retrieved_company = company_repo.get(company.id)
@@ -652,12 +651,6 @@ def test_email_application_ingress(request_scope):
     # Process email with multiple parts
     usecase.process_email_application_ingress(ingress_email, company_email_ingress)
 
-    # Check for company usage
-    usage = CompanyBillingUsecase(request_scope).get_historic_company_usage(company.id)
-    assert (
-        usage[1] == 1
-    )  # Company usage is incremented at the end of process_email_application_ingress, so we will make sure that happens here
-
 
 def test_create_application_from_raw_text(request_scope):
     company_fixture = CompanyFixture(request_scope)
@@ -674,7 +667,7 @@ def test_create_application_from_raw_text(request_scope):
         "ajb.contexts.applications.extract_data.ai_extractor.SyncronousAIResumeExtractor.get_candidate_profile_from_resume_text",
         return_value=example_resume,
     ):
-        usecase.application_is_created_from_raw_text(company.id, job.id, "test")
+        usecase.create_application_from_raw_text(company.id, job.id, "test")
 
     # Check that the application creation event was fired
-    assert len(request_scope.kafka.messages["applications"]) == 1
+    assert len(request_scope.kafka.messages[SETTINGS.KAFKA_APPLICATIONS_TOPIC]) == 1

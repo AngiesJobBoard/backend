@@ -25,6 +25,7 @@ router = APIRouter(
 @router.get("/application-updates", response_model=PaginatedCompanyUpdateView)
 def get_all_recruiter_updates(
     request: Request,
+    company_id: str,
     update_query: ApplicationUpdateQuery = Depends(),
 ):
     """Gets all recruiter updates for a given company"""
@@ -70,6 +71,7 @@ def create_recruiter_comment(
 @router.delete("/jobs/{job_id}/applications/{application_id}/updates/{update_id}")
 def delete_recruiter_update(
     request: Request,
+    company_id: str,
     application_id: str,
     update_id: str,
 ):
@@ -83,6 +85,7 @@ def delete_recruiter_update(
 )
 def update_recruiter_comment(
     request: Request,
+    company_id: str,
     application_id: str,
     comment_id: str,
     recruiter_comment: UserCreateRecruiterComment,

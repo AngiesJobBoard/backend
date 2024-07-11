@@ -5,14 +5,8 @@ This module is for various admin capabilities which can be organized better llll
 from fastapi import APIRouter, Request, Body
 
 from ajb.base.events import SourceServices
-from ajb.contexts.companies.recruiters.repository import RecruiterRepository
 from ajb.contexts.applications.repository import ApplicationRepository
 from ajb.contexts.companies.jobs.repository import JobRepository
-from ajb.contexts.companies.recruiters.models import (
-    UserCreateRecruiter,
-    CreateRecruiter,
-    Recruiter,
-)
 from ajb.contexts.applications.models import ScanStatus
 from ajb.contexts.applications.events import ApplicationEventProducer
 
@@ -21,13 +15,6 @@ from api.middleware import scope
 
 
 router = APIRouter(tags=["Admin Etc."], prefix="/etc")
-
-
-@router.post("/add-user-to-company", response_model=Recruiter)
-def add_user_to_company(request: Request, payload: UserCreateRecruiter):
-    return RecruiterRepository(scope(request)).create(
-        CreateRecruiter(**payload.model_dump())
-    )
 
 
 @router.post("/rerun-resume-scan", response_model=bool)

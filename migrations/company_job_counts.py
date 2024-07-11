@@ -118,3 +118,7 @@ class JobCountsMigrationUseCase(BaseUseCase):
 def main():
     CompanyCountsMigrationUseCase(MIGRATION_REQUEST_SCOPE).run()
     JobCountsMigrationUseCase(MIGRATION_REQUEST_SCOPE).run()
+
+
+if __name__ == "__main__":
+    main()

@@ -19,3 +19,18 @@ class GenericHTTPException(HTTPException):
 class NotFound(HTTPException):
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=404, detail=detail or "Not found")
+
+
+class TierLimitHTTPException(HTTPException):
+    def __init__(self, detail: str | None = None):
+        super().__init__(status_code=402, detail=detail or "Tier limit reached")
+
+
+class FeatureNotAvailableOnTierHTTPException(HTTPException):
+    def __init__(self, detail: str | None = None):
+        super().__init__(status_code=402, detail=detail or "Feature not available")
+
+
+class NoSubscription(HTTPException):
+    def __init__(self, detail: str | None = None):
+        super().__init__(status_code=402, detail=detail or "No subscription")

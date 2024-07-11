@@ -4,37 +4,11 @@ way to take a company's usage data and create a Stripe invoice for that usage da
 
 """
 
-import typing as t
 from stripe import StripeClient
-from pydantic import BaseModel
 
 from ajb.vendor.stripe.client_factory import StripeClientFactory
-from ajb.utils import generate_random_short_code
-
-
-def generate_invoice_number(customer_id: str, billing_period: str):
-    return f"{customer_id}-{billing_period}-{generate_random_short_code()}"[0:26]
-
-
-class InvoiceLineItem(BaseModel):
-    description: str
-    unit_amount_decimal: str
-    quantity: int
-
-
-class CreateInvoiceData(BaseModel):
-    stripe_customer_id: str
-    description: str
-    invoice_number: str
-    invoice_items: list[InvoiceLineItem]
-
-
-class DefaultInvoiceSettings:
-    CURRENCY = "usd"
-    DAYS_UNTIL_DUE = 30
-    COLLECTION_METHOD: t.Literal["charge_automatically", "send_invoice"] = (
-        "send_invoice"
-    )
+from ajb.vendor.stripe.models import StripeCheckoutSessionCreated, Subscription
+from ajb.config.settings import SETTINGS
 
 
 class StripeRepository:
@@ -49,27 +23,48 @@ class StripeRepository:
         }
         return self.client.customers.create(params=params)  # type: ignore
 
-    def create_invoice(self, invoice_data: CreateInvoiceData):
-        draft_invoice = self.client.invoices.create(
-            params={
-                "currency": DefaultInvoiceSettings.CURRENCY,
-                "days_until_due": DefaultInvoiceSettings.DAYS_UNTIL_DUE,
-                "customer": invoice_data.stripe_customer_id,
-                "description": invoice_data.description,
-                "number": invoice_data.invoice_number,
-                "collection_method": DefaultInvoiceSettings.COLLECTION_METHOD,
-            }
-        )
-        for item in invoice_data.invoice_items:
-            self.client.invoice_items.create(
-                params={
-                    "invoice": draft_invoice.id,  # type: ignore
-                    "currency": DefaultInvoiceSettings.CURRENCY,
-                    "description": item.description,
-                    "unit_amount_decimal": item.unit_amount_decimal,
-                    "quantity": item.quantity,
-                    "customer": invoice_data.stripe_customer_id,
+    def create_subscription_checkout_session(
+        self,
+        company_id: str,
+        stripe_customer_id: str,
+        price_id: str,
+        charge_is_recurring: bool = True,
+    ) -> StripeCheckoutSessionCreated:
+        params = {
+            "customer": stripe_customer_id,
+            "metadata": {"company_id": company_id},
+            "line_items": [
+                {
+                    "price": price_id,
+                    "quantity": 1,
                 }
-            )
+            ],
+            "mode": "subscription" if charge_is_recurring else "payment",
+            "success_url": f"{SETTINGS.APP_URL}/subscription/confirm",
+            "client_reference_id": company_id,
+        }
+        results = self.client.checkout.sessions.create(params=params)  # type: ignore
+        return StripeCheckoutSessionCreated(**results)
 
-        return self.client.invoices.retrieve(draft_invoice.id)  # type: ignore
+    def cancel_subscription(self, subscription_id: str):
+        return self.client.subscriptions.cancel(subscription_id)
+
+    def get_original_subscription_item_id(self, subscription_id: str):
+        subscription_items = self.client.subscription_items.list({"subscription": subscription_id})  # type: ignore
+        return subscription_items.data[0].id
+
+    def update_subscription(self, subscription_id: str, new_price_id: str):
+        params = {
+            "items": [
+                {"price": new_price_id, "quantity": 1},
+                {
+                    "id": self.get_original_subscription_item_id(subscription_id),
+                    "deleted": "true",
+                    "quantity": 1,
+                },
+            ],
+            "proration_behavior": "always_invoice",
+            "billing_cycle_anchor": "now",
+        }
+        results = self.client.subscriptions.update(subscription_id, params=params)  # type: ignore
+        return Subscription(**results)

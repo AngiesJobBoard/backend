@@ -1,8 +1,23 @@
 from ajb.base import BaseUseCase, Collection, RequestScope
 from ajb.base.events import SourceServices
+from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.companies.events import CompanyEventProducer
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.applications.models import Application
+from ajb.contexts.companies.jobs.repository import JobRepository
+from ajb.contexts.companies.repository import CompanyRepository
+from ajb.contexts.billing.validate_usage import (
+    BillingValidateUsageUseCase,
+    UsageType,
+    TierFeatures,
+)
+from ajb.contexts.companies.email_ingress_webhooks.repository import (
+    CompanyEmailIngressRepository,
+)
+from ajb.contexts.companies.email_ingress_webhooks.models import (
+    CreateCompanyEmailIngress,
+    EmailIngressType,
+)
 from ajb.vendor.openai.repository import OpenAIRepository
 from ajb.config.settings import SETTINGS
 
@@ -27,9 +42,19 @@ class JobsUseCase(BaseUseCase):
         company_id: str,
         job: UserCreateJob,
     ) -> Job:
+        BillingValidateUsageUseCase(self.request_scope, company_id).validate_usage(
+            company_id, UsageType.TOTAL_JOBS, 1
+        )
         job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
         created_job: Job = job_repo.create(
             CreateJob(**job.model_dump(), company_id=company_id)
+        )
+
+        # Create the email ingress
+        CompanyEmailIngressRepository(self.request_scope).create(
+            CreateCompanyEmailIngress.generate(
+                company_id, EmailIngressType.CREATE_APPLICATION, created_job.id, True
+            )
         )
 
         # Create event
@@ -87,26 +112,50 @@ class JobsUseCase(BaseUseCase):
         )
         return total_applicants, total_high_match, total_new
 
-    def _update_company_counts(
-        self, company_id: str, job_id: str, is_marking_active: bool
-    ):
-        # Get all applicants, i
-        company_repo = self.get_repository(Collection.COMPANIES)
-        company_repo.increment_field(
-            company_id, "total_jobs", 1 if is_marking_active else -1
+    def _update_company_counts(self, company_id: str):
+        # Prepare repos
+        application_repo = CompanyApplicationRepository(self.request_scope)
+        company_repo = CompanyRepository(self.request_scope)
+        job_repo = JobRepository(self.request_scope, company_id)
+
+        # Count applications
+        new_count = 0
+        total_count = 0
+        high_match_count = 0
+
+        applications = application_repo.get_all(company_id=company_id)
+        for application in applications:
+            # For each application, find it's associated job.
+            application_job = job_repo.get(application.job_id)
+            if application_job.active:
+                # The job is active, so we will count it
+                total_count += 1
+                if application.application_status == None:
+                    # This application doesn't have a status yet, so it's a new one
+                    new_count += 1
+                if (
+                    isinstance(application.application_match_score, int)
+                    and application.application_match_score >= 70
+                ):
+                    # This is a high matching application
+                    high_match_count += 1
+
+        # Count jobs
+        total_jobs = 0
+
+        jobs = job_repo.get_all()
+        for job in jobs:
+            if job.active:
+                total_jobs += 1
+
+        # Update counters in company repository
+        company_repo.update_fields(
+            id=company_id,
+            total_applicants=total_count,
+            new_applicants=new_count,
+            high_matching_applicants=high_match_count,
+            total_jobs=total_jobs,
         )
-        total_applicants, total_high_match, total_new = (
-            self._get_job_application_counts(company_id, job_id)
-        )
-        if not is_marking_active:
-            total_applicants = -total_applicants
-            total_high_match = -total_high_match
-            total_new = -total_new
-        company_repo.increment_field(company_id, "total_applicants", total_applicants)
-        company_repo.increment_field(
-            company_id, "high_matching_applicants", total_high_match
-        )
-        company_repo.increment_field(company_id, "new_applicants", total_new)
 
     def update_job_active_status(
         self, company_id: str, job_id: str, active: bool
@@ -119,8 +168,17 @@ class JobsUseCase(BaseUseCase):
 
         # Update the job and it's counts
         updated_job = job_repo.update_fields(job_id, active=active)
-        self._update_company_counts(company_id, job_id, active)
+        self._update_company_counts(company_id)
         CompanyEventProducer(
             self.request_scope, SourceServices.API
         ).company_updates_job(company_id=company_id, job_id=job_id)
         return updated_job
+
+    def toggle_job_public_application_form(
+        self, company_id: str, job_id: str, is_available: bool
+    ):
+        BillingValidateUsageUseCase(
+            self.request_scope, company_id
+        ).validate_feature_access(TierFeatures.PUBLIC_APPLICATION_PAGE)
+        job_repo = self.get_repository(Collection.JOBS, self.request_scope, company_id)
+        return job_repo.update_fields(job_id, job_is_public=is_available)

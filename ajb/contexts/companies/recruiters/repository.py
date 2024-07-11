@@ -7,7 +7,7 @@ from ajb.base import (
     RepoFilterParams,
 )
 from ajb.vendor.arango.models import Join, Filter
-from ajb.exceptions import GenericTypeError
+from ajb.exceptions import GenericTypeError, EntityNotFound
 
 from .models import Recruiter, CreateRecruiter, RecruiterAndUser, CompanyAndRole
 
@@ -65,10 +65,13 @@ class RecruiterRepository(MultipleChildrenRepository[CreateRecruiter, Recruiter]
         return [CompanyAndRole(**result.model_dump()) for result in results]
 
     def get_recruiter_by_company_and_user(self, company_id: str, user_id: str):
-        return self.get_one(
+        res = self.get_all(
             company_id=company_id,
             user_id=user_id,
         )
+        if len(res) == 0:
+            raise EntityNotFound(collection=Collection.COMPANY_RECRUITERS.value)
+        return res[0]
 
 
 RepositoryRegistry.register(RecruiterRepository)

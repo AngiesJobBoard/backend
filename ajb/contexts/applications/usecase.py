@@ -20,10 +20,6 @@ from ajb.contexts.applications.recruiter_updates.usecase import RecruiterUpdates
 from ajb.contexts.applications.repository import CompanyApplicationRepository
 from ajb.contexts.companies.jobs.models import Job
 from ajb.contexts.companies.email_ingress_webhooks.models import CompanyEmailIngress
-from ajb.contexts.billing.usecase import (
-    CompanyBillingUsecase,
-    UsageType,
-)
 from ajb.contexts.applications.extract_data.ai_extractor import (
     SyncronousAIResumeExtractor,
 )
@@ -264,16 +260,9 @@ class ApplicationUseCase(BaseUseCase):
                 )
             )
             created_applications.append(created_application)
-
-        CompanyBillingUsecase(self.request_scope).increment_company_usage(
-            company_id=ingress_record.company_id,
-            incremental_usages={
-                UsageType.EMAIL_INGRESS: len(created_applications),
-            },
-        )
         return created_applications
 
-    def application_is_created_from_raw_text(
+    def create_application_from_raw_text(
         self, company_id: str, job_id: str, raw_text: str
     ):
         partial_application = CreateApplication(

@@ -8,96 +8,94 @@ class SubscriptionPlan(str, Enum):
     Other plans progressively more expensive per month but marginally cheaper per action
     """
 
-    STARTER = "Starter"
-    PRO = "Pro"
-    ENTERPRISE = "Enterprise"
+    SILVER = "Silver"
+    GOLD = "Gold"
+    PLATINUM = "Platinum"
+    APPSUMO = "AppSumo"
+    GOLD_TRIAL = "Gold Trial"
 
 
 class UsageType(str, Enum):
-    RESUME_SCANS = "resume_scans"
-    MATCH_SCORES = "match_scores"
-    APPLICATION_QUESTIONS_ANSWERED = "application_questions_answered"
-    EMAIL_INGRESS = "email_ingress"
-    API_INGRESS = "api_ingress"
-    API_EGRESS = "api_egress"
+    APPLICATIONS_PROCESSED = "applications_processed"
+    TOTAL_JOBS = "total_jobs"
     TOTAL_RECRUITERS = "total_recruiters"
 
 
 class UsageDetail(BaseModel):
-    free_tier_limit_per_month: int = 0
-    cost_usd_per_transaction: float
+    """
+    If they have unlimited use, we don't check or charge for usage
+    """
+
+    free_tier_limit_per_month: int | None = None
+    cost_usd_per_transaction: float = 0.0
+    blocked_after_free_tier: bool = True
+    unlimited_use: bool = False
+
+
+class TierFeatures(str, Enum):
+    ALL_FEATURES = "*"  # Special case for all features
+    PUBLIC_APPLICATION_PAGE = "public_application_page"
+    EMAIL_INGRESS = "email_ingress"
+    API_INGRESS = "api_ingress"
+    API_EGRESS = "api_egress"
+    GENERATE_JOB_SKILLS = "generate_job_skills"
+    GENERATE_JOB_QUESTIONS = "generate_job_questions"
+    WHITE_LABELLING = "white_labelling"
 
 
 SUBSCRIPTION_USAGE_COST_DETAIL_DEFAULTS: dict[
     SubscriptionPlan, dict[UsageType, UsageDetail]
 ] = {
-    SubscriptionPlan.STARTER: {
-        UsageType.RESUME_SCANS: UsageDetail(
-            free_tier_limit_per_month=50, cost_usd_per_transaction=1.0
+    # 50 free applications per month then blocked. 5 jobs, only 1 recruiter - all blocked after free tier
+    SubscriptionPlan.SILVER: {
+        UsageType.APPLICATIONS_PROCESSED: UsageDetail(
+            free_tier_limit_per_month=250,
         ),
-        UsageType.MATCH_SCORES: UsageDetail(
-            free_tier_limit_per_month=50, cost_usd_per_transaction=1.0
-        ),
-        UsageType.APPLICATION_QUESTIONS_ANSWERED: UsageDetail(
-            free_tier_limit_per_month=250, cost_usd_per_transaction=1.0
-        ),
-        UsageType.EMAIL_INGRESS: UsageDetail(
-            free_tier_limit_per_month=50, cost_usd_per_transaction=1.0
-        ),
-        UsageType.API_INGRESS: UsageDetail(
-            free_tier_limit_per_month=100, cost_usd_per_transaction=1.0
-        ),
-        UsageType.API_EGRESS: UsageDetail(
-            free_tier_limit_per_month=250, cost_usd_per_transaction=1.0
+        UsageType.TOTAL_JOBS: UsageDetail(
+            free_tier_limit_per_month=5,
         ),
         UsageType.TOTAL_RECRUITERS: UsageDetail(
-            free_tier_limit_per_month=10, cost_usd_per_transaction=1.0
+            free_tier_limit_per_month=1,
         ),
     },
-    SubscriptionPlan.PRO: {
-        UsageType.RESUME_SCANS: UsageDetail(
-            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.05
+    # 1000 free applications per month then 0.1 per application. 10 recruiters then 5 per recruiter per month, unlimited jobs
+    SubscriptionPlan.GOLD: {
+        UsageType.APPLICATIONS_PROCESSED: UsageDetail(
+            free_tier_limit_per_month=1000,
+            cost_usd_per_transaction=0.1,
+            blocked_after_free_tier=False,
         ),
-        UsageType.MATCH_SCORES: UsageDetail(
-            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.05
-        ),
-        UsageType.APPLICATION_QUESTIONS_ANSWERED: UsageDetail(
-            free_tier_limit_per_month=25000, cost_usd_per_transaction=0.05
-        ),
-        UsageType.EMAIL_INGRESS: UsageDetail(
-            free_tier_limit_per_month=5000, cost_usd_per_transaction=0.05
-        ),
-        UsageType.API_INGRESS: UsageDetail(
-            free_tier_limit_per_month=10000, cost_usd_per_transaction=0.05
-        ),
-        UsageType.API_EGRESS: UsageDetail(
-            free_tier_limit_per_month=25000, cost_usd_per_transaction=0.05
-        ),
+        UsageType.TOTAL_JOBS: UsageDetail(unlimited_use=True),
         UsageType.TOTAL_RECRUITERS: UsageDetail(
-            free_tier_limit_per_month=50, cost_usd_per_transaction=0.05
+            free_tier_limit_per_month=10,
+            cost_usd_per_transaction=5.0,
+            blocked_after_free_tier=False,
         ),
     },
-    SubscriptionPlan.ENTERPRISE: {
-        UsageType.RESUME_SCANS: UsageDetail(
-            free_tier_limit_per_month=10000, cost_usd_per_transaction=0.01
-        ),
-        UsageType.MATCH_SCORES: UsageDetail(
-            free_tier_limit_per_month=10000, cost_usd_per_transaction=0.01
-        ),
-        UsageType.APPLICATION_QUESTIONS_ANSWERED: UsageDetail(
-            free_tier_limit_per_month=50000, cost_usd_per_transaction=0.01
-        ),
-        UsageType.EMAIL_INGRESS: UsageDetail(
-            free_tier_limit_per_month=10000, cost_usd_per_transaction=0.01
-        ),
-        UsageType.API_INGRESS: UsageDetail(
-            free_tier_limit_per_month=20000, cost_usd_per_transaction=0.01
-        ),
-        UsageType.API_EGRESS: UsageDetail(
-            free_tier_limit_per_month=50000, cost_usd_per_transaction=0.01
-        ),
-        UsageType.TOTAL_RECRUITERS: UsageDetail(
-            free_tier_limit_per_month=100, cost_usd_per_transaction=0.01
-        ),
+    # No limit plan
+    SubscriptionPlan.PLATINUM: {
+        UsageType.APPLICATIONS_PROCESSED: UsageDetail(free_tier_limit_per_month=3000),
+        UsageType.TOTAL_JOBS: UsageDetail(unlimited_use=True),
+        UsageType.TOTAL_RECRUITERS: UsageDetail(free_tier_limit_per_month=50),
     },
+    SubscriptionPlan.APPSUMO: {
+        UsageType.APPLICATIONS_PROCESSED: UsageDetail(free_tier_limit_per_month=12000),
+        UsageType.TOTAL_JOBS: UsageDetail(unlimited_use=True),
+        UsageType.TOTAL_RECRUITERS: UsageDetail(free_tier_limit_per_month=5),
+    },
+}
+
+SUBSCRIPTION_FEATURE_DEFAULTS: dict[SubscriptionPlan, list[TierFeatures]] = {
+    SubscriptionPlan.SILVER: [
+        TierFeatures.ALL_FEATURES,
+    ],
+    SubscriptionPlan.GOLD: [
+        TierFeatures.ALL_FEATURES,
+    ],
+    SubscriptionPlan.PLATINUM: [
+        TierFeatures.ALL_FEATURES,
+    ],
+    SubscriptionPlan.APPSUMO: [
+        TierFeatures.ALL_FEATURES,
+    ],
 }
