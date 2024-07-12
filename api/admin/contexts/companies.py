@@ -79,7 +79,7 @@ def admin_delete_recruiter(request: Request, company_id: str, recruiter_id: str)
     )
     return res
 
-
+  
 @router.put("/{company_id}/subscription")
 def admin_update_company_subscription(
     request: Request, company_id: str, new_subscription: AdminUserCreateSubscription

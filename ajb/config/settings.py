@@ -78,13 +78,6 @@ class AppSettings:
     # Google API
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
 
-    # Minio config
-    MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT", "localhost:9000")
-    MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "minio")
-    MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "minio123")
-    MINIO_SECURE: bool = get_bool_from_string(os.getenv("MINIO_SECURE", "false"))
-    MINIO_BUCKET: str = os.getenv("MINIO_BUCKET", "ajb")
-
     # Deeplink secrets
     DEFAULT_EXPIRY_HOURS: int = int(os.getenv("RECRUITER_INVITATION_SECRET", 100))
     RECRUITER_INVITATION_SECRET: str = os.getenv("RECRUITER_INVITATION_SECRET", "test")
