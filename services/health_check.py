@@ -4,7 +4,7 @@ import requests
 
 
 async def status():
-    heartbeat_url = os.getenv("HEARTBEAL_URL")
+    heartbeat_url = os.getenv("HEARTBEAT_URL")
     if not heartbeat_url:
         return
     while True:
