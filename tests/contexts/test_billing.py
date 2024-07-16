@@ -2,6 +2,7 @@ from datetime import datetime
 import time
 
 import pytest
+
 from ajb.contexts.billing.billing_models import SubscriptionPlan, TierFeatures
 from ajb.contexts.billing.discount_codes.models import CodeType, CreateDiscountCode
 from ajb.contexts.billing.discount_codes.repository import DiscountCodeRepository
@@ -89,17 +90,10 @@ def test_billing_usecases(request_scope):
     )  # And a discount code that has already been used
 
     # Try to use an already redemmed AppSumo code
-    error_received = False
-    try:
+    with pytest.raises(InvalidDiscountCode):
         billing.start_create_subscription(
             company.id, SubscriptionPlan.APPSUMO, appsumo_code="B12345678"
         )
-    except InvalidDiscountCode:
-        error_received = True
-
-    assert (
-        error_received is True
-    ), "Attempting to start an AppSumo subscription with invalid code should have raised a BadAppSumoCode exception"
 
     # Use a valid code to create the subscription
     billing.start_create_subscription(
