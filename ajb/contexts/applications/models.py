@@ -217,15 +217,26 @@ class Application(CreateApplication, BaseDataModel):
         duration_tuples = []
         if self.qualifications and self.qualifications.work_history:
             for work_history in self.qualifications.work_history:
-                if (
-                    work_history.start_date
-                    and isinstance(work_history.start_date, datetime)
-                    and work_history.end_date
-                    and isinstance(work_history.end_date, datetime)
-                ):
+                start_date = work_history.start_date
+                end_date = work_history.end_date
+
+                # Convert start_date if not a datetime instance
+                if not isinstance(start_date, datetime):
+                    try:
+                        start_date = get_datetime_from_string(start_date)
+                    except TypeError:
+                        start_date = None
+
+                # Convert end_date if not a datetime instance
+                if not isinstance(end_date, datetime):
+                    try:
+                        end_date = get_datetime_from_string(end_date)
+                    except TypeError:
+                        end_date = None
+                if start_date and end_date:
                     duration_tuple = JobDuration(
-                        start_date=work_history.start_date,
-                        end_date=work_history.end_date,
+                        start_date=start_date,
+                        end_date=end_date,
                         still_at_job=work_history.still_at_job or False,
                     )
                     duration_tuples.append(duration_tuple)

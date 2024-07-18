@@ -176,7 +176,9 @@ def get_datetime_from_string(date_string: str) -> datetime:
     return parse_date_string(date_string, datetime_regex_map)
 
 
-def is_present_or_current(date_string: str) -> bool:
+def is_present_or_current(date_string: str | None) -> bool:
+    if date_string is None:
+        return False
     lower_date_string = date_string.lower()
     return lower_date_string == "present" or "current" in lower_date_string
 
