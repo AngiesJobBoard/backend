@@ -5,6 +5,7 @@ from api.app.contexts import (
     health,
     static_data,
     users,
+    websockets,
 )
 from api.app.contexts.companies.app import company_api_router
 from ajb.contexts.companies.invitations.usecase import CompanyInvitationUseCase
@@ -22,6 +23,7 @@ portal_api_router.include_router(
     static_data.router, dependencies=[Depends(verify_user)]
 )
 portal_api_router.include_router(users.router, dependencies=[Depends(verify_user)])
+portal_api_router.include_router(websockets.router, dependencies=[Depends(verify_user)])
 
 
 @portal_api_router.post("/confirm-recruiter-invitation")

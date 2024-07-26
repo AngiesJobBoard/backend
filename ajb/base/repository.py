@@ -19,6 +19,7 @@ from arango.exceptions import (
 )
 from arango.cursor import Cursor
 
+from ajb.contexts.websockets.event_handler import WebSocketEventHandler
 from ajb.vendor.arango.models import Filter, Operator, Join, Sort
 from ajb.vendor.arango.repository import ArangoDBRepository, CreateManyInsertError
 from ajb.exceptions import EntityNotFound, MultipleEntitiesReturned, FailedToCreate
@@ -236,9 +237,11 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             results = self.db.update(update_dict, merge)
         except DocumentUpdateError:
             raise EntityNotFound(collection=self.collection.value, entity_id=id)
-        return format_to_schema(
+        updated_object = format_to_schema(
             t.cast(dict, results)[BaseConstants.NEW], self.entity_model
         )
+        WebSocketEventHandler().fire_update_event(updated_object)
+        return updated_object
 
     def update_fields(self, id: str, **kwargs) -> DataSchema:
         update_dict = {
@@ -251,9 +254,11 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             results = self.db.update(update_dict)
         except DocumentUpdateError:
             raise EntityNotFound(collection=self.collection.value, entity_id=id)
-        return format_to_schema(
+        updated_object = format_to_schema(
             t.cast(dict, results)[BaseConstants.NEW], self.entity_model
         )
+        WebSocketEventHandler().fire_update_event(updated_object)
+        return updated_object
 
     def upsert(
         self,
@@ -498,7 +503,20 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
             }
             for key, update_data in updates_as_dict.items()
         ]
-        self.db.update_many(update_docs)
+        try:
+            results = self.db.update_many(update_docs)
+        except DocumentUpdateError as e:
+            raise EntityNotFound(collection=self.collection.value, entity_id=str(e))
+
+        updated_objects = [
+            format_to_schema(t.cast(dict, result)[BaseConstants.NEW], self.entity_model)
+            for result in results
+        ]
+        
+        # Fire events for each updated object
+        for updated_object in updated_objects:
+            WebSocketEventHandler().fire_update_event(updated_object)
+
         return True
 
     def delete_many(self, document_ids: list[str]) -> bool:
@@ -529,7 +547,9 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         results = ArangoDBRepository(
             self.request_scope.db, self.collection.value
         ).execute_custom_statement(statement, bind_vars)
-        return format_to_schema(results[0], self.entity_model)
+        updated_object = format_to_schema(results[0], self.entity_model)
+        WebSocketEventHandler().fire_update_event(updated_object)
+        return updated_object
 
     def decrement_field(self, id: str, field: str, amount: int) -> DataSchema:
         statement = f"""
@@ -545,7 +565,9 @@ class BaseRepository(t.Generic[CreateDataSchema, DataSchema]):
         results = ArangoDBRepository(
             self.request_scope.db, self.collection.value
         ).execute_custom_statement(statement, bind_vars)
-        return format_to_schema(results[0], self.entity_model)
+        updated_object = format_to_schema(results[0], self.entity_model)
+        WebSocketEventHandler().fire_update_event(updated_object)
+        return updated_object
 
     def get_most_recent(self, **kwargs) -> DataSchema:
         repo_filters = RepoFilterParams(
