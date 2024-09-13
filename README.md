@@ -1,45 +1,68 @@
-# shared
-Stores All Business Logic for the Angies Job Board Backend
+
+# Angies Job Board Backend
+
+This repository stores the API, database connectors, business logic, and async data handling for the HR platform AngiesJobBoard.
+
+
+## Features
+
+- Create and manage Job Posts
+- Upload and scan resumes of candidates
+- Automatically score and match candidates to job posts
+- Track candidates through full hiring cycle using custom candidate statuses
+- Custom data integrations with any incoming or outgoing source
+- Inbound email parsing for candidates to send resumes
+- Support for public job posting pages
+- Inviting and manage recruiters in your company
+
+
+## Tech Stack
+
+Python3
+
+FastAPI
+
+ArangoDB
+
+OpenAI
+
+Sendgrid
+
+Stripe
+
+Kafka
+
+Containerized and deployed to Heroku
 
 
 
-Patterns of this repository
+## Run Locally
 
+Start database and kafka services locally with docker
 
-You'll see some common file names in each of the contexts in this repo
+```bash
+  docker compose up -d
+```
 
-The contexts may be embedded into each other if they are expected to be stored as children
-For instance, you'll find the Resume context under a user because it is a direct relationship
+Install dependencies
 
-BUT, you'll find the Application context at the "Parent" level because it is a 
-shared entity between a user and a company/job.
+```bash
+  pipenv install -d
+```
 
+Start the server
 
-Each context will have files matching this pattern, some may have all of these and 
-others may only have a portion of these files depending on what is needed
+```bash
+  pipenv run localapi
+```
 
-models
-enumerations
-search
-repository
-usecase
-async_service
+Run testing, linting, and type checking
 
+```bash
+  pipenv run check_all
+```
 
-docker run -e ARANGO_NO_AUTH=1 -p 8529:8529 -d --name arangodb-instance arangodb/arangodb:latest
+## Authors
 
+- [@mikeshanahan](https://www.github.com/mikeshanahan)
 
-
-Full Flow example - 
-
-
-Company creates and posts a job
-
-Candidate views job (job is included in search)
-Candidate Clicks job (job details are retrieved but user not is recruiter)
-Candidate applies
-
-
-Company views
- 
- 
