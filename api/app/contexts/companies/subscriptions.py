@@ -12,6 +12,7 @@ from ajb.contexts.billing.usecase.start_update_subscription import (
     CannotUpdateSubscriptionException,
     NoInitialSubscriptionException,
 )
+from ajb.contexts.billing.usecase.billing_usecase import NoSubscriptionUsageAllottedException
 
 from api.middleware import scope
 from api.exceptions import GenericHTTPException
@@ -43,7 +44,14 @@ def cancel_subscription(request: Request, company_id: str, reason: str = Body(..
 
 @router.get("/current-usage", response_model=MonthlyUsage)
 def get_current_usage(request: Request, company_id: str):
-    return CompanyBillingUsecase(scope(request)).get_current_company_usage(company_id)
+    try:
+        return CompanyBillingUsecase(scope(request)).get_current_company_usage(company_id)
+    except NoSubscriptionUsageAllottedException:
+        return MonthlyUsage(
+            company_id=company_id,
+            usage_expires=None,
+            invoice_details=None,
+        )
 
 
 @router.post("/change-subscription", response_model=CompanySubscription)
