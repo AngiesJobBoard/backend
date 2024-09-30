@@ -47,11 +47,7 @@ def get_current_usage(request: Request, company_id: str):
     try:
         return CompanyBillingUsecase(scope(request)).get_current_company_usage(company_id)
     except NoSubscriptionUsageAllottedException:
-        return MonthlyUsage(
-            company_id=company_id,
-            usage_expires=None,
-            invoice_details=None,
-        )
+        raise GenericHTTPException(400, "No usage allotted for this company")
 
 
 @router.post("/change-subscription", response_model=CompanySubscription)
